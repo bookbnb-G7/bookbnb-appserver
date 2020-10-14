@@ -1,0 +1,51 @@
+sudo: 
+  - required
+
+language: 
+  - python
+
+python:
+  - "3.8.6"
+
+services:
+  - docker
+
+
+#------------------------------------testing------------------------------------#
+before_script:
+  - pip install docker-compose
+  - docker-compose build 
+
+scripts:
+  - docker-compose run -d --name appserver web
+  - docker exec appserver pytest --cov=appserver
+  - docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" appserver coveralls
+
+#--------------------------------------------------------------------------------#
+
+
+
+#------------------------------------deploy---------------------------------------#
+before_install:
+  # install heroku CLI
+  - wget -qO- https://toolbelt.heroku.com/install.sh | sh
+  
+  # login to docker registries (dockerhub + heroku)
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - echo "$HEROKU_PASSWORD" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
+
+install:
+
+deploy:
+  - provider: script
+    
+    script: 
+      docker build . -t facutorraca/bookbnb-appserver
+      docker tag facutorraca/bookbnb-appserver registry.heroku.com/$HEROKU_APPSERVER_NAME/web;
+      docker push facutorraca/bookbnb-appserver;
+      heroku container:push web --app $HEROKU_APPSERVER_NAME;
+      heroku container:release web --app $HEROKU_APPSERVER_NAME;
+
+    on:
+      branch: master
+#--------------------------------------------------------------------------------#
