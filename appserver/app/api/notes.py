@@ -19,7 +19,7 @@ async def create_note(payload: NoteSchema):
     return response_object
 
 
-@router.get("/{id}/", response_model=NoteDB)
+@router.get("/{note_id}/", response_model=NoteDB)
 async def read_note(note_id: int):
     note = await crud.get(note_id)
     if not note:
