@@ -18,7 +18,7 @@ async def shutdown():
 
 @app.get("/")
 async def pong():
-    return {"message":"pudiste crack!"}
+    return {"message":"appserver"}
 
 @app.get("/facu")
 async def facu():
