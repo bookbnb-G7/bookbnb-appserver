@@ -41,10 +41,10 @@ deploy:
     
     script: 
       docker build . -t facutorraca/bookbnb-appserver
-      docker tag facutorraca/bookbnb-appserver registry.heroku.com/$HEROKU_APPSERVER_NAME/web;
+      docker tag facutorraca/bookbnb-appserver registry.heroku.com/$HEROKU_APP_NAME/web;
       docker push facutorraca/bookbnb-appserver;
-      heroku container:push web --app $HEROKU_APPSERVER_NAME;
-      heroku container:release web --app $HEROKU_APPSERVER_NAME;
+      heroku container:push web --app $HEROKU_APP_NAME;
+      heroku container:release web --app $HEROKU_APP_NAME;
 
     on:
       branch: master
