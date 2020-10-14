@@ -4,4 +4,4 @@ repos:
     hooks:
     -   id: pylint
         name: PyLint
-        args: [./appserver, --rcfile=.pylintrc]
+        args: [--rcfile=.pylintrc]

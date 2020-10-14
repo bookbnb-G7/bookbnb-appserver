@@ -7,18 +7,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    
+
     command: sh ./docker-entrypoint.dev.sh
-    
+
     volumes:
       - ./:/usr/src/app
-    
+
     ports:
       - 8002:8000
-    
-    depends_on: 
+
+    depends_on:
       - db # first execute database
-    
+
     environment:
       - TESTING=0
       - ENVIRONMENT=dev
@@ -32,7 +32,7 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    
+
     environment:
       - POSTGRES_USER=hello_fastapi
       - POSTGRES_PASSWORD=hello_fastapi

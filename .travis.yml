@@ -1,8 +1,4 @@
-sudo: 
-  - required
-
-language: 
-  - python
+language: python
 
 python:
   - "3.8.6"
@@ -14,7 +10,7 @@ services:
 #------------------------------------testing------------------------------------#
 before_script:
   - pip install docker-compose
-  - docker-compose build 
+  - docker-compose build
 
 scripts:
   - docker-compose run -d --name appserver web
@@ -29,7 +25,7 @@ scripts:
 before_install:
   # install heroku CLI
   - wget -qO- https://toolbelt.heroku.com/install.sh | sh
-  
+
   # login to docker registries (dockerhub + heroku)
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
   - echo "$HEROKU_PASSWORD" | docker login -u "$HEROKU_USERNAME" --password-stdin registry.heroku.com
@@ -38,8 +34,8 @@ install:
 
 deploy:
   - provider: script
-    
-    script: 
+
+    script:
       docker build . -t facutorraca/bookbnb-appserver
       docker tag facutorraca/bookbnb-appserver registry.heroku.com/$HEROKU_APP_NAME/web;
       docker push facutorraca/bookbnb-appserver;

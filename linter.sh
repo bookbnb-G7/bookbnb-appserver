@@ -1,2 +1,2 @@
 #!/bin/sh
-pylint --rcfile=.pytlintrc ./appserver/
+pylint --rcfile=.pylintrc ./appserver/
