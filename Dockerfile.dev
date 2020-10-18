@@ -21,7 +21,6 @@ COPY . /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-
 # docker entrypoint for heroku
 CMD ["sh", "./docker-entrypoint.dev.sh"]
 

@@ -25,7 +25,6 @@ services:
       - ENVIRONMENT=dev
       - DATABASE_URL=postgres://user:password@db/appserver_db_dev
 
-
   db:
     container_name: bookbnb-appserver_db
 
