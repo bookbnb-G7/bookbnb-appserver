@@ -10,12 +10,12 @@ services:
 #------------------------------------testing------------------------------------#
 before_script:
   - docker-compose build
+  - docker-compose up -d
 
 scripts:
-  - docker-compose run -d --name appserver web
-  - docker exec appserver pytest --cov=appserver
-  - docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" appserver coveralls
-
+  - docker exec bookbnb-appserver_web pytest --cov=appserver
+  - docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH \
+                -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" appserver coveralls
 #--------------------------------------------------------------------------------#
 
 
