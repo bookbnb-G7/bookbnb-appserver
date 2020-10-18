@@ -9,7 +9,6 @@ services:
 
 #------------------------------------testing------------------------------------#
 before_script:
-  - pip install docker-compose
   - docker-compose build
 
 scripts:
