@@ -14,8 +14,9 @@ before_script:
 
 scripts:
   - docker exec bookbnb-appserver_web pytest --cov=appserver
-  - docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH \
-                -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" appserver coveralls
+
+after_success:
+  - docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" appserver coveralls
 #--------------------------------------------------------------------------------#
 
 

@@ -8,13 +8,14 @@ services:
       context: .
       dockerfile: Dockerfile.dev
 
-    command: sh ./docker-entrypoint.dev.sh
-
     volumes:
       - ./:/usr/src/app
 
     ports:
-      - 8002:8000
+      - 3000:8080
+
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; 
+             sh docker-entrypoint.dev.sh'
 
     depends_on:
       - db # first execute database
@@ -22,7 +23,7 @@ services:
     environment:
       - TESTING=0
       - ENVIRONMENT=dev
-      - DATABASE_URL=postgresql://hello_fastapi:hello_fastapi@db/hello_fastapi_dev
+      - DATABASE_URL=postgres://user:password@db/appserver_db_dev
 
 
   db:
@@ -34,9 +35,9 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
     environment:
-      - POSTGRES_USER=hello_fastapi
-      - POSTGRES_PASSWORD=hello_fastapi
-      - POSTGRES_DB=hello_fastapi_dev
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=appserver_db_dev
 
 volumes:
   postgres_data:
