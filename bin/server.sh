@@ -2,7 +2,7 @@
 if [ $1 == "up" ]; then
 	echo "==========server=started========="
 	if [ ${2-"none"} == "build" ]; then 
-		docker-compose up -d --build
+		docker-compose up -d --build 
 	else 
 		docker-compose up -d
 	fi

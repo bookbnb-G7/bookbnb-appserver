@@ -4,7 +4,12 @@ from app.api import crud
 
 
 def test_create_note(test_app, monkeypatch):
-    test_request_payload = {"title": "something", "description": "something else"}
+    test_request_payload = {
+        "title": "something", 
+        "description": "something else"
+    }
+   
+
     test_response_payload = {
         "id": 1,
         "title": "something",
