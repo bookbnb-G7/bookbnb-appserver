@@ -17,7 +17,7 @@ def test_create_note(test_app, monkeypatch):
     # This test uses the Pytest monkeypatch fixture to mock out the crud.post
     # function. We then asserted that the endpoint responds with the expected
     # status codes and response body.
-    monkeypatch.setattr(crud, "post", mock_post)
+    monkeypatch.setattr(crud.note_crud, "post", mock_post)
 
     response = test_app.post(
         "/notes/",
@@ -39,7 +39,7 @@ def test_read_note(test_app, monkeypatch):
     async def mock_get(note_id):
         return test_data
 
-    monkeypatch.setattr(crud, "get", mock_get)
+    monkeypatch.setattr(crud.note_crud, "get", mock_get)
 
     response = test_app.get("/notes/1")
     assert response.status_code == 200
@@ -50,7 +50,7 @@ def test_read_note_incorrect_id(test_app, monkeypatch):
     async def mock_get(note_id):
         return None
 
-    monkeypatch.setattr(crud, "get", mock_get)
+    monkeypatch.setattr(crud.note_crud, "get", mock_get)
 
     response = test_app.get("/notes/999")
     assert response.status_code == 404
