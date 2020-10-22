@@ -6,5 +6,5 @@ async def post(payload: NoteSchema):
     return await database.execute(query=query)
 
 async def get(note_id: int):
-    query = notes_table.select().where(note_id == notes.c.id)
+    query = notes_table.select().where(note_id == notes_table.c.id)
     return await database.fetch_one(query=query)
