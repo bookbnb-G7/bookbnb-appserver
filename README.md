@@ -28,3 +28,4 @@
 
 # Removing Images, Containes and Volumes associated
 `bin/armagedon.sh`
+
