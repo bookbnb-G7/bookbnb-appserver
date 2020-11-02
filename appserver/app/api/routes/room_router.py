@@ -14,11 +14,9 @@ from app.api.models.room_review_model import (
 
 
 router = APIRouter()
-# API_URL = "https://bookbnb-postserver.herokuapp.com/rooms"
-API_URL = "http://localhost:4000/rooms"
+API_URL = "https://bookbnb-postserver.herokuapp.com/rooms"
 
 
-# Fix: Ver si hace falta agregar el status code al decorator para que genere la doc
 @router.post("/", response_model=RoomDB)
 async def create_room(payload: RoomSchema, response: Response):
     room = rq.post(API_URL + "/", json=payload.dict())
