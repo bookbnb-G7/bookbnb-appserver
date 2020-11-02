@@ -1,4 +1,4 @@
-import os
+"""import os
 import logging
 from functools import lru_cache
 from pydantic import BaseSettings
@@ -15,3 +15,4 @@ class Settings(BaseSettings):
 def get_settings() -> BaseSettings:
     log.info("Loading config settings from the environment...")
     return Settings()
+"""

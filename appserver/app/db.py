@@ -1,4 +1,4 @@
-import os
+"""import os
 
 from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, create_engine
 from sqlalchemy.sql import func
@@ -22,3 +22,4 @@ notes_table = Table(
 
 # databases query builder
 database = Database(DATABASE_URL)
+"""
