@@ -1,7 +1,8 @@
-from pydantic import BaseModel
+"""from pydantic import BaseModel
 
 
 class UserSchema(BaseModel):
     username: str
     firstname: str
     lastname: str
+"""
