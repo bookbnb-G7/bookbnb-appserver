@@ -6,7 +6,7 @@ WORKDIR /usr/src/app
 
 # copy requirements
 COPY ./requirements.txt /usr/src/app/requirements.txt
-COPY ./pylintrc /usr/src/app/.pylintrc
+COPY ./.pylintrc /usr/src/app/.pylintrc
 
 # Updates packages and install git(required for coveralls)
 RUN apt-get update
