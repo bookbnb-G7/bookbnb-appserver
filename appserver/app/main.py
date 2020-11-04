@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 # from app.db import engine, metadata, database
-from app.api.routes import room_router
+from app.api.routes import room_router, user_router
 
 app = FastAPI()
 
@@ -17,3 +17,4 @@ app = FastAPI()
 
 
 app.include_router(room_router.router, prefix="/rooms", tags=["rooms"])
+app.include_router(user_router.router, prefix="/users", tags=["users"])
