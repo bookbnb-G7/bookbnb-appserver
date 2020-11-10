@@ -1,8 +1,7 @@
-import re
 import httpretty
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.api.routes.user_router import API_URL
-from tests.conftest import MockResponse
+from tests.utils import MockResponse, mock_request, check_responses_equality
 
 HOST_RATING_REGEX = f"{API_URL}/?[0-9]*[/]?host_ratings/?"
 GUEST_RATING_REGEX = f"{API_URL}/?[0-9]*[/]?guest_ratings/?"
@@ -15,9 +14,7 @@ class MockUserRatingResponse(MockResponse):
             "userId": 1,
             "rating": 5,
             "reviewer": "aaaa",
-            "reviewer_id": "2",
-            "updatedAt": "2020-11-03T21:42:11.876Z",
-            "createdAt": "2020-11-03T21:42:11.876Z",
+            "reviewer_id": 2,
         }
 
 
@@ -28,27 +25,21 @@ class MockUserRatingListResponse(MockResponse):
                 "id": 1,
                 "rating": 5,
                 "reviewer": "aaaa",
-                "reviewer_id": "2",
-                "createdAt": "2020-11-03T21:42:11.876Z",
-                "updatedAt": "2020-11-03T21:42:11.876Z",
+                "reviewer_id": 2,
                 "userId": 1,
             },
             {
                 "id": 2,
                 "rating": 3,
                 "reviewer": "jon",
-                "reviewer_id": "4",
-                "createdAt": "2020-11-03T21:43:04.692Z",
-                "updatedAt": "2020-11-03T21:43:04.692Z",
+                "reviewer_id": 4,
                 "userId": 1,
             },
             {
                 "id": 3,
                 "rating": 1,
                 "reviewer": "malaonda",
-                "reviewer_id": "5",
-                "createdAt": "2020-11-03T21:43:16.869Z",
-                "updatedAt": "2020-11-03T21:43:16.869Z",
+                "reviewer_id": 5,
                 "userId": 1,
             },
         ]
@@ -58,167 +49,184 @@ class MockUserRatingListResponse(MockResponse):
 def test_post_host_rating(test_app):
     mock_user_rating_response = MockUserRatingResponse()
     test_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    expected_status = HTTP_201_CREATED
+    attrs_to_test = ["rating", "reviewer", "reviewer_id"]
 
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile(HOST_RATING_REGEX),
-        responses=[
-            httpretty.Response(
-                body=mock_user_rating_response.json(), status=HTTP_201_CREATED
-            )
-        ],
+    mock_request(
+        httpretty.POST, mock_user_rating_response, HOST_RATING_REGEX, expected_status
     )
-    response = test_app.post(
-        f"{API_URL}/{test_rating['userId']}/host_ratings", json=test_rating
-    )
-    response_json = response.json()
-
-    assert response.status_code == HTTP_201_CREATED
-    assert response_json["rating"] == test_rating["rating"]
-    assert response_json["reviewer"] == test_rating["reviewer"]
-    assert response_json["createdAt"] == test_rating["createdAt"]
-    assert response_json["updatedAt"] == test_rating["updatedAt"]
-    assert response_json["reviewer_id"] == test_rating["reviewer_id"]
-    assert response_json["userId"] == test_rating["userId"]
-    assert response_json["id"] == test_rating["id"]
+    response = test_app.post(f"{API_URL}/{test_user_id}/host_ratings", json=test_rating)
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
 
 
 @httpretty.activate
 def test_post_guest_rating(test_app):
     mock_user_rating_response = MockUserRatingResponse()
     test_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    expected_status = HTTP_201_CREATED
+    attrs_to_test = ["rating", "reviewer", "reviewer_id"]
 
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile(GUEST_RATING_REGEX),
-        responses=[
-            httpretty.Response(
-                body=mock_user_rating_response.json(), status=HTTP_201_CREATED
-            )
-        ],
+    mock_request(
+        httpretty.POST, mock_user_rating_response, GUEST_RATING_REGEX, expected_status
     )
     response = test_app.post(
-        f"{API_URL}/{test_rating['id']}/guest_ratings", json=test_rating
+        f"{API_URL}/{test_user_id}/guest_ratings", json=test_rating
     )
-    response_json = response.json()
-
-    assert response.status_code == HTTP_201_CREATED
-    assert response_json["rating"] == test_rating["rating"]
-    assert response_json["reviewer"] == test_rating["reviewer"]
-    assert response_json["createdAt"] == test_rating["createdAt"]
-    assert response_json["updatedAt"] == test_rating["updatedAt"]
-    assert response_json["reviewer_id"] == test_rating["reviewer_id"]
-    assert response_json["userId"] == test_rating["userId"]
-    assert response_json["id"] == test_rating["id"]
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
 
 
 @httpretty.activate
 def test_get_all_user_host_ratings(test_app):
     mock_user_rating_list_response = MockUserRatingListResponse()
     test_rating_list = mock_user_rating_list_response.dict()
+    test_user_id = 1
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating", "reviewer", "reviewer_id"]
 
-    httpretty.register_uri(
+    mock_request(
         httpretty.GET,
-        re.compile(HOST_RATING_REGEX),
-        responses=[
-            httpretty.Response(
-                body=mock_user_rating_list_response.json(), status=HTTP_200_OK
-            )
-        ],
+        mock_user_rating_list_response,
+        HOST_RATING_REGEX,
+        expected_status,
     )
-    response = test_app.get(f"{API_URL}/{test_rating_list[0]['userId']}/host_ratings")
+    response = test_app.get(f"{API_URL}/{test_user_id}/host_ratings")
     response_json = response.json()
 
-    assert response.status_code == HTTP_200_OK
-
+    assert response.status_code == expected_status
     for i, response_rating in enumerate(response_json):
-        assert response_rating["rating"] == test_rating_list[i]["rating"]
-        assert response_rating["reviewer"] == test_rating_list[i]["reviewer"]
-        assert response_rating["createdAt"] == test_rating_list[i]["createdAt"]
-        assert response_rating["updatedAt"] == test_rating_list[i]["updatedAt"]
-        assert response_rating["reviewer_id"] == test_rating_list[i]["reviewer_id"]
-        assert response_rating["userId"] == test_rating_list[i]["userId"]
-        assert response_rating["id"] == test_rating_list[i]["id"]
+        check_responses_equality(response_rating, test_rating_list[i], attrs_to_test)
 
 
 @httpretty.activate
 def test_get_all_user_guest_ratings(test_app):
     mock_user_rating_list_response = MockUserRatingListResponse()
     test_rating_list = mock_user_rating_list_response.dict()
+    test_user_id = 1
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating", "reviewer", "reviewer_id"]
 
-    httpretty.register_uri(
+    mock_request(
         httpretty.GET,
-        re.compile(GUEST_RATING_REGEX),
-        responses=[
-            httpretty.Response(
-                body=mock_user_rating_list_response.json(), status=HTTP_200_OK
-            )
-        ],
+        mock_user_rating_list_response,
+        GUEST_RATING_REGEX,
+        expected_status,
     )
-    response = test_app.get(f"{API_URL}/{test_rating_list[0]['userId']}/guest_ratings")
+    response = test_app.get(f"{API_URL}/{test_user_id}/guest_ratings")
     response_json = response.json()
 
-    assert response.status_code == HTTP_200_OK
-
+    assert response.status_code == expected_status
     for i, response_rating in enumerate(response_json):
-        assert response_rating["rating"] == test_rating_list[i]["rating"]
-        assert response_rating["reviewer"] == test_rating_list[i]["reviewer"]
-        assert response_rating["createdAt"] == test_rating_list[i]["createdAt"]
-        assert response_rating["updatedAt"] == test_rating_list[i]["updatedAt"]
-        assert response_rating["reviewer_id"] == test_rating_list[i]["reviewer_id"]
-        assert response_rating["userId"] == test_rating_list[i]["userId"]
-        assert response_rating["id"] == test_rating_list[i]["id"]
+        check_responses_equality(response_rating, test_rating_list[i], attrs_to_test)
 
 
 @httpretty.activate
 def test_get_single_guest_rating(test_app):
-    mock_rating_response = MockUserRatingResponse()
-    test_rating = mock_rating_response.dict()
-    test_user_id = test_rating["userId"]
-    test_rating_id = test_rating["id"]
+    mock_user_rating_response = MockUserRatingResponse()
+    test_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    test_rating_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating", "reviewer", "reviewer_id"]
 
-    httpretty.register_uri(
-        httpretty.GET,
-        re.compile(GUEST_RATING_REGEX),
-        responses=[
-            httpretty.Response(body=mock_rating_response.json(), status=HTTP_200_OK)
-        ],
+    mock_request(
+        httpretty.GET, mock_user_rating_response, GUEST_RATING_REGEX, expected_status
     )
     response = test_app.get(f"{API_URL}/{test_user_id}/guest_ratings/{test_rating_id}")
-    response_json = response.json()
 
-    assert response.status_code == HTTP_200_OK
-    assert response_json["rating"] == test_rating["rating"]
-    assert response_json["reviewer"] == test_rating["reviewer"]
-    assert response_json["createdAt"] == test_rating["createdAt"]
-    assert response_json["updatedAt"] == test_rating["updatedAt"]
-    assert response_json["reviewer_id"] == test_rating["reviewer_id"]
-    assert response_json["userId"] == test_rating["userId"]
-    assert response_json["id"] == test_rating["id"]
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
 
 
 @httpretty.activate
 def test_get_single_host_rating(test_app):
-    mock_rating_response = MockUserRatingResponse()
-    test_rating = mock_rating_response.dict()
-    test_user_id = test_rating["userId"]
-    test_rating_id = test_rating["id"]
+    mock_user_rating_response = MockUserRatingResponse()
+    test_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    test_rating_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating", "reviewer", "reviewer_id"]
 
-    httpretty.register_uri(
-        httpretty.GET,
-        re.compile(HOST_RATING_REGEX),
-        responses=[
-            httpretty.Response(body=mock_rating_response.json(), status=HTTP_200_OK)
-        ],
+    mock_request(
+        httpretty.GET, mock_user_rating_response, HOST_RATING_REGEX, expected_status
     )
     response = test_app.get(f"{API_URL}/{test_user_id}/host_ratings/{test_rating_id}")
-    response_json = response.json()
 
-    assert response.status_code == HTTP_200_OK
-    assert response_json["rating"] == test_rating["rating"]
-    assert response_json["reviewer"] == test_rating["reviewer"]
-    assert response_json["createdAt"] == test_rating["createdAt"]
-    assert response_json["updatedAt"] == test_rating["updatedAt"]
-    assert response_json["reviewer_id"] == test_rating["reviewer_id"]
-    assert response_json["userId"] == test_rating["userId"]
-    assert response_json["id"] == test_rating["id"]
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_update_host_rating(test_app):
+    mock_user_rating_response = MockUserRatingResponse()
+    test_full_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    test_rating_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating"]
+    test_rating = {attr: test_full_rating[attr] for attr in attrs_to_test}
+
+    mock_request(
+        httpretty.PATCH, mock_user_rating_response, HOST_RATING_REGEX, expected_status
+    )
+    response = test_app.patch(
+        f"{API_URL}/{test_user_id}/host_ratings/{test_rating_id}", json=test_rating
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_update_guest_rating(test_app):
+    mock_user_rating_response = MockUserRatingResponse()
+    test_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    test_rating_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating"]
+
+    mock_request(
+        httpretty.PATCH, mock_user_rating_response, GUEST_RATING_REGEX, expected_status
+    )
+    response = test_app.patch(
+        f"{API_URL}/{test_user_id}/guest_ratings/{test_rating_id}", json=test_rating
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_delete_host_review(test_app):
+    mock_user_response = MockUserRatingResponse()
+    test_user_id = 1
+    test_review_id = 2
+    expected_status = HTTP_200_OK
+
+    mock_request(
+        httpretty.DELETE, mock_user_response, HOST_RATING_REGEX, expected_status
+    )
+    response = test_app.delete(
+        f"{API_URL}/{test_user_id}/host_ratings/{test_review_id}"
+    )
+
+    assert response.status_code == expected_status
+
+
+@httpretty.activate
+def test_delete_guest_review(test_app):
+    mock_user_response = MockUserRatingResponse()
+    test_user_id = 1
+    test_review_id = 2
+    expected_status = HTTP_200_OK
+
+    mock_request(
+        httpretty.DELETE, mock_user_response, GUEST_RATING_REGEX, expected_status
+    )
+    response = test_app.delete(
+        f"{API_URL}/{test_user_id}/guest_ratings/{test_review_id}"
+    )
+
+    assert response.status_code == expected_status

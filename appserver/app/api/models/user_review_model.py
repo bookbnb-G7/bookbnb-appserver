@@ -1,18 +1,17 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
 class UserReviewSchema(BaseModel):
     review: str
     reviewer: str
-    reviewer_id: str
+    reviewer_id: int
 
 
-class UserReviewDB(UserReviewSchema):
-    id: int
-    userId: int
-    updatedAt: str
-    createdAt: str
+class UserReviewUpdate(BaseModel):
+    review: Optional[str] = None
+    reviewer: Optional[str] = None
+    reviewer_id: Optional[int] = None
 
 
-UserReviewList = List[UserReviewDB]
+UserReviewList = List[UserReviewSchema]

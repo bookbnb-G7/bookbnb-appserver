@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -10,7 +12,10 @@ class UserSchema(BaseModel):
     birthdate: str
 
 
-class UserDB(UserSchema):
-    id: int
-    updatedAt: str
-    createdAt: str
+class UserUpdateSchema(BaseModel):
+    firstname: Optional[str] = None
+    lastname: Optional[str] = None
+    email: Optional[str] = None
+    phonenumber: Optional[str] = None
+    country: Optional[str] = None
+    birthdate: Optional[str] = None
