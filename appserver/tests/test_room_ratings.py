@@ -1,8 +1,7 @@
-import re
 import httpretty
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.api.routes.room_router import API_URL
-from tests.conftest import MockResponse
+from tests.utils import MockResponse, mock_request, check_responses_equality
 
 
 RATING_REGEX = f"{API_URL}/?[0-9]*[/]?ratings/?"
@@ -46,74 +45,50 @@ class MockRatingListResponse(MockResponse):
 def test_post_room_rating(test_app):
     mock_rating_response = MockRatingResponse()
     test_rating = mock_rating_response.dict()
+    expected_status = HTTP_201_CREATED
+    attrs_to_test = ["rating", "reviewer", "reviewer_id", "room_id", "id"]
 
-    httpretty.register_uri(
-        httpretty.POST,
-        re.compile(RATING_REGEX),
-        responses=[
-            httpretty.Response(
-                body=mock_rating_response.json(), status=HTTP_201_CREATED
-            )
-        ],
-    )
+    mock_request(httpretty.POST, mock_rating_response, RATING_REGEX, expected_status)
     response = test_app.post(f"{API_URL}/{test_rating['id']}/ratings", json=test_rating)
-    response_json = response.json()
-
-    assert response.status_code == HTTP_201_CREATED
-    assert response_json["rating"] == test_rating["rating"]
-    assert response_json["reviewer"] == test_rating["reviewer"]
-    assert int(response_json["reviewer_id"]) == test_rating["reviewer_id"]
-    assert int(response_json["room_id"]) == test_rating["room_id"]
-    assert int(response_json["id"]) == test_rating["id"]
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
 
 
 @httpretty.activate
 def test_get_all_room_ratings(test_app):
     mock_rating_response = MockRatingListResponse()
     test_rating_list = mock_rating_response.dict()
+    expected_status = HTTP_200_OK
+    attrs_to_compare = ["room_id"]
+    room_attrs_to_compare = ["rating", "reviewer", "reviewer_id", "room_id", "id"]
 
-    httpretty.register_uri(
-        httpretty.GET,
-        re.compile(RATING_REGEX),
-        responses=[
-            httpretty.Response(body=mock_rating_response.json(), status=HTTP_200_OK)
-        ],
-    )
+    mock_request(httpretty.GET, mock_rating_response, RATING_REGEX, expected_status)
     response = test_app.get(f"{API_URL}/{test_rating_list['room_id']}/ratings")
+    assert response.status_code == expected_status
+
     response_json = response.json()
-
-    assert response.status_code == HTTP_200_OK
-
     response_ratings = response_json["ratings"]
     test_ratings = test_rating_list["ratings"]
 
-    assert response_json["room_id"] == test_rating_list["room_id"]
+    check_responses_equality(response.json(), test_rating_list, attrs_to_compare)
     for i, response_rating in enumerate(response_ratings):
-        assert response_rating["rating"] == test_ratings[i]["rating"]
-        assert response_rating["reviewer"] == test_ratings[i]["reviewer"]
-        assert response_rating["reviewer_id"] == test_ratings[i]["reviewer_id"]
+        check_responses_equality(
+            response_rating, test_ratings[i], room_attrs_to_compare
+        )
 
 
 @httpretty.activate
 def test_get_single_room_rating(test_app):
     mock_rating_response = MockRatingResponse()
     test_rating = mock_rating_response.dict()
-    test_room_id = test_rating["room_id"]
     test_rating_id = test_rating["id"]
+    test_room_id = test_rating["room_id"]
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating", "reviewer", "reviewer_id", "room_id", "id"]
 
-    httpretty.register_uri(
-        httpretty.GET,
-        re.compile(RATING_REGEX),
-        responses=[
-            httpretty.Response(body=mock_rating_response.json(), status=HTTP_200_OK)
-        ],
+    mock_request(httpretty.GET, mock_rating_response, RATING_REGEX, expected_status)
+    response = test_app.get(
+        f"{API_URL}/{test_room_id}/ratings/{test_rating_id}", json=test_rating
     )
-    response = test_app.get(f"{API_URL}/{test_room_id}/ratings/{test_rating_id}")
-    response_json = response.json()
-
-    assert response.status_code == HTTP_200_OK
-    assert response_json["id"] == test_rating_id
-    assert response_json["rating"] == test_rating["rating"]
-    assert response_json["reviewer"] == test_rating["reviewer"]
-    assert response_json["reviewer_id"] == test_rating["reviewer_id"]
-    assert response_json["room_id"] == test_room_id
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
