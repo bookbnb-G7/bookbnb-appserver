@@ -145,3 +145,76 @@ def test_get_single_host_review(test_app):
 
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_review, attrs_to_test)
+
+
+@httpretty.activate
+def test_update_host_review(test_app):
+    mock_user_rating_response = MockUserReviewResponse()
+    test_full_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    test_review_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["review"]
+    test_rating = {attr: test_full_rating[attr] for attr in attrs_to_test}
+
+    mock_request(
+        httpretty.PATCH, mock_user_rating_response, HOST_REVIEW_REGEX, expected_status
+    )
+    response = test_app.patch(
+        f"{API_URL}/{test_user_id}/host_reviews/{test_review_id}", json=test_rating
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_update_guest_review(test_app):
+    mock_user_rating_response = MockUserReviewResponse()
+    test_rating = mock_user_rating_response.dict()
+    test_user_id = 1
+    test_review_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["review"]
+
+    mock_request(
+        httpretty.PATCH, mock_user_rating_response, GUEST_REVIEW_REGEX, expected_status
+    )
+    response = test_app.patch(
+        f"{API_URL}/{test_user_id}/guest_reviews/{test_review_id}", json=test_rating
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_delete_host_review(test_app):
+    mock_user_response = MockUserReviewResponse()
+    test_user_id = 1
+    test_review_id = 2
+    expected_status = HTTP_200_OK
+
+    mock_request(
+        httpretty.DELETE, mock_user_response, HOST_REVIEW_REGEX, expected_status
+    )
+    response = test_app.delete(
+        f"{API_URL}/{test_user_id}/host_reviews/{test_review_id}"
+    )
+
+    assert response.status_code == expected_status
+
+
+@httpretty.activate
+def test_delete_guest_review(test_app):
+    mock_user_response = MockUserReviewResponse()
+    test_user_id = 1
+    test_review_id = 2
+    expected_status = HTTP_200_OK
+
+    mock_request(
+        httpretty.DELETE, mock_user_response, GUEST_REVIEW_REGEX, expected_status
+    )
+    response = test_app.delete(
+        f"{API_URL}/{test_user_id}/guest_reviews/{test_review_id}"
+    )
+
+    assert response.status_code == expected_status
