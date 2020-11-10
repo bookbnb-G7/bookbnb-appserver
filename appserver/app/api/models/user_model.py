@@ -8,9 +8,3 @@ class UserSchema(BaseModel):
     phonenumber: str
     country: str
     birthdate: str
-
-
-class UserDB(UserSchema):
-    id: int
-    updatedAt: str
-    createdAt: str

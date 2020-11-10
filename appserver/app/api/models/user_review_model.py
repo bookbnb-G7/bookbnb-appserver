@@ -5,14 +5,7 @@ from pydantic import BaseModel
 class UserReviewSchema(BaseModel):
     review: str
     reviewer: str
-    reviewer_id: str
+    reviewer_id: int
 
 
-class UserReviewDB(UserReviewSchema):
-    id: int
-    userId: int
-    updatedAt: str
-    createdAt: str
-
-
-UserReviewList = List[UserReviewDB]
+UserReviewList = List[UserReviewSchema]
