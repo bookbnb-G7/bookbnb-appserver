@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -8,9 +8,15 @@ class RoomRatingSchema(BaseModel):
     reviewer_id: int
 
 
+class RoomRatingUpdate(BaseModel):
+    rating: Optional[int] = None
+
+
 class RoomRatingDB(RoomRatingSchema):
     id: int
     room_id: int
+    created_at: str
+    updated_at: str
 
 
 class RoomRatingList(BaseModel):
