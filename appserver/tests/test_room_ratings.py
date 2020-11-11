@@ -3,7 +3,6 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.api.routes.room_router import API_URL
 from tests.utils import MockResponse, mock_request, check_responses_equality
 
-
 RATING_REGEX = f"{API_URL}/?[0-9]*[/]?ratings/?"
 
 
@@ -15,6 +14,8 @@ class MockRatingResponse(MockResponse):
             "reviewer_id": 44,
             "id": 23,
             "room_id": 983,
+            "created_at": "2020-11-10T22:51:03.539Z",
+            "updated_at": "2020-11-10T22:51:03.539Z",
         }
 
 
@@ -29,6 +30,8 @@ class MockRatingListResponse(MockResponse):
                     "reviewer_id": 0,
                     "id": 0,
                     "room_id": 1,
+                    "created_at": "2020-11-10T22:51:03.539Z",
+                    "updated_at": "2020-11-10T22:51:03.539Z",
                 },
                 {
                     "rating": 0,
@@ -36,6 +39,8 @@ class MockRatingListResponse(MockResponse):
                     "reviewer_id": 666,
                     "id": 2,
                     "room_id": 1,
+                    "created_at": "2020-11-10T22:51:03.539Z",
+                    "updated_at": "2020-11-10T22:51:03.539Z",
                 },
             ],
         }
@@ -92,3 +97,34 @@ def test_get_single_room_rating(test_app):
     )
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_update_room_rating(test_app):
+    mock_rating_response = MockRatingResponse()
+    test_full_rating = mock_rating_response.dict()
+    test_rating_id = 1
+    test_room_id = 2
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["rating"]
+    test_rating = {attr: test_full_rating[attr] for attr in attrs_to_test}
+
+    mock_request(httpretty.PATCH, mock_rating_response, RATING_REGEX, expected_status)
+    response = test_app.patch(
+        f"{API_URL}/{test_room_id}/ratings/{test_rating_id}", json=test_rating
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_rating, attrs_to_test)
+
+
+@httpretty.activate
+def test_delete_room_rating(test_app):
+    mock_rating_response = MockRatingResponse()
+    test_rating = mock_rating_response.dict()
+    test_rating_id = test_rating["id"]
+    test_room_id = test_rating["room_id"]
+    expected_status = HTTP_200_OK
+
+    mock_request(httpretty.DELETE, mock_rating_response, RATING_REGEX, expected_status)
+    response = test_app.delete(f"{API_URL}/{test_room_id}/ratings/{test_rating_id}")
+    assert response.status_code == expected_status
