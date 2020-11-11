@@ -123,6 +123,6 @@ def test_delete_room_review(test_app):
     test_room_id = test_review["room_id"]
     expected_status = HTTP_200_OK
 
-    mock_request(httpretty.GET, mock_review_response, REVIEW_REGEX, expected_status)
-    response = test_app.get(f"{API_URL}/{test_room_id}/reviews/{test_review_id}")
+    mock_request(httpretty.DELETE, mock_review_response, REVIEW_REGEX, expected_status)
+    response = test_app.delete(f"{API_URL}/{test_room_id}/reviews/{test_review_id}")
     assert response.status_code == expected_status
