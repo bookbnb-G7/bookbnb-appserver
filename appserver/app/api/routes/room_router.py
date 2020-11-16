@@ -1,7 +1,7 @@
 import requests as rq
 from fastapi import APIRouter, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from app.api.models.room_model import RoomSchema, RoomDB, RoomUpdate
+from app.api.models.room_model import RoomSchema, RoomDB, RoomUpdate, RoomList
 from app.api.models.room_rating_model import (
     RoomRatingDB,
     RoomRatingSchema,
@@ -25,6 +25,13 @@ async def create_room(payload: RoomSchema, response: Response):
     room = rq.post(API_URL + "/", json=payload.dict())
     response.status_code = room.status_code
     return room.json()
+
+
+@router.get("/", response_model=RoomList, status_code=HTTP_200_OK)
+async def get_rooms(response: Response):
+    rooms = rq.get(f"{API_URL}/")
+    response.status_code = rooms.status_code
+    return rooms.json()
 
 
 @router.post(
