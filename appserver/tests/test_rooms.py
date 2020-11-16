@@ -20,6 +20,33 @@ class MockRoomResponse(MockResponse):
         }
 
 
+class MockRoomListResponse(MockResponse):
+    def dict(self):
+        return {
+            "amount": 2,
+            "rooms": [
+                {
+                    "type": "Apartment",
+                    "owner": "Carlito",
+                    "owner_id": 10,
+                    "price_per_day": 999,
+                    "id": 0,
+                    "created_at": "2020-11-10T22:51:03.539Z",
+                    "updated_at": "2020-11-10T22:51:03.539Z",
+                },
+                {
+                    "type": "House",
+                    "owner": "Freee",
+                    "owner_id": 11,
+                    "price_per_day": 123,
+                    "id": 1,
+                    "created_at": "2020-11-10T22:51:03.539Z",
+                    "updated_at": "2020-11-10T22:51:03.539Z",
+                },
+            ],
+        }
+
+
 @httpretty.activate
 def test_create_room(test_app):
     mock_room_response = MockRoomResponse()
@@ -49,6 +76,28 @@ def test_get_room_by_id(test_app):
 
     check_responses_equality(response.json(), test_room, attrs_to_test)
     assert response_json["id"] == test_room_id
+
+
+@httpretty.activate
+def test_get_all_rooms(test_app):
+    mock_room_list_response = MockRoomListResponse()
+    test_room_list = mock_room_list_response.dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
+
+    mock_request(httpretty.GET, mock_room_list_response, ROOM_REGEX, expected_status)
+
+    response = test_app.get(f"{API_URL}/")
+    assert response.status_code == expected_status
+    response_json = response.json()
+
+    rooms = response_json["rooms"]
+    test_rooms = test_room_list["rooms"]
+
+    check_responses_equality(response_json, test_room_list, ["amount"])
+
+    for i, room in enumerate(rooms):
+        check_responses_equality(room, test_rooms[i], attrs_to_test)
 
 
 @httpretty.activate

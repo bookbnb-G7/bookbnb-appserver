@@ -22,6 +22,7 @@ class MockRatingResponse(MockResponse):
 class MockRatingListResponse(MockResponse):
     def dict(self):
         return {
+            "amount": 2,
             "room_id": 1,
             "ratings": [
                 {
