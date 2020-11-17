@@ -15,6 +15,34 @@ class MockUserResponse(MockResponse):
             "phonenumber": "08004444",
             "country": "CR",
             "birthdate": "9999-99-99",
+            "photo": "https://www.cmtv.com.ar/imagenes_artistas/70.jpg?Chayanne",
+        }
+
+
+class MockUserListResponse(MockResponse):
+    def dict(self):
+        return {
+            "amount": 2,
+            "users": [
+                {
+                    "firstname": "carlito",
+                    "lastname": "carlos",
+                    "email": "carlos@aaaaaaa",
+                    "phonenumber": "08004444",
+                    "country": "CR",
+                    "birthdate": "9999-99-99",
+                    "photo": "otrolinkkkk",
+                },
+                {
+                    "firstname": "elmer",
+                    "lastname": "figueroa",
+                    "email": "carlos@eeee",
+                    "phonenumber": "08004444",
+                    "country": "CHY",
+                    "birthdate": "9999-99-99",
+                    "photo": "unlinkkkkk",
+                },
+            ],
         }
 
 
@@ -30,6 +58,7 @@ def test_create_user(test_app):
         "phonenumber",
         "country",
         "birthdate",
+        "photo",
     ]
 
     mock_request(httpretty.POST, mock_user_response, USER_REGEX, expected_status)
@@ -52,6 +81,7 @@ def test_get_user_by_id(test_app):
         "phonenumber",
         "country",
         "birthdate",
+        "photo",
     ]
 
     mock_request(httpretty.GET, mock_user_response, USER_REGEX, expected_status)
@@ -87,3 +117,32 @@ def test_delete_user(test_app):
     response = test_app.delete(f"{API_URL}/{test_room_id}")
 
     assert response.status_code == expected_status
+
+
+@httpretty.activate
+def test_get_all_users(test_app):
+    mock_user_list_response = MockUserListResponse()
+    test_user_list = mock_user_list_response.dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "firstname",
+        "lastname",
+        "email",
+        "phonenumber",
+        "country",
+        "birthdate",
+        "photo",
+    ]
+
+    mock_request(httpretty.GET, mock_user_list_response, USER_REGEX, expected_status)
+    response = test_app.get(f"{API_URL}/")
+    response_json = response.json()
+
+    assert response.status_code == expected_status
+    check_responses_equality(response_json, test_user_list, ["amount"])
+
+    test_users = test_user_list["users"]
+    response_users = response_json["users"]
+
+    for i, user in enumerate(response_users):
+        check_responses_equality(user, test_users[i], attrs_to_test)
