@@ -2,7 +2,7 @@ import requests as rq
 from fastapi import APIRouter, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
-from app.api.models.user_model import UserSchema, UserUpdateSchema
+from app.api.models.user_model import UserSchema, UserUpdateSchema, UserListSchema
 from app.api.models.user_rating_model import (
     UserRatingList,
     UserRatingSchema,
@@ -30,6 +30,13 @@ async def get_user(user_id: int, response: Response):
     user = rq.get(API_URL + f"/{user_id}")
     response.status_code = user.status_code
     return user.json()
+
+
+@router.get("/", response_model=UserListSchema, status_code=HTTP_200_OK)
+async def get_all_users(response: Response):
+    users = rq.get(f"{API_URL}/")
+    response.status_code = users.status_code
+    return users.json()
 
 
 @router.post(

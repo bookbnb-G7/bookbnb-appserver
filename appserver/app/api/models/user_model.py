@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -10,6 +10,12 @@ class UserSchema(BaseModel):
     phonenumber: str
     country: str
     birthdate: str
+    photo: Optional[str] = None
+
+
+class UserListSchema(BaseModel):
+    amount: int
+    users: List[UserSchema]
 
 
 class UserUpdateSchema(BaseModel):
