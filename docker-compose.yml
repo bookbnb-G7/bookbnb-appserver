@@ -21,6 +21,13 @@ services:
       - TESTING=0
       - ENVIRONMENT
       - DATABASE_URL=postgres://user:password@db/appserver_db_dev
+      - FIREBASE-CLIENT-CERT-URL
+      - FIREBASE-CLIENT-EMAIL
+      - FIREBASE-CLIENT-ID
+      - FIREBASE-PRIVATE-KEY
+      - FIREBASE-PRIVATE-KEY-ID
+      - FIREBASE-PROJECT-ID
+      - FIREBASE-STORAGE-BUCKET
 
   db:
     container_name: bookbnb-appserver_db
