@@ -12,10 +12,53 @@ class UserSchema(BaseModel):
     birthdate: str
     photo: Optional[str] = None
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "firstname": "Mark",
+                "lastname": "Zuckerberg",
+                "email": "reptil@facebook.com",
+                "phonenumber": "650-543-4800",
+                "country": "USA",
+                "birthdate": "1984-05-14",
+                "photo": "https://melmagazine.com/wp-content/uploads/"
+                + "2020/07/zuck_sunscreen.jpg",
+            }
+        }
+
 
 class UserListSchema(BaseModel):
     amount: int
     users: List[UserSchema]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "amount": 0,
+                "users": [
+                    {
+                        "firstname": "Mark",
+                        "lastname": "Zuckerberg",
+                        "email": "reptil@facebook.com",
+                        "phonenumber": "650-543-4800",
+                        "country": "USA",
+                        "birthdate": "1984-05-14",
+                        "photo": "https://melmagazine.com/wp-content/"
+                        + "uploads/2020/07/zuck_sunscreen.jpg",
+                    },
+                    {
+                        "firstname": "Jack",
+                        "lastname": "Dorsey",
+                        "email": "barba@twitter.com",
+                        "phonenumber": "212-300-8876",
+                        "country": "USA",
+                        "birthdate": "1976-11-19",
+                        "photo": "https://i.insider.com/5e5e32fafee23d6a26433d83?"
+                        + "width=750&format=jpeg&auto=webp",
+                    },
+                ],
+            }
+        }
 
 
 class UserUpdateSchema(BaseModel):
@@ -25,3 +68,11 @@ class UserUpdateSchema(BaseModel):
     phonenumber: Optional[str] = None
     country: Optional[str] = None
     birthdate: Optional[str] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "firstname": "Marquitos",
+                "lastname": "Zucaritas",
+            }
+        }
