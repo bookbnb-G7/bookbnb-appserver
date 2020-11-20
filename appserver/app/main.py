@@ -8,7 +8,9 @@ from app.config import get_settings
 
 if get_settings().environment == "production":
     firebase_authenticate()
-app = FastAPI()
+app = FastAPI(
+    title="BookBNB Appserver", description="Especificacion sobre la API del appserver"
+)
 
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])

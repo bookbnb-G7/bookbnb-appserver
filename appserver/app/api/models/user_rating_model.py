@@ -7,11 +7,27 @@ class UserRatingSchema(BaseModel):
     reviewer: str
     reviewer_id: int
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "rating": 5,
+                "reviewer": "Bob",
+                "reviewer_id": 17,
+            }
+        }
+
 
 class UserRatingUpdate(BaseModel):
     rating: Optional[int] = None
     reviewer: Optional[str] = None
     reviewer_id: Optional[int] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "rating": 4,
+            }
+        }
 
 
 UserRatingList = List[UserRatingSchema]

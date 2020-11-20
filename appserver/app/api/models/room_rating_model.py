@@ -8,9 +8,25 @@ class RoomRatingSchema(BaseModel):
     reviewer: str
     reviewer_id: int
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "rating": 4,
+                "reviewer": "Bob",
+                "reviewer_id": 17,
+            }
+        }
+
 
 class RoomRatingUpdate(BaseModel):
     rating: Optional[int] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "rating": 5,
+            }
+        }
 
 
 class RoomRatingDB(RoomRatingSchema):
@@ -19,8 +35,49 @@ class RoomRatingDB(RoomRatingSchema):
     created_at: datetime
     updated_at: datetime
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "rating": 4,
+                "reviewer": "Bob",
+                "reviewer_id": 17,
+                "id": 5,
+                "room_id": 8,
+                "created_at": "2020-11-20T18:13:31.378Z",
+                "updated_at": "2020-11-20T18:13:31.378Z",
+            }
+        }
+
 
 class RoomRatingList(BaseModel):
     amount: int
     room_id: int
     ratings: List[RoomRatingDB]
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "amount": 0,
+                "room_id": 0,
+                "ratings": [
+                    {
+                        "rating": 3,
+                        "reviewer": "Alice",
+                        "reviewer_id": 34,
+                        "id": 90,
+                        "room_id": 6,
+                        "created_at": "2020-11-20T18:19:11.706Z",
+                        "updated_at": "2020-11-20T18:19:11.706Z",
+                    },
+                    {
+                        "rating": 2,
+                        "reviewer": "Bob",
+                        "reviewer_id": 24,
+                        "id": 98,
+                        "room_id": 6,
+                        "created_at": "2020-11-20T18:19:11.706Z",
+                        "updated_at": "2020-11-20T18:19:11.706Z",
+                    },
+                ],
+            }
+        }

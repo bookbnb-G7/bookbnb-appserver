@@ -8,7 +8,7 @@ from starlette.status import HTTP_200_OK
 from app.api.models.user_model import UserSchema
 
 
-USER_IMAGES_PATH = "/users"
+USER_IMAGES_PATH = "users"
 USER_SERVER_API_URL = "https://bookbnb-userserver.herokuapp.com"
 
 
