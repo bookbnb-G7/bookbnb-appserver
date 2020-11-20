@@ -1,20 +1,15 @@
 from fastapi import FastAPI
 
 # from app.db import engine, metadata, database
-from app.api.routes import room_router, user_router
+from app.api.routes import room_router, user_router, file_upload_router
+from app.config import firebase_authenticate
+from app.config import get_settings
 
+
+if get_settings().environment == "production":
+    firebase_authenticate()
 app = FastAPI()
 
-
-# """@app.on_event("startup")
-# async def startup():
-#     await database.connect()"""
-
-
-# @app.on_event("shutdown")
-# async def shutdown():
-#     await database.disconnect()"""
-
-
-app.include_router(room_router.router, prefix="/rooms", tags=["rooms"])
-app.include_router(user_router.router, prefix="/users", tags=["users"])
+app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
+app.include_router(user_router.router, prefix="/users", tags=["Users"])
+app.include_router(file_upload_router.router, tags=["Images"])
