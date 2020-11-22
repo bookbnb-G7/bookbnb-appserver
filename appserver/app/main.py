@@ -1,10 +1,12 @@
 from fastapi import FastAPI
+from app.db import Base, engine
 
 # from app.db import engine, metadata, database
 from app.api.routes import room_router, user_router, file_upload_router
 from app.config import firebase_authenticate
 from app.config import get_settings
 
+Base.metadata.create_all(engine)
 
 if get_settings().environment == "production":
     firebase_authenticate()

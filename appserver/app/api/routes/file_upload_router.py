@@ -59,3 +59,10 @@ async def update_user_profile_picture(
     )
     response.status_code = user_response.status_code
     return user_response.json()
+
+
+'''
+async def review_room(payload: RoomReviewSchema, room_id: int, db: Session = Depends(get_db)):
+    room_review_info = RoomReviewDAO.add_new_room_review(db, room_id, payload)
+    return room_review_info
+'''
