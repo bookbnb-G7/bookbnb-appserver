@@ -1,42 +1,38 @@
 from app.model.room_photo import RoomPhoto
+from app.errors.http_error import NotFoundError
+
 
 class RoomPhotoDAO:
-	@classmethod
-	def add_new_room_photo(cls, db, firebase_id, room_photo_id): 
-		new_room_photo = RoomPhoto(firebase_id=firebase_id, 
-							       room_photo_id=room_photo_id)
+    @classmethod
+    def add_new_room_photo(cls, db, firebase_id, room_photo_id):
+        new_room_photo = RoomPhoto(firebase_id=firebase_id, room_photo_id=room_photo_id)
 
-		db.add(new_room_photo)
-		db.commit()
+        db.add(new_room_photo)
+        db.commit()
 
-		return new_room_photo.serialize()
+        return new_room_photo.serialize()
 
+    @classmethod
+    def get_room_photo(cls, db, firebase_id):
+        room_photo = (
+            db.query(RoomPhoto).where(firebase_id=RoomPhoto.firebase_id).first()
+        )
 
-	@classmethod
-	def get_room_photo(cls, db, firebase_id):
-		room_photo = db.query(RoomPhoto)
-		               .where(firebase_id = RoomPhoto.firebase_id)
-				       .first()
+        if room_photo is None:
+            return None
 
-		if room_photo == None:
-			return None
+        return room_photo.serialize()
 
-		return room.serialize()
+    @classmethod
+    def delete_room_photo(cls, db, firebase_id):
+        room_photo = (
+            db.query(RoomPhoto).where(firebase_id=RoomPhoto.firebase_id).first()
+        )
 
+        if room_photo is None:
+            raise NotFoundError("room")
 
-	@classmethod
-	def delete_room_photo(cls, db, firebase_id):
-		room_photo = db.query(RoomPhoto)
-		               .where(firebase_id = RoomPhoto.firebase_id)
-				       .first()
+        db.delete(room_photo)
+        db.commit()
 
-		if room is None:
-			raise NotFoundError('room')
-		
-		db.delete(room_photo)
-		db.commit()
-
-		return room.serialize()
-
-	
-	
+        return room_photo.serialize()
