@@ -9,13 +9,13 @@ ENVIRONMENT = os.getenv("ENVIRONMENT")
 engine = None
 session = None
 
-if ENVIRONMENT == 'production':
-	# use postgresql 
-	engine = create_engine(DATABASE_URL)	
+if ENVIRONMENT == "production":
+    # use postgresql
+    engine = create_engine(DATABASE_URL)
 
-if ENVIRONMENT == 'development':
- 	# use sqlite 
- 	engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+if ENVIRONMENT == "development":
+    # use sqlite
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 
 Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = Session()
@@ -23,9 +23,10 @@ session = Session()
 # Create a Base class for models
 Base = declarative_base()
 
+
 def get_db():
-	db = Session()
-	try:
-		yield db
-	finally:
-		db.close()
+    db = Session()
+    try:
+        yield db
+    finally:
+        db.close()
