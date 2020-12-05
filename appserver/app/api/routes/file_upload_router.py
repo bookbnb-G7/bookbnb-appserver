@@ -1,16 +1,15 @@
 import os
-import requests
 
-from fastapi import APIRouter, UploadFile, File, Response, Depends
+import requests
+from fastapi import APIRouter, Depends, File, Response, UploadFile
 from firebase_admin import storage
-from starlette.status import HTTP_200_OK
 
 from app.api.crud.room_photo_dao import RoomPhotoDAO
-from app.db import Session, get_db
+from app.api.models.room_photo_model import RoomPhoto, RoomPhotoList
 from app.api.models.user_model import UserSchema
-from app.api.models.room_photo_upload_model import RoomPhotoUploadResponse
+from app.db import Session, get_db
+from app.errors.http_error import NotFoundError
 from app.utils.image_utils import IdGenerator
-
 
 USER_IMAGES_PATH = "users"
 ROOM_IMAGES_PATH = "rooms"
@@ -21,7 +20,7 @@ ROOM_SERVER_API_URL = "https://bookbnb-postserver.herokuapp.com"
 router = APIRouter()
 
 
-@router.post("/rooms/{room_id}/photos", response_model=RoomPhotoUploadResponse)
+@router.post("/rooms/{room_id}/photos", response_model=RoomPhoto)
 async def add_room_picture(
     room_id: int,
     response: Response,
@@ -34,7 +33,6 @@ async def add_room_picture(
     bucket = storage.bucket()
     blob = bucket.blob(filename)
     blob.upload_from_file(file.file)
-
     blob.make_public()
     image_url = blob.public_url
 
@@ -49,10 +47,60 @@ async def add_room_picture(
     return photo_response.json()
 
 
+@router.get("/rooms/{room_id}/photos", response_model=RoomPhotoList)
+async def get_all_room_photos(
+    room_id: int,
+    response: Response,
+):
+    photos = requests.get(f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos")
+    response.status_code = photos.status_code
+    return photos.json()
+
+
+@router.get("/rooms/{room_id}/photos/{firebase_id}", response_model=RoomPhoto)
+async def get_room_photo(
+    room_id: int,
+    firebase_id: int,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    photo = RoomPhotoDAO.get_room_photo(db, firebase_id)
+    photo_id = photo["room_photo_id"]
+    photo_response = requests.get(
+        f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos/{photo_id}"
+    )
+    response.status_code = photo_response.status_code
+    return photo_response.json()
+
+
+@router.delete("/rooms/{room_id}/photos/{firebase_id}", response_model=RoomPhoto)
+async def delete_room_photo(
+    room_id: int,
+    firebase_id: int,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    blob_name = f"{ROOM_IMAGES_PATH}/{room_id}/{firebase_id}"
+    bucket = storage.bucket()
+    blob = bucket.get_blob(blob_name)
+    if blob is None:
+        raise NotFoundError("Photo")
+    blob.delete()
+
+    photo = RoomPhotoDAO.delete_room_photo(db, firebase_id)
+    if photo is None:
+        raise NotFoundError("Photo id")
+    photo_id = photo["room_photo_id"]
+    photo_response = requests.delete(
+        f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos/{photo_id}"
+    )
+    response.status_code = photo_response.status_code
+    return photo_response.json()
+
+
 @router.patch(
     "/users/{user_id}/photo",
     response_model=UserSchema,
-    status_code=HTTP_200_OK,
 )
 async def update_user_profile_picture(
     user_id: int, response: Response, file: UploadFile = File(...)

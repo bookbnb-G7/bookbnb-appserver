@@ -15,7 +15,7 @@ class RoomPhotoDAO:
     @classmethod
     def get_room_photo(cls, db, firebase_id):
         room_photo = (
-            db.query(RoomPhoto).where(firebase_id=RoomPhoto.firebase_id).first()
+            db.query(RoomPhoto).filter(RoomPhoto.firebase_id == firebase_id).first()
         )
 
         if room_photo is None:
@@ -26,7 +26,7 @@ class RoomPhotoDAO:
     @classmethod
     def delete_room_photo(cls, db, firebase_id):
         room_photo = (
-            db.query(RoomPhoto).where(firebase_id=RoomPhoto.firebase_id).first()
+            db.query(RoomPhoto).filter(RoomPhoto.firebase_id == firebase_id).first()
         )
 
         if room_photo is None:

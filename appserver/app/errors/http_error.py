@@ -1,4 +1,4 @@
-from starlette.exceptions import HTTPException
+from fastapi import HTTPException
 
 
 class NotFoundError(HTTPException):
