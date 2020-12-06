@@ -1,10 +1,11 @@
-import httpretty
+import re
+import responses
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from tests.utils import MockResponse, check_responses_equality
 from app.api.routes.room_router import API_URL
-from tests.utils import MockResponse, mock_request, check_responses_equality
 
 
-ROOM_REGEX = f"{API_URL}/?[0-9]*[/]?"
+POSTSERVER_ROOM_REGEX = rf"{API_URL}/?[0-9]*[/]?"
 
 
 class MockRoomResponse(MockResponse):
@@ -47,20 +48,25 @@ class MockRoomListResponse(MockResponse):
         }
 
 
-@httpretty.activate
+@responses.activate
 def test_create_room(test_app):
     mock_room_response = MockRoomResponse()
     test_room = mock_room_response.dict()
     expected_status = HTTP_201_CREATED
     attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
 
-    mock_request(httpretty.POST, mock_room_response, ROOM_REGEX, expected_status)
+    responses.add(
+        responses.POST,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=mock_room_response.dict(),
+        status=expected_status,
+    )
     response = test_app.post(f"{API_URL}/", json=test_room)
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_room, attrs_to_test)
 
 
-@httpretty.activate
+@responses.activate
 def test_get_room_by_id(test_app):
     mock_room_response = MockRoomResponse()
     test_room = mock_room_response.dict()
@@ -68,7 +74,12 @@ def test_get_room_by_id(test_app):
     expected_status = HTTP_200_OK
     attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
 
-    mock_request(httpretty.GET, mock_room_response, ROOM_REGEX, expected_status)
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=mock_room_response.dict(),
+        status=expected_status,
+    )
 
     response = test_app.get(f"{API_URL}/{test_room_id}")
     assert response.status_code == expected_status
@@ -78,14 +89,19 @@ def test_get_room_by_id(test_app):
     assert response_json["id"] == test_room_id
 
 
-@httpretty.activate
+@responses.activate
 def test_get_all_rooms(test_app):
     mock_room_list_response = MockRoomListResponse()
     test_room_list = mock_room_list_response.dict()
     expected_status = HTTP_200_OK
     attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
 
-    mock_request(httpretty.GET, mock_room_list_response, ROOM_REGEX, expected_status)
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=mock_room_list_response.dict(),
+        status=expected_status,
+    )
 
     response = test_app.get(f"{API_URL}/")
     assert response.status_code == expected_status
@@ -100,7 +116,7 @@ def test_get_all_rooms(test_app):
         check_responses_equality(room, test_rooms[i], attrs_to_test)
 
 
-@httpretty.activate
+@responses.activate
 def test_update_room(test_app):
     mock_room_response = MockRoomResponse()
     test_full_room = mock_room_response.dict()
@@ -109,19 +125,29 @@ def test_update_room(test_app):
     attrs_to_test = ["type", "price_per_day"]
     test_room = {attr: test_full_room[attr] for attr in attrs_to_test}
 
-    mock_request(httpretty.PATCH, mock_room_response, ROOM_REGEX, expected_status)
+    responses.add(
+        responses.PATCH,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=mock_room_response.dict(),
+        status=expected_status,
+    )
     response = test_app.patch(f"{API_URL}/{test_room_id}", json=test_room)
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_room, attrs_to_test)
 
 
-@httpretty.activate
+@responses.activate
 def test_delete_room(test_app):
     mock_room_response = MockRoomResponse()
     test_room = mock_room_response.dict()
     test_room_id = test_room["id"]
     expected_status = HTTP_200_OK
 
-    mock_request(httpretty.DELETE, mock_room_response, ROOM_REGEX, expected_status)
+    responses.add(
+        responses.DELETE,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=mock_room_response.dict(),
+        status=expected_status,
+    )
     response = test_app.delete(f"{API_URL}/{test_room_id}")
     assert response.status_code == expected_status

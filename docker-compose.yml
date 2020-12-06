@@ -14,13 +14,14 @@ services:
     ports:
       - 3000:8080
 
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; 
+             sh docker-entrypoint.dev.sh'
+
     depends_on:
       - db # first execute database
 
     environment:
       - TESTING=0
-      - ENVIRONMENT
-      - DATABASE_URL=postgres://user:password@db/appserver_db_dev
       - FIREBASE_CLIENT_CERT_URL
       - FIREBASE_CLIENT_EMAIL
       - FIREBASE_CLIENT_ID
@@ -28,6 +29,8 @@ services:
       - FIREBASE_PRIVATE_KEY_ID
       - FIREBASE_PROJECT_ID
       - FIREBASE_STORAGE_BUCKET
+      - ENVIRONMENT=development
+      - DATABASE_URL=sqlite:///./app.db
 
   db:
     container_name: bookbnb-appserver_db

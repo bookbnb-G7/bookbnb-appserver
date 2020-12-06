@@ -1,9 +1,10 @@
-import httpretty
+import re
+import responses
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from tests.utils import MockResponse, check_responses_equality
 from app.api.routes.user_router import API_URL
-from tests.utils import MockResponse, mock_request, check_responses_equality
 
-USER_REGEX = f"{API_URL}/?[0-9]*[/]?"
+USER_REGEX = rf"{API_URL}/?[0-9]*[/]?"
 
 
 class MockUserResponse(MockResponse):
@@ -46,7 +47,7 @@ class MockUserListResponse(MockResponse):
         }
 
 
-@httpretty.activate
+@responses.activate
 def test_create_user(test_app):
     mock_user_response = MockUserResponse()
     test_user = mock_user_response.dict()
@@ -61,14 +62,19 @@ def test_create_user(test_app):
         "photo",
     ]
 
-    mock_request(httpretty.POST, mock_user_response, USER_REGEX, expected_status)
+    responses.add(
+        responses.POST,
+        re.compile(USER_REGEX),
+        json=mock_user_response.dict(),
+        status=expected_status,
+    )
     response = test_app.post(f"{API_URL}/", json=test_user)
 
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_user, attrs_to_test)
 
 
-@httpretty.activate
+@responses.activate
 def test_get_user_by_id(test_app):
     mock_user_response = MockUserResponse()
     test_user = mock_user_response.dict()
@@ -84,14 +90,19 @@ def test_get_user_by_id(test_app):
         "photo",
     ]
 
-    mock_request(httpretty.GET, mock_user_response, USER_REGEX, expected_status)
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=mock_user_response.dict(),
+        status=expected_status,
+    )
     response = test_app.get(f"{API_URL}/{test_user_id}")
 
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_user, attrs_to_test)
 
 
-@httpretty.activate
+@responses.activate
 def test_edit_user(test_app):
     mock_user_response = MockUserResponse()
     test_full_user = mock_user_response.dict()
@@ -100,26 +111,36 @@ def test_edit_user(test_app):
     attrs_to_test = ["firstname", "lastname", "email", "phonenumber"]
     test_user = {attr: test_full_user[attr] for attr in attrs_to_test}
 
-    mock_request(httpretty.PATCH, mock_user_response, USER_REGEX, expected_status)
+    responses.add(
+        responses.PATCH,
+        re.compile(USER_REGEX),
+        json=mock_user_response.dict(),
+        status=expected_status,
+    )
     response = test_app.patch(f"{API_URL}/{test_room_id}", json=test_user)
 
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_user, attrs_to_test)
 
 
-@httpretty.activate
+@responses.activate
 def test_delete_user(test_app):
     mock_user_response = MockUserResponse()
     test_room_id = 1
     expected_status = HTTP_200_OK
 
-    mock_request(httpretty.DELETE, mock_user_response, USER_REGEX, expected_status)
+    responses.add(
+        responses.DELETE,
+        re.compile(USER_REGEX),
+        json=mock_user_response.dict(),
+        status=expected_status,
+    )
     response = test_app.delete(f"{API_URL}/{test_room_id}")
 
     assert response.status_code == expected_status
 
 
-@httpretty.activate
+@responses.activate
 def test_get_all_users(test_app):
     mock_user_list_response = MockUserListResponse()
     test_user_list = mock_user_list_response.dict()
@@ -134,7 +155,12 @@ def test_get_all_users(test_app):
         "photo",
     ]
 
-    mock_request(httpretty.GET, mock_user_list_response, USER_REGEX, expected_status)
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=mock_user_list_response.dict(),
+        status=expected_status,
+    )
     response = test_app.get(f"{API_URL}/")
     response_json = response.json()
 
