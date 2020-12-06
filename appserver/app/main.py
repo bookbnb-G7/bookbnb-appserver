@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.db import Base, engine
 
 # from app.db import engine, metadata, database
@@ -12,6 +13,13 @@ if get_settings().environment == "production":
     firebase_authenticate()
 app = FastAPI(
     title="BookBNB Appserver", description="Especificacion sobre la API del appserver"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
