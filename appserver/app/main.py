@@ -16,6 +16,13 @@ if get_settings().environment == "production":
 app = FastAPI(
     title="BookBNB Appserver", description="Especificacion sobre la API del appserver"
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.add_middleware(
     CORSMiddleware,
