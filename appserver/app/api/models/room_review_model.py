@@ -1,19 +1,15 @@
 from datetime import datetime
-from typing import List, Optional
 from pydantic import BaseModel
+from typing import List, Optional
 
 
 class RoomReviewSchema(BaseModel):
     review: str
-    reviewer: str
-    reviewer_id: int
 
     class Config:
         schema_extra = {
             "example": {
                 "review": "Excelente, prepara un buen guiso de lentejas",
-                "reviewer": "Bob",
-                "reviewer_id": 17,
             }
         }
 
@@ -32,6 +28,8 @@ class RoomReviewUpdate(BaseModel):
 class RoomReviewDB(RoomReviewSchema):
     id: int
     room_id: int
+    reviewer: str
+    reviewer_id: int
     created_at: datetime
     updated_at: datetime
 

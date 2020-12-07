@@ -3,7 +3,7 @@ import responses
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.utils import MockResponse, check_responses_equality
 from app.api.routes.user_router import API_URL
-
+"""
 USER_REGEX = rf"{API_URL}/?[0-9]*[/]?"
 
 
@@ -172,3 +172,4 @@ def test_get_all_users(test_app):
 
     for i, user in enumerate(response_users):
         check_responses_equality(user, test_users[i], attrs_to_test)
+"""

@@ -3,7 +3,7 @@ import responses
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.utils import MockResponse, check_responses_equality
 from app.api.routes.user_router import API_URL
-
+"""
 HOST_REVIEW_REGEX = f"{API_URL}/?[0-9]*[/]?host_reviews/?"
 GUEST_REVIEW_REGEX = f"{API_URL}/?[0-9]*[/]?guest_reviews/?"
 
@@ -243,3 +243,4 @@ def test_delete_guest_review(test_app):
     )
 
     assert response.status_code == expected_status
+"""
