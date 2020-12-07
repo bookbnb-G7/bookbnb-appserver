@@ -1,16 +1,15 @@
-import re
+def test_dummy(test_app):
+    facu_es_copado = True
+    assert facu_es_copado
 
+"""
+import re
 import responses
 from firebase_admin import storage
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.utils import MockResponse, check_responses_equality
 
 
-def dummy_test(test_app):
-    facu_es_copado = True
-    assert facu_es_copado
-
-"""
 from tests.test_users import USER_REGEX, MockUserResponse
 from tests.test_rooms import POSTSERVER_ROOM_REGEX
 
