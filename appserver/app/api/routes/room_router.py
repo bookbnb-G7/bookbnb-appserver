@@ -1,5 +1,6 @@
 from fastapi import Header
 from typing import Optional
+import app.utils.token_utils as token_utils
 from fastapi import APIRouter, Response
 from app.services.requester import Requester
 from app.services.authsender import AuthSender
@@ -25,6 +26,8 @@ router = APIRouter()
 async def create_room(payload: RoomSchema, response: Response,
     x_access_token: Optional[str] = Header(None)):
     
+    token_utils.check_token(x_access_token)
+
     uuid = AuthSender.get_uuid_from_token(x_access_token)
 
     path = f'users/{uuid}'
@@ -42,6 +45,8 @@ async def create_room(payload: RoomSchema, response: Response,
 
 @router.get("/", response_model=RoomList, status_code=HTTP_200_OK)
 async def get_all_rooms(response: Response):
+    token_utils.check_token(x_access_token)
+
     rooms, status_code = Requester.room_srv_fetch(method='GET', 
                                                   path='/rooms')
     response.status_code = status_code
@@ -50,6 +55,8 @@ async def get_all_rooms(response: Response):
 
 @router.get("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
 async def get_room(room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}"
 
     room, status_code = Requester.room_srv_fetch(method='GET', 
@@ -60,6 +67,8 @@ async def get_room(room_id: int, response: Response):
 
 @router.patch("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
 async def update_room(payload: RoomUpdate, room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}"
     viewer_uuid = AuthSender.get_uuid_from_token(token)
     room, status_code = Requester.room_srv_fetch(method='GET', path=path)        
@@ -79,6 +88,8 @@ async def update_room(payload: RoomUpdate, room_id: int, response: Response):
 
 @router.delete("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
 async def delete_room(room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}"
     viewer_uuid = AuthSender.get_uuid_from_token(token)
     room, status_code = Requester.room_srv_fetch(method='GET', path=path)   
@@ -99,6 +110,8 @@ async def delete_room(room_id: int, response: Response):
 #-----------------------------ROOMS-RATINGS------------------------------------#
 @router.post("/{room_id}/ratings", response_model=RoomRatingDB, status_code=HTTP_201_CREATED)
 async def rate_room(payload: RoomRatingSchema, room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}"
     viewer_uuid = AuthSender.get_uuid_from_token(token)
     room, status_code = Requester.room_srv_fetch(method='GET', path=path)
@@ -123,6 +136,8 @@ async def rate_room(payload: RoomRatingSchema, room_id: int, response: Response)
 
 @router.get("/{room_id}/ratings/{rating_id}",response_model=RoomRatingDB, status_code=HTTP_200_OK)
 async def get_room_rating(room_id: int, rating_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}/ratings/{rating_id}"
     rating, status_code = Requester.room_srv_fetch(method='GET', 
                                                    path=path)
@@ -132,6 +147,8 @@ async def get_room_rating(room_id: int, rating_id: int, response: Response):
 
 @router.get("/{room_id}/ratings", response_model=RoomRatingList, status_code=HTTP_200_OK)
 async def get_all_room_ratings(room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f'/{room_id}/ratings'
     ratings, status_code = Requester.room_srv_fetch(method='GET', 
                                                    path=path)
@@ -142,6 +159,7 @@ async def get_all_room_ratings(room_id: int, response: Response):
 @router.patch("/{room_id}/ratings/{rating_id}", response_model=RoomRatingDB, status_code=HTTP_200_OK)
 async def update_room_rating(payload: RoomRatingUpdate, 
     room_id: int, rating_id: int, response: Response):
+    token_utils.check_token(x_access_token)
     
     path = f'/rooms/{room_id}/ratings/{rating_id}'
     viewer_uuid = AuthSender.get_uuid_from_token(token)
@@ -163,6 +181,8 @@ async def update_room_rating(payload: RoomRatingUpdate,
 
 @router.delete("/{room_id}/ratings/{rating_id}", response_model=RoomRatingDB, status_code=HTTP_200_OK)
 async def delete_room_rating(room_id: int, rating_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = f"/{room_id}/ratings/{rating_id}"
     viewer_uuid = AuthSender.get_uuid_from_token(token)
     rating, status_code = Requester.room_srv_fetch(method='GET', path=path)   
@@ -183,6 +203,8 @@ async def delete_room_rating(room_id: int, rating_id: int, response: Response):
 #-----------------------------ROOMS-REVIEWS------------------------------------#
 @router.post("/{room_id}/reviews", response_model=RoomReviewDB, status_code=HTTP_201_CREATED)
 async def review_room(payload: RoomReviewSchema, room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}"
     viewer_uuid = AuthSender.get_uuid_from_token(token)
     room, status_code = Requester.room_srv_fetch(method='GET', path=path)
@@ -207,6 +229,8 @@ async def review_room(payload: RoomReviewSchema, room_id: int, response: Respons
 
 @router.get("/{room_id}/reviews/{review_id}", response_model=RoomReviewDB, status_code=HTTP_200_OK)
 async def get_room_review(room_id: int, review_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f"/{room_id}/reviews/{review_id}"
     review, status_code = Requester.room_srv_fetch(method='GET', 
                                                    path=path)
@@ -216,6 +240,8 @@ async def get_room_review(room_id: int, review_id: int, response: Response):
 
 @router.get("/{room_id}/reviews", response_model=RoomReviewList, status_code=HTTP_200_OK)
 async def get_all_room_reviews(room_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = '/rooms' + f'/{room_id}/reviews'
     reviews, status_code = Requester.room_srv_fetch(method='GET', 
                                                     path=path)
@@ -226,6 +252,7 @@ async def get_all_room_reviews(room_id: int, response: Response):
 @router.patch("/{room_id}/reviews/{review_id}", response_model=RoomReviewDB, status_code=HTTP_200_OK)
 async def update_room_review(payload: RoomReviewUpdate, 
     room_id: int, review_id: int, response: Response):
+    token_utils.check_token(x_access_token)
 
     path = f'/rooms/{room_id}/reviews/{review_id}'
     viewer_uuid = AuthSender.get_uuid_from_token(token)
@@ -245,6 +272,8 @@ async def update_room_review(payload: RoomReviewUpdate,
 
 @router.delete("/{room_id}/reviews/{review_id}", response_model=RoomReviewDB, status_code=HTTP_200_OK)
 async def delete_room_review(room_id: int, review_id: int, response: Response):
+    token_utils.check_token(x_access_token)
+
     path = f"/{room_id}/reviews/{review_id}"
     viewer_uuid = AuthSender.get_uuid_from_token(token)
     review, status_code = Requester.room_srv_fetch(method='GET', path=path)   

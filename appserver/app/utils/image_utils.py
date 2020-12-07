@@ -1,6 +1,5 @@
 import itertools
 
-
 class IdGenerator:
     gen = itertools.count()
 
