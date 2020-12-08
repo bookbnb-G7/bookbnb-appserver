@@ -24,9 +24,10 @@ async def create_user(
     payload: UserSchema, response: Response, uuid: int = Depends(get_uuid_from_xtoken)
 ):
     path = "/users"
-    user, status_code = Requester.user_srv_fetch(method="POST", path=path)
+    payload = payload.dict().add(id=uuid)
+    user, status_code = Requester.user_srv_fetch(method="POST", path=path, payload=payload)
     response.status_code = status_code
-    return user.json()
+    return user
 
 
 @router.get("/{user_id}", response_model=UserSchema, status_code=HTTP_200_OK)
