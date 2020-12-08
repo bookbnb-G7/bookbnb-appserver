@@ -25,6 +25,30 @@ class UserSchema(BaseModel):
                 + "2020/07/zuck_sunscreen.jpg",
             }
         }
+        
+class UserDB(BaseModel):
+    firstname: str
+    lastname: str
+    email: str
+    phonenumber: str
+    country: str
+    birthdate: str
+    photo: Optional[str] = None
+    id: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "firstname": "Mark",
+                "lastname": "Zuckerberg",
+                "email": "reptil@facebook.com",
+                "phonenumber": "650-543-4800",
+                "country": "USA",
+                "birthdate": "1984-05-14",
+                "photo": "https://melmagazine.com/wp-content/uploads/"
+                + "2020/07/zuck_sunscreen.jpg",
+            }
+        }
 
 
 class UserListSchema(BaseModel):

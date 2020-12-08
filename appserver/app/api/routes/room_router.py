@@ -180,7 +180,6 @@ async def update_room_rating(
     response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
-
     path = f"/rooms/{room_id}/ratings/{rating_id}"
     rating, status_code = Requester.room_srv_fetch(method="GET", path=path)
 
