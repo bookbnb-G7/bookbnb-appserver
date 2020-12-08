@@ -1,19 +1,16 @@
 from datetime import datetime
 from typing import List, Optional
+
 from pydantic import BaseModel
 
 
 class RoomRatingSchema(BaseModel):
     rating: int
-    reviewer: str
-    reviewer_id: int
 
     class Config:
         schema_extra = {
             "example": {
                 "rating": 4,
-                "reviewer": "Bob",
-                "reviewer_id": 17,
             }
         }
 
@@ -32,16 +29,18 @@ class RoomRatingUpdate(BaseModel):
 class RoomRatingDB(RoomRatingSchema):
     id: int
     room_id: int
+    reviewer: str
+    reviewer_id: int
     created_at: datetime
     updated_at: datetime
 
     class Config:
         schema_extra = {
             "example": {
+                "id": 5,
                 "rating": 4,
                 "reviewer": "Bob",
                 "reviewer_id": 17,
-                "id": 5,
                 "room_id": 8,
                 "created_at": "2020-11-20T18:13:31.378Z",
                 "updated_at": "2020-11-20T18:13:31.378Z",

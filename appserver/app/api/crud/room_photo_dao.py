@@ -1,5 +1,5 @@
-from app.model.room_photo import RoomPhoto
 from app.errors.http_error import NotFoundError
+from app.model.room_photo import RoomPhoto
 
 
 class RoomPhotoDAO:

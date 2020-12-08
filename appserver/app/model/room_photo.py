@@ -1,6 +1,5 @@
-from sqlalchemy import Column, Integer
-
 from app.db import Base
+from sqlalchemy import Column, Integer
 
 
 class RoomPhoto(Base):

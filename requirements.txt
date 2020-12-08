@@ -9,6 +9,7 @@ psycopg2-binary==2.8.6
 databases[postgresql]==0.3.2
 python-multipart==0.0.5
 firebase==3.0.1
+Pyrebase4==4.3.0
 firebase-admin==4.4.0
 
 # dev

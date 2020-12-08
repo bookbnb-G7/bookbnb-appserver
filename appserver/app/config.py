@@ -1,9 +1,9 @@
-import os
 import logging
+import os
 from functools import lru_cache
+
 from firebase_admin import credentials, initialize_app
 from pydantic import BaseSettings
-
 
 log = logging.getLogger(__name__)
 

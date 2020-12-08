@@ -1,9 +1,11 @@
 import re
+
 import responses
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.utils import MockResponse, check_responses_equality
-from app.api.routes.room_router import API_URL
 
+"""
+from app.api.routes.room_router import API_URL
 REVIEW_REGEX = f"{API_URL}/?[0-9]*[/]?reviews/?"
 
 
@@ -153,3 +155,4 @@ def test_delete_room_review(test_app):
     )
     response = test_app.delete(f"{API_URL}/{test_room_id}/reviews/{test_review_id}")
     assert response.status_code == expected_status
+"""
