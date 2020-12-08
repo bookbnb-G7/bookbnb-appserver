@@ -1,8 +1,10 @@
 import re
+
 import responses
+from app.api.routes.user_router import API_URL
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.utils import MockResponse, check_responses_equality
-from app.api.routes.user_router import API_URL
+
 """
 USER_REGEX = rf"{API_URL}/?[0-9]*[/]?"
 

@@ -1,18 +1,16 @@
-import app.errors.auth_error as ae 
+import app.errors.auth_error as ae
 from app.services.authsender import AuthSender
+
 
 def check_token(token):
     if not token:
-        raise ae.MissingTokenError();
+        raise ae.MissingTokenError()
 
     if not AuthSender.token_is_valid(token):
-        raise ae.MissingTokenError();
+        raise ae.MissingTokenError()
 
-    return
 
 """
-from functools import wraps
-
 def token_required(f):
 
     @wraps(f)

@@ -1,6 +1,7 @@
 import os
-from app.services.requester import Requester
+
 from app.errors.http_error import NotFoundError
+from app.services.requester import Requester
 
 
 class AuthSender():
@@ -23,7 +24,7 @@ class AuthSender():
         #if not cls.url:
         #    return True
 
-        response, code = Requester.auth_srv_fetch(method='POST', 
+        _, code = Requester.auth_srv_fetch(method='POST', 
                                                   path='/sign-in', 
                                                   payload={})
         #if code == 200:
