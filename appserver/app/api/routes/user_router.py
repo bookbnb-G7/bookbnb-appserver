@@ -1,18 +1,13 @@
 import requests as rq
+from app.api.models.user_model import (UserListSchema, UserSchema,
+                                       UserUpdateSchema)
+from app.api.models.user_rating_model import (UserRatingList, UserRatingSchema,
+                                              UserRatingUpdate)
+from app.api.models.user_review_model import (UserReviewList, UserReviewSchema,
+                                              UserReviewUpdate)
 from app.dependencies import check_token, get_uuid_from_xtoken
-from app.api.models.user_model import UserListSchema, UserSchema, UserUpdateSchema
-from app.api.models.user_rating_model import (
-    UserRatingList,
-    UserRatingSchema,
-    UserRatingUpdate,
-)
-from app.api.models.user_review_model import (
-    UserReviewList,
-    UserReviewSchema,
-    UserReviewUpdate,
-)
 from app.services.requester import Requester
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Depends, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
@@ -25,7 +20,9 @@ API_URL = "https://bookbnb-userserver.herokuapp.com/users"
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
-async def create_user(payload: UserSchema, response: Response, uuid: int = Depends(get_uuid_from_xtoken)):
+async def create_user(
+    payload: UserSchema, response: Response, uuid: int = Depends(get_uuid_from_xtoken)
+):
     path = "/users"
     user, status_code = Requester.user_srv_fetch(method="POST", path=path)
     response.status_code = status_code

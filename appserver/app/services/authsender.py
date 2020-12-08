@@ -4,8 +4,8 @@ from app.errors.http_error import NotFoundError
 from app.services.requester import Requester
 
 
-class AuthSender():
-    url = 'https://bookbnb-authserver.herokuapp.com'
+class AuthSender:
+    url = "https://bookbnb-authserver.herokuapp.com"
     mock_db = []
 
     """
@@ -16,54 +16,51 @@ class AuthSender():
 
     @classmethod
     def tkn_hdr(cls, token):
-        return {'x-access-token': token}
-
+        return {"x-access-token": token}
 
     @classmethod
     def is_valid_token(cls, token):
-        #if not cls.url:
+        # if not cls.url:
         #    return True
 
-        _, code = Requester.auth_srv_fetch(method='POST', 
-                                                  path='/sign-in', 
-                                                  payload={})
-        #if code == 200:
+        _, code = Requester.auth_srv_fetch(method="POST", path="/sign-in", payload={})
+        # if code == 200:
         #    return True
 
-        #if code == 400:
+        # if code == 400:
         #    return False
 
         return code == 200
 
-
     @classmethod
     def get_uuid_from_token(cls, token):
-        #if not cls.url:
+        # if not cls.url:
         #    cls._mock_get_info(int(token))
         #    return int(token)
-        
-        response, code = Requester.auth_srv_fetch(method='GET', 
-                                                  path='/users/id',
-                                                  payload={})
+
+        response, code = Requester.auth_srv_fetch(
+            method="GET", path="/users/id", payload={}
+        )
 
         if code != 200:
-            raise NotFoundError('User')
+            raise NotFoundError("User")
 
         return response["uuid"]
-
 
     @classmethod
     def has_permission_to_modify(cls, viewer_id, user_id):
         # an user can only modify its own things
-        return user_id == viewer_id # or cls.is_user_admin(viewer_id)[0].get("admin", False)
-
+        return (
+            user_id == viewer_id
+        )  # or cls.is_user_admin(viewer_id)[0].get("admin", False)
 
     @classmethod
     def has_permission_to_comment(cls, viewer_id, user_id):
-        # an user can rate/review its own 
+        # an user can rate/review its own
         # rooms or himself (as host or guest)
-        return user_id != viewer_id # or cls.is_user_admin(viewer_id)[0].get("admin", False)
-
+        return (
+            user_id != viewer_id
+        )  # or cls.is_user_admin(viewer_id)[0].get("admin", False)
 
     """
 

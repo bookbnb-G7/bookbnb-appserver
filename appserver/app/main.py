@@ -23,15 +23,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.exception_handler(AuthException)
 async def auth_exception_handler(request, exc):
     error = {"error": exc.detail}
     return JSONResponse(status_code=exc.status_code, content=error)
 
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     error = {"error": exc.detail}
     return JSONResponse(status_code=exc.status_code, content=error)
+
 
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])

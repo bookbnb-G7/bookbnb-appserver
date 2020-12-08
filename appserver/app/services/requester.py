@@ -1,7 +1,6 @@
 from json import JSONDecodeError
 
 import requests
-
 from app.errors.http_error import BadGatewayError
 
 
@@ -20,7 +19,7 @@ class Requester:
 
     @classmethod
     def room_srv_fetch(cls, method, path, payload=None, extra_headers=None):
-        header = {"x-client-token": cls.POST_SERVER_TOKEN}
+        header = {"api_key": cls.POST_SERVER_TOKEN}
 
         if extra_headers is not None:
             header.update(extra_headers)
@@ -34,7 +33,7 @@ class Requester:
 
     @classmethod
     def auth_srv_fetch(cls, method, path, payload=None, extra_headers=None):
-        header = {"x-client-token": cls.AUTH_SERVER_TOKEN}
+        header = {"api_key": cls.AUTH_SERVER_TOKEN}
 
         if extra_headers is not None:
             header.update(extra_headers)
@@ -48,7 +47,7 @@ class Requester:
 
     @classmethod
     def user_srv_fetch(cls, method, path, payload=None, extra_headers=None):
-        header = {"x-client-token": cls.USER_SERVER_TOKEN}
+        header = {"api_key": cls.USER_SERVER_TOKEN}
 
         if extra_headers is not None:
             header.update(extra_headers)

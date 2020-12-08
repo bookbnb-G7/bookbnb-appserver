@@ -43,11 +43,7 @@ class RoomUpdate(BaseModel):
     price_per_day: Optional[float] = None
 
     class Config:
-        schema_extra = {
-            "example": { 
-                "price_per_day": 456
-            }
-        }
+        schema_extra = {"example": {"price_per_day": 456}}
 
 
 class RoomList(BaseModel):
