@@ -1,10 +1,20 @@
 import requests as rq
-from app.api.models.user_model import (UserListSchema, UserSchema,
-                                       UserUpdateSchema)
-from app.api.models.user_rating_model import (UserRatingList, UserRatingSchema,
-                                              UserRatingUpdate)
-from app.api.models.user_review_model import (UserReviewList, UserReviewSchema,
-                                              UserReviewUpdate)
+from app.api.models.user_model import (
+    UserListSchema,
+    UserSchema,
+    UserDB,
+    UserUpdateSchema,
+)
+from app.api.models.user_rating_model import (
+    UserRatingList,
+    UserRatingSchema,
+    UserRatingUpdate,
+)
+from app.api.models.user_review_model import (
+    UserReviewList,
+    UserReviewSchema,
+    UserReviewUpdate,
+)
 from app.dependencies import check_token, get_uuid_from_xtoken
 from app.services.requester import Requester
 from fastapi import APIRouter, Depends, Response
@@ -16,7 +26,7 @@ API_URL = "https://bookbnb-userserver.herokuapp.com/users"
 
 @router.post(
     "/",
-    response_model=UserSchema,
+    response_model=UserDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
@@ -25,7 +35,9 @@ async def create_user(
 ):
     path = "/users"
     payload = payload.dict().add(id=uuid)
-    user, status_code = Requester.user_srv_fetch(method="POST", path=path, payload=payload)
+    user, status_code = Requester.user_srv_fetch(
+        method="POST", path=path, payload=payload
+    )
     response.status_code = status_code
     return user
 
