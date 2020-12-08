@@ -1,4 +1,5 @@
 from json import JSONDecodeError
+import os
 
 import requests
 from app.errors.http_error import BadGatewayError
@@ -6,9 +7,9 @@ from app.errors.http_error import BadGatewayError
 
 class Requester:
 
-    AUTH_SERVER_TOKEN = ""  # os.environ['AUTH_SERVER_TOKEN'] if os.environ['ENVIRONMENT'] != 'testing' else ''
-    POST_SERVER_TOKEN = ""  # os.environ['POST_SERVER_TOKEN'] if os.environ['ENVIRONMENT'] != 'testing' else ''
-    USER_SERVER_TOKEN = ""  # os.environ['ROOM_SERVER_TOKEN'] if os.environ['ENVIRONMENT'] != 'testing' else ''
+    AUTH_SERVER_API_KEY = os.environ['AUTH_SERVER_API_KEY']
+    POST_SERVER_API_KEY = os.environ['POST_SERVER_API_KEY']
+    USER_SERVER_API_KEY = os.environ['USER_SERVER_API_KEY']
 
     # tal vez estaria bueno meterlo en una env var
     POST_API_URL = "https://bookbnb-postserver.herokuapp.com"
@@ -19,7 +20,7 @@ class Requester:
 
     @classmethod
     def room_srv_fetch(cls, method, path, payload=None, extra_headers=None):
-        header = {"api_key": cls.POST_SERVER_TOKEN}
+        header = {"api_key": cls.POST_SERVER_API_KEY}
 
         if extra_headers is not None:
             header.update(extra_headers)
@@ -33,7 +34,7 @@ class Requester:
 
     @classmethod
     def auth_srv_fetch(cls, method, path, payload=None, extra_headers=None):
-        header = {"api_key": cls.AUTH_SERVER_TOKEN}
+        header = {"api_key": cls.AUTH_SERVER_API_KEY}
 
         if extra_headers is not None:
             header.update(extra_headers)
@@ -47,7 +48,7 @@ class Requester:
 
     @classmethod
     def user_srv_fetch(cls, method, path, payload=None, extra_headers=None):
-        header = {"api_key": cls.USER_SERVER_TOKEN}
+        header = {"api_key": cls.USER_SERVER_API_KEY}
 
         if extra_headers is not None:
             header.update(extra_headers)
