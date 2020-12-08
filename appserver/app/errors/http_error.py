@@ -16,3 +16,8 @@ class BadGatewayError(HTTPException):
     def __init__(self):
         message = "Failed to contact external resource"
         super().__init__(status_code=400, detail=message)
+        
+
+class UnauthorizedRequestError(HTTPException):
+    def __init__(self, message):
+        super().__init__(status_code=401, detail=message)
