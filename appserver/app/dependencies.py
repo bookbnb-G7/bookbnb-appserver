@@ -9,7 +9,7 @@ async def check_token(x_access_token: Optional[str] = Header(None)):
     if not x_access_token:
         raise ae.MissingTokenError()
 
-    if not AuthSender.token_is_valid(x_access_token):
+    if not AuthSender.is_valid_token(x_access_token):
         raise ae.InvalidIdTokenError()
 
 
