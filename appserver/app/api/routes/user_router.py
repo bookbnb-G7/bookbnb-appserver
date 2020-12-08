@@ -1,3 +1,4 @@
+from typing import Optional
 import requests as rq
 from app.api.models.user_model import (
     UserListSchema,
@@ -17,7 +18,7 @@ from app.api.models.user_review_model import (
 )
 from app.dependencies import check_token, get_uuid_from_xtoken
 from app.services.requester import Requester
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, Header
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
@@ -31,10 +32,20 @@ API_URL = "https://bookbnb-userserver.herokuapp.com/users"
     dependencies=[Depends(check_token)],
 )
 async def create_user(
-    payload: UserSchema, response: Response, uuid: int = Depends(get_uuid_from_xtoken)
+    payload: UserSchema,
+    response: Response,
+    x_access_token: Optional[str] = Header(None),
 ):
+    auth_payload = {"email": payload.email}
+    auth_header = {"x-access-token": x_access_token}
+    registered_user, status_code = Requester.auth_srv_fetch(
+        method="POST",
+        path="/user/registered",
+        payload=auth_payload,
+        extra_headers=auth_header,
+    )
     path = "/users"
-    payload = payload.dict().add(id=uuid)
+    payload = payload.dict().add(id=registered_user["uuid"])
     user, status_code = Requester.user_srv_fetch(
         method="POST", path=path, payload=payload
     )
@@ -44,16 +55,18 @@ async def create_user(
 
 @router.get("/{user_id}", response_model=UserSchema, status_code=HTTP_200_OK)
 async def get_user(user_id: int, response: Response):
-    user = rq.get(API_URL + f"/{user_id}")
-    response.status_code = user.status_code
-    return user.json()
+    path = f"/users/{user_id}"
+    user, status_code = Requester.user_srv_fetch(method="GET", path=path)
+    response.status_code = status_code
+    return user
 
 
 @router.get("/", response_model=UserListSchema, status_code=HTTP_200_OK)
 async def get_all_users(response: Response):
-    users = rq.get(f"{API_URL}/")
-    response.status_code = users.status_code
-    return users.json()
+    path = "/users"
+    users, status_code = Requester.user_srv_fetch(method="GET", path=path)
+    response.status_code = status_code
+    return users
 
 
 @router.post(

@@ -53,7 +53,7 @@ class UserDB(BaseModel):
 
 class UserListSchema(BaseModel):
     amount: int
-    users: List[UserSchema]
+    users: List[UserDB]
 
     class Config:
         schema_extra = {
