@@ -6,7 +6,7 @@ from app.services.requester import Requester
 
 class AuthSender:
     url = "https://bookbnb-authserver.herokuapp.com"
-    mock_db : List[Dict[str, Any]] = []
+    mock_db: List[Dict[str, Any]] = []
 
     """
     @classmethod
@@ -23,7 +23,9 @@ class AuthSender:
         # if not cls.url:
         #    return True
 
-        _, code = Requester.auth_srv_fetch(method="POST", path="/sign-in", payload={})
+        _, code = Requester.auth_srv_fetch(
+            method="POST", path="/auth/sign-in", payload={}
+        )
         # if code == 200:
         #    return True
 
