@@ -51,6 +51,7 @@ async def create_room(
 async def get_all_rooms(response: Response):
     rooms, status_code = Requester.room_srv_fetch(method="GET", path="/rooms/")
     response.status_code = status_code
+    print(f"Los cuartos son: {rooms}, con codigo de error: {status_code}")
 
     return rooms
 
