@@ -1,4 +1,4 @@
-import os
+from typing import Any, Dict, List
 
 from app.errors.http_error import NotFoundError
 from app.services.requester import Requester
@@ -6,7 +6,7 @@ from app.services.requester import Requester
 
 class AuthSender:
     url = "https://bookbnb-authserver.herokuapp.com"
-    mock_db = []
+    mock_db : List[Dict[str, Any]] = []
 
     """
     @classmethod
