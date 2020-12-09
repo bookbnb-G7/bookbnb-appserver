@@ -44,7 +44,7 @@ class AuthSender:
         #    return int(token)
 
         response, code = Requester.auth_srv_fetch(
-            method="GET", path="/users/id", payload={}
+            method="GET", path="/user/id", payload={}, extra_headers=cls.tkn_hdr(token)
         )
 
         if code != 200:
