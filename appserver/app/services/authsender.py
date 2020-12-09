@@ -24,7 +24,10 @@ class AuthSender:
         #    return True
 
         _, code = Requester.auth_srv_fetch(
-            method="POST", path="/auth/sign-in", payload={}
+            method="POST",
+            path="/auth/sign-in",
+            payload={},
+            extra_headers=cls.tkn_hdr(token),
         )
         # if code == 200:
         #    return True
