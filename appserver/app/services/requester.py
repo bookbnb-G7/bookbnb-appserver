@@ -21,6 +21,7 @@ class Requester:
     @classmethod
     def room_srv_fetch(cls, method, path, payload=None, extra_headers=None):
         header = {"api_key": cls.POST_SERVER_API_KEY}
+        print(f"La api key del post server es: {cls.POST_SERVER_API_KEY}")
 
         if extra_headers is not None:
             header.update(extra_headers)
