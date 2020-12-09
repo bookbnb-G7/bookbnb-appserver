@@ -26,7 +26,6 @@ router = APIRouter()
 @router.post(
     "/",
     response_model=RoomDB,
-    status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
 async def create_room(
@@ -47,7 +46,7 @@ async def create_room(
     return room
 
 
-@router.get("/", response_model=RoomList, status_code=HTTP_200_OK)
+@router.get("/", response_model=RoomList)
 async def get_all_rooms(response: Response):
     rooms, status_code = Requester.room_srv_fetch(method="GET", path="/rooms/")
     response.status_code = status_code
@@ -56,7 +55,7 @@ async def get_all_rooms(response: Response):
     return rooms
 
 
-@router.get("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
+@router.get("/{room_id}", response_model=RoomDB)
 async def get_room(room_id: int, response: Response):
     path = "/rooms" + f"/{room_id}"
     room, status_code = Requester.room_srv_fetch(method="GET", path=path)
@@ -67,7 +66,6 @@ async def get_room(room_id: int, response: Response):
 @router.patch(
     "/{room_id}",
     response_model=RoomDB,
-    status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def update_room(
@@ -95,7 +93,6 @@ async def update_room(
 @router.delete(
     "/{room_id}",
     response_model=RoomDB,
-    status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def delete_room(
@@ -123,7 +120,6 @@ async def delete_room(
 @router.post(
     "/{room_id}/ratings",
     response_model=RoomRatingDB,
-    status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
 async def rate_room(
@@ -158,7 +154,6 @@ async def rate_room(
 @router.get(
     "/{room_id}/ratings/{rating_id}",
     response_model=RoomRatingDB,
-    status_code=HTTP_200_OK,
 )
 async def get_room_rating(room_id: int, rating_id: int, response: Response):
 
@@ -182,7 +177,6 @@ async def get_all_room_ratings(room_id: int, response: Response):
 @router.patch(
     "/{room_id}/ratings/{rating_id}",
     response_model=RoomRatingDB,
-    status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def update_room_rating(
