@@ -250,9 +250,7 @@ async def review_room(
     reviewer_name = f"{user['firstname']} {user['lastname']}"
 
     review_payload = payload.dict()
-    review_payload.update(
-        {"reviewer_name": reviewer_name, "reviewer_uuid": viewer_uuid}
-    )
+    review_payload.update({"reviewer": reviewer_name, "reviewer_id": viewer_uuid})
 
     review_path = "/rooms" + f"/{room_id}/reviews"
     review, status_code = Requester.room_srv_fetch(

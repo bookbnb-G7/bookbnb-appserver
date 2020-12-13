@@ -78,8 +78,10 @@ def test_get_all_user_host_ratings(test_app):
     response_json = response.json()
 
     assert response.status_code == expected_status
-    for i, response_rating in enumerate(response_json):
-        check_responses_equality(response_rating, test_rating_list[i], attrs_to_test)
+    for i, response_rating in enumerate(response_json["ratings"]):
+        check_responses_equality(
+            response_rating, test_rating_list["ratings"][i], attrs_to_test
+        )
 
 
 @responses.activate
@@ -99,8 +101,10 @@ def test_get_all_user_guest_ratings(test_app):
     response_json = response.json()
 
     assert response.status_code == expected_status
-    for i, response_rating in enumerate(response_json):
-        check_responses_equality(response_rating, test_rating_list[i], attrs_to_test)
+    for i, response_rating in enumerate(response_json["ratings"]):
+        check_responses_equality(
+            response_rating, test_rating_list["ratings"][i], attrs_to_test
+        )
 
 
 @responses.activate
