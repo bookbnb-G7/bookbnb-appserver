@@ -1,34 +1,25 @@
+import os
 from typing import Optional
-import requests as rq
-from app.api.models.user_model import (
-    UserListSchema,
-    UserSchema,
-    UserDB,
-    UserUpdateSchema,
-)
-from app.api.models.user_rating_model import (
-    UserRatingList,
-    UserRatingSchema,
-    UserRatingUpdate,
-)
-from app.api.models.user_review_model import (
-    UserReviewList,
-    UserReviewSchema,
-    UserReviewUpdate,
-)
+
+from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
+                                       UserUpdateSchema)
+from app.api.models.user_rating_model import (UserRatingList, UserRatingSchema,
+                                              UserRatingUpdate)
+from app.api.models.user_review_model import (UserReviewList, UserReviewSchema,
+                                              UserReviewUpdate)
 from app.dependencies import check_token, get_uuid_from_xtoken
-from app.errors.http_error import BadRequestError, UnauthorizedRequestError
+from app.errors.http_error import UnauthorizedRequestError
 from app.services.authsender import AuthSender
 from app.services.requester import Requester
-from fastapi import APIRouter, Depends, Response, Header
+from fastapi import APIRouter, Depends, Header, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
-API_URL = "https://bookbnb-userserver.herokuapp.com/users"
+API_URL = os.environ["USERSERVER_URL"]
 
 
 @router.post(
-    "/",
+    "",
     response_model=UserDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
@@ -47,9 +38,10 @@ async def create_user(
         extra_headers=auth_header,
     )
     path = "/users"
-    payload = payload.dict().add(id=registered_user["uuid"])
+    payload_user = payload.dict()
+    payload_user.update({"id": registered_user["uuid"]})
     user, status_code = Requester.user_srv_fetch(
-        method="POST", path=path, payload=payload
+        method="POST", path=path, payload=payload_user
     )
     response.status_code = status_code
     return user
@@ -63,7 +55,45 @@ async def get_user(user_id: int, response: Response):
     return user
 
 
-@router.get("/", response_model=UserListSchema, status_code=HTTP_200_OK)
+@router.patch(
+    "/{user_id}",
+    response_model=UserSchema,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def update_user(
+    user_id: int,
+    payload: UserUpdateSchema,
+    response: Response,
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't update info about other users")
+
+    path = f"/users/{user_id}"
+    new_user_info, status_code = Requester.user_srv_fetch(
+        method="PATCH", path=path, payload=payload.dict(exclude_unset=True)
+    )
+    response.status_code = status_code
+    return new_user_info
+
+
+@router.delete(
+    "/{user_id}", status_code=HTTP_200_OK, dependencies=[Depends(check_token)]
+)
+async def delete_user(
+    user_id: int, response: Response, uuid: int = Depends(get_uuid_from_xtoken)
+):
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't delete other users")
+
+    path = f"/users/{user_id}"
+    new_user_info, status_code = Requester.user_srv_fetch(method="DELETE", path=path)
+    response.status_code = status_code
+    return new_user_info
+
+
+@router.get("", response_model=UserListSchema, status_code=HTTP_200_OK)
 async def get_all_users(response: Response):
     path = "/users"
     users, status_code = Requester.user_srv_fetch(method="GET", path=path)
@@ -250,47 +280,9 @@ async def get_single_guest_review(user_id: int, review_id: int, response: Respon
 )
 async def get_single_guest_rating(user_id: int, rating_id: int, response: Response):
     path = f"/users/{user_id}/guest_ratings/{rating_id}"
-    user_reviews, status_code = Requester.user_srv_fetch(method="GET", path=path)
+    user_ratings, status_code = Requester.user_srv_fetch(method="GET", path=path)
     response.status_code = status_code
-    return user_reviews
-
-
-@router.patch(
-    "/{user_id}",
-    response_model=UserSchema,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def update_user(
-    user_id: int,
-    payload: UserUpdateSchema,
-    response: Response,
-    uuid: int = Depends(get_uuid_from_xtoken),
-):
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't update info about other users")
-
-    path = f"/users/{user_id}"
-    new_user_info, status_code = Requester.user_srv_fetch(
-        method="PATCH", path=path, payload=payload.dict(exclude_unset=True)
-    )
-    response.status_code = status_code
-    return new_user_info
-
-
-@router.delete(
-    "/{user_id}", status_code=HTTP_200_OK, dependencies=[Depends(check_token)]
-)
-async def delete_user(
-    user_id: int, response: Response, uuid: int = Depends(get_uuid_from_xtoken)
-):
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't delete other users")
-
-    path = f"/users/{user_id}"
-    new_user_info, status_code = Requester.user_srv_fetch(method="DELETE", path=path)
-    response.status_code = status_code
-    return new_user_info
+    return user_ratings
 
 
 @router.patch(
@@ -306,12 +298,15 @@ async def update_host_review(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    review = rq.patch(
-        API_URL + f"/{user_id}/host_reviews/{review_id}",
-        json=payload.dict(exclude_unset=True),
+    review_path = f"/users/{user_id}/host_reviews/{review_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't edit a review of another user")
+
+    review, status_code = Requester.user_srv_fetch(
+        method="PATCH", path=review_path, payload=payload.dict(exclude_unset=True)
     )
-    response.status_code = review.status_code
-    return review.json()
+    response.status_code = status_code
+    return review
 
 
 @router.patch(
@@ -327,12 +322,15 @@ async def update_host_rating(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    rating = rq.patch(
-        API_URL + f"/{user_id}/host_ratings/{rating_id}",
-        json=payload.dict(exclude_unset=True),
+    review_path = f"/users/{user_id}/host_ratings/{rating_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't edit a rating of another user")
+
+    review, status_code = Requester.user_srv_fetch(
+        method="PATCH", path=review_path, payload=payload.dict(exclude_unset=True)
     )
-    response.status_code = rating.status_code
-    return rating.json()
+    response.status_code = status_code
+    return review
 
 
 @router.patch(
@@ -348,12 +346,15 @@ async def update_guest_review(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    review = rq.patch(
-        API_URL + f"/{user_id}/guest_reviews/{review_id}",
-        json=payload.dict(exclude_unset=True),
+    review_path = f"/users/{user_id}/guest_reviews/{review_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't edit a review of another user")
+
+    review, status_code = Requester.user_srv_fetch(
+        method="PATCH", path=review_path, payload=payload.dict(exclude_unset=True)
     )
-    response.status_code = review.status_code
-    return review.json()
+    response.status_code = status_code
+    return review
 
 
 @router.patch(
@@ -369,12 +370,15 @@ async def update_guest_rating(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    rating = rq.patch(
-        API_URL + f"/{user_id}/guest_ratings/{rating_id}",
-        json=payload.dict(exclude_unset=True),
+    rating_path = f"/users/{user_id}/guest_ratings/{rating_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't edit a rating of another user")
+
+    review, status_code = Requester.user_srv_fetch(
+        method="PATCH", path=rating_path, payload=payload.dict(exclude_unset=True)
     )
-    response.status_code = rating.status_code
-    return rating.json()
+    response.status_code = status_code
+    return review
 
 
 @router.delete(
@@ -388,9 +392,13 @@ async def delete_host_review(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    review = rq.delete(API_URL + f"/{user_id}/host_reviews/{review_id}")
-    response.status_code = review.status_code
-    return review.json()
+    review_path = f"/users/{user_id}/host_reviews/{review_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't delete a review of another user")
+
+    review, status_code = Requester.user_srv_fetch(method="DELETE", path=review_path)
+    response.status_code = status_code
+    return review
 
 
 @router.delete(
@@ -404,9 +412,13 @@ async def delete_host_rating(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    rating = rq.delete(API_URL + f"/{user_id}/host_ratings/{rating_id}")
-    response.status_code = rating.status_code
-    return rating.json()
+    rating_path = f"/users/{user_id}/host_ratings/{rating_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't delete a rating of another user")
+
+    review, status_code = Requester.user_srv_fetch(method="DELETE", path=rating_path)
+    response.status_code = status_code
+    return review
 
 
 @router.delete(
@@ -420,9 +432,13 @@ async def delete_guest_review(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    review = rq.delete(API_URL + f"/{user_id}/guest_reviews/{review_id}")
-    response.status_code = review.status_code
-    return review.json()
+    review_path = f"/users/{user_id}/guest_reviews/{review_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't delete a review of another user")
+
+    review, status_code = Requester.user_srv_fetch(method="DELETE", path=review_path)
+    response.status_code = status_code
+    return review
 
 
 @router.delete(
@@ -436,6 +452,10 @@ async def delete_guest_rating(
     response: Response,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    rating = rq.delete(API_URL + f"/{user_id}/guest_ratings/{rating_id}")
-    response.status_code = rating.status_code
-    return rating.json()
+    rating_path = f"/users/{user_id}/guest_ratings/{rating_id}"
+    if not AuthSender.has_permission_to_modify(uuid, user_id):
+        raise UnauthorizedRequestError("You can't delete a rating of another user")
+
+    review, status_code = Requester.user_srv_fetch(method="DELETE", path=rating_path)
+    response.status_code = status_code
+    return review
