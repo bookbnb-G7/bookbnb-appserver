@@ -1,69 +1,75 @@
 import re
 
 import responses
+from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from tests.utils import MockResponse, check_responses_equality
-
-"""
-from app.api.routes.room_router import API_URL
-REVIEW_REGEX = f"{API_URL}/?[0-9]*[/]?reviews/?"
-
-
-class MockReviewResponse(MockResponse):
-    def dict(self):
-        return {
-            "review": "muy lindo todo",
-            "reviewer": "string",
-            "reviewer_id": 44,
-            "id": 23,
-            "room_id": 22,
-            "created_at": "2020-11-10T22:51:03.539Z",
-            "updated_at": "2020-11-10T22:51:03.539Z",
-        }
-
-
-class MockReviewListResponse(MockResponse):
-    def dict(self):
-        return {
-            "amount": 2,
-            "room_id": 1,
-            "reviews": [
-                {
-                    "review": "muy lindo todo",
-                    "reviewer": "carlitos",
-                    "reviewer_id": 10,
-                    "id": 0,
-                    "room_id": 1,
-                    "created_at": "2020-11-10T22:51:03.539Z",
-                    "updated_at": "2020-11-10T22:51:03.539Z",
-                },
-                {
-                    "review": "todo mal",
-                    "reviewer": "remalo",
-                    "reviewer_id": 666,
-                    "id": 2,
-                    "room_id": 1,
-                    "created_at": "2020-11-10T22:51:03.539Z",
-                    "updated_at": "2020-11-10T22:51:03.539Z",
-                },
-            ],
-        }
+from tests.mock_models.room_models import MockRoomResponse
+from tests.mock_models.room_reviews_models import (MockReviewListResponse,
+                                                   MockReviewResponse)
+from tests.mock_models.user_models import MockUserResponse
+from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, REVIEW_REGEX,
+                         USER_REGEX, check_responses_equality)
 
 
 @responses.activate
-def test_post_room_review(test_app):
-    mock_review_response = MockReviewResponse()
-    test_review = mock_review_response.dict()
+def test_post_room_review(test_app, monkeypatch):
+    test_review = MockReviewResponse().dict()
+    test_room = MockRoomResponse().dict()
+    test_user = MockUserResponse().dict()
     expected_status = HTTP_201_CREATED
     attrs_to_test = ["review", "reviewer", "reviewer_id", "room_id", "id"]
+    header = {"x-access-token": "tokenrefalso"}
 
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_comment", lambda x, y: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_review["reviewer_id"]
+    )
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_room,
+        status=expected_status,
+    )
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
     responses.add(
         responses.POST,
         re.compile(REVIEW_REGEX),
-        json=mock_review_response.dict(),
+        json=test_review,
         status=expected_status,
     )
-    response = test_app.post(f"{API_URL}/{test_review['id']}/reviews", json=test_review)
+    response = test_app.post(
+        f"{APPSERVER_URL}/rooms/{test_review['id']}/reviews",
+        json=test_review,
+        headers=header,
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_review, attrs_to_test)
+
+
+@responses.activate
+def test_get_single_room_review(test_app):
+    test_review = MockReviewResponse().dict()
+    test_review_id = test_review["id"]
+    test_room_id = test_review["room_id"]
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["review", "reviewer", "reviewer_id", "room_id", "id"]
+
+    responses.add(
+        responses.GET,
+        re.compile(REVIEW_REGEX),
+        json=test_review,
+        status=expected_status,
+    )
+    response = test_app.get(
+        f"{APPSERVER_URL}/rooms/{test_room_id}/reviews/{test_review_id}",
+        json=test_review,
+    )
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_review, attrs_to_test)
 
@@ -82,7 +88,9 @@ def test_get_all_room_reviews(test_app):
         json=mock_review_response.dict(),
         status=expected_status,
     )
-    response = test_app.get(f"{API_URL}/{test_review_list['room_id']}/reviews")
+    response = test_app.get(
+        f"{APPSERVER_URL}/rooms/{test_review_list['room_id']}/reviews"
+    )
     assert response.status_code == expected_status
 
     response_json = response.json()
@@ -97,62 +105,67 @@ def test_get_all_room_reviews(test_app):
 
 
 @responses.activate
-def test_get_single_room_review(test_app):
-    mock_review_response = MockReviewResponse()
-    test_review = mock_review_response.dict()
-    test_review_id = test_review["id"]
-    test_room_id = test_review["room_id"]
+def test_update_room_review(test_app, monkeypatch):
+    test_full_review = MockReviewResponse().dict()
+    test_review_id = 1
+    test_room_id = 2
     expected_status = HTTP_200_OK
-    attrs_to_test = ["review", "reviewer", "reviewer_id", "room_id", "id"]
+    attrs_to_test = ["review"]
+    test_review = {attr: test_full_review[attr] for attr in attrs_to_test}
+    header = {"x-access-token": "tokenrefalso"}
 
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_full_review["reviewer_id"]
+    )
     responses.add(
         responses.GET,
         re.compile(REVIEW_REGEX),
-        json=mock_review_response.dict(),
+        json=test_full_review,
         status=expected_status,
     )
-    response = test_app.get(f"{API_URL}/{test_room_id}/reviews/{test_review_id}")
-    assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_review, attrs_to_test)
-
-
-@responses.activate
-def test_update_room_review(test_app):
-    mock_review_response = MockReviewResponse()
-    test_full_review = mock_review_response.dict()
-    test_review_id = 1
-    test_room_id = 2
-    expected_status = HTTP_201_CREATED
-    attrs_to_test = ["review"]
-    test_review = {attr: test_full_review[attr] for attr in attrs_to_test}
-
     responses.add(
         responses.PATCH,
         re.compile(REVIEW_REGEX),
-        json=mock_review_response.dict(),
+        json=test_full_review,
         status=expected_status,
     )
     response = test_app.patch(
-        f"{API_URL}/{test_room_id}/reviews/{test_review_id}", json=test_review
+        f"{APPSERVER_URL}/rooms/{test_room_id}/reviews/{test_review_id}",
+        json=test_review,
+        headers=header,
     )
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_review, attrs_to_test)
 
 
 @responses.activate
-def test_delete_room_review(test_app):
-    mock_review_response = MockReviewResponse()
-    test_review = mock_review_response.dict()
+def test_delete_room_review(test_app, monkeypatch):
+    test_review = MockReviewResponse().dict()
     test_review_id = test_review["id"]
     test_room_id = test_review["room_id"]
     expected_status = HTTP_200_OK
+    header = {"x-access-token": "tokenrefalso"}
 
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_review["reviewer_id"]
+    )
+    responses.add(
+        responses.GET,
+        re.compile(REVIEW_REGEX),
+        json=test_review,
+        status=expected_status,
+    )
     responses.add(
         responses.DELETE,
         re.compile(REVIEW_REGEX),
-        json=mock_review_response.dict(),
+        json=test_review,
         status=expected_status,
     )
-    response = test_app.delete(f"{API_URL}/{test_room_id}/reviews/{test_review_id}")
+    response = test_app.delete(
+        f"{APPSERVER_URL}/rooms/{test_room_id}/reviews/{test_review_id}", headers=header
+    )
     assert response.status_code == expected_status
-"""
