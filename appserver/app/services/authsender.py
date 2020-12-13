@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List
 
 from app.errors.http_error import NotFoundError
@@ -5,7 +6,7 @@ from app.services.requester import Requester
 
 
 class AuthSender:
-    url = "https://bookbnb-authserver.herokuapp.com"
+    url = os.environ["AUTHSERVER_URL"]
     mock_db: List[Dict[str, Any]] = []
 
     """
@@ -46,6 +47,8 @@ class AuthSender:
         response, code = Requester.auth_srv_fetch(
             method="GET", path="/user/id", payload={}, extra_headers=cls.tkn_hdr(token)
         )
+
+        print(f"La respuesta del authserver: {response}, el codigo: {code}")
 
         if code != 200:
             raise NotFoundError("User")

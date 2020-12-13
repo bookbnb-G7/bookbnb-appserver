@@ -1,5 +1,22 @@
 import json
+import os
 from typing import Any, Dict, List
+
+POST_API_URL = os.environ["POSTSERVER_URL"]
+AUTH_API_URL = os.environ["AUTHSERVER_URL"]
+USER_API_URL = os.environ["USERSERVER_URL"]
+APPSERVER_URL = os.environ["APPSERVER_URL"]
+
+AUTH_REGEX = rf"{AUTH_API_URL}"
+POSTSERVER_ROOM_REGEX = rf"{POST_API_URL}/?[0-9]*[/]?"
+APPSERVER_ROOM_REGEX = rf"{APPSERVER_URL}/rooms/?[0-9]*[/]?"
+HOST_RATING_REGEX = rf"{USER_API_URL}/users/?[0-9]*[/]?host_ratings/?"
+GUEST_RATING_REGEX = rf"{USER_API_URL}/users/?[0-9]*[/]?guest_ratings/?"
+HOST_REVIEW_REGEX = rf"{USER_API_URL}/users/?[0-9]*[/]?host_reviews/?"
+GUEST_REVIEW_REGEX = rf"{USER_API_URL}/users/?[0-9]*[/]?guest_reviews/?"
+USER_REGEX = rf"{USER_API_URL}/?[0-9]*[/]?"
+RATING_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?ratings/?"
+REVIEW_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?reviews/?"
 
 
 class MockResponse:

@@ -1,31 +1,45 @@
 import os
 
-import requests
 from app.api.crud.room_photo_dao import RoomPhotoDAO
 from app.api.models.room_photo_model import RoomPhoto, RoomPhotoList
 from app.api.models.user_model import UserSchema
-from app.db import Session, get_db
-from app.errors.http_error import NotFoundError
+from app.db import get_db
+from app.dependencies import check_token, get_uuid_from_xtoken
+from app.errors.http_error import NotFoundError, UnauthorizedRequestError
+from app.services.authsender import AuthSender
+from app.services.requester import Requester
 from app.utils.image_utils import IdGenerator
 from fastapi import APIRouter, Depends, File, Response, UploadFile
 from firebase_admin import storage
+from sqlalchemy.orm import Session
 
 USER_IMAGES_PATH = "users"
 ROOM_IMAGES_PATH = "rooms"
-USER_SERVER_API_URL = "https://bookbnb-userserver.herokuapp.com"
-ROOM_SERVER_API_URL = "https://bookbnb-postserver.herokuapp.com"
+USER_SERVER_API_URL = os.environ["USERSERVER_URL"]
+ROOM_SERVER_API_URL = os.environ["POSTSERVER_URL"]
 
 
 router = APIRouter()
 
 
-@router.post("/rooms/{room_id}/photos", response_model=RoomPhoto)
+@router.post(
+    "/rooms/{room_id}/photos",
+    response_model=RoomPhoto,
+    dependencies=[Depends(check_token)],
+)
 async def add_room_picture(
     room_id: int,
     response: Response,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
+    uuid: int = Depends(get_uuid_from_xtoken),
 ):
+    room_path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch("GET", room_path)
+    # ! Chequear status_code y levantar error a mano si no es 200
+    if not AuthSender.has_permission_to_modify(room["owner_uuid"], uuid):
+        raise UnauthorizedRequestError("You can't add photos to another user room!")
+
     firebase_id = IdGenerator.generate()
     filename = f"{ROOM_IMAGES_PATH}/{room_id}/{firebase_id}"
 
@@ -35,15 +49,16 @@ async def add_room_picture(
     blob.make_public()
     image_url = blob.public_url
 
+    room_photo_path = f"/rooms/{room_id}/photos"
     new_photo_request = {"url": image_url, "firebase_id": firebase_id}
-    photo_response = requests.post(
-        f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos", json=new_photo_request
+    photo_response, status_code = Requester.room_srv_fetch(
+        "POST", room_photo_path, new_photo_request
     )
-    photo_id = photo_response.json()["id"]
+    photo_id = photo_response["id"]
 
     RoomPhotoDAO.add_new_room_photo(db, firebase_id, photo_id)
-    response.status_code = photo_response.status_code
-    return photo_response.json()
+    response.status_code = status_code
+    return photo_response
 
 
 @router.get("/rooms/{room_id}/photos", response_model=RoomPhotoList)
@@ -51,9 +66,10 @@ async def get_all_room_photos(
     room_id: int,
     response: Response,
 ):
-    photos = requests.get(f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos")
-    response.status_code = photos.status_code
-    return photos.json()
+    room_photo_path = f"/rooms/{room_id}/photos"
+    photo_response, status_code = Requester.room_srv_fetch("GET", room_photo_path)
+    response.status_code = status_code
+    return photo_response
 
 
 @router.get("/rooms/{room_id}/photos/{firebase_id}", response_model=RoomPhoto)
@@ -64,21 +80,33 @@ async def get_room_photo(
     db: Session = Depends(get_db),
 ):
     photo = RoomPhotoDAO.get_room_photo(db, firebase_id)
+
     photo_id = photo["room_photo_id"]
-    photo_response = requests.get(
-        f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos/{photo_id}"
-    )
-    response.status_code = photo_response.status_code
-    return photo_response.json()
+    room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
+
+    photo_response, status_code = Requester.room_srv_fetch("GET", room_photo_path)
+    response.status_code = status_code
+    return photo_response
 
 
-@router.delete("/rooms/{room_id}/photos/{firebase_id}", response_model=RoomPhoto)
+@router.delete(
+    "/rooms/{room_id}/photos/{firebase_id}",
+    response_model=RoomPhoto,
+    dependencies=[Depends(check_token)],
+)
 async def delete_room_photo(
     room_id: int,
     firebase_id: int,
     response: Response,
     db: Session = Depends(get_db),
+    uuid: int = Depends(get_uuid_from_xtoken),
 ):
+    room_path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch("GET", room_path)
+    # ! Chequear status_code y levantar error a mano si no es 200
+    if not AuthSender.has_permission_to_modify(room["owner_uuid"], uuid):
+        raise UnauthorizedRequestError("You can't delete photos of another user room!")
+
     blob_name = f"{ROOM_IMAGES_PATH}/{room_id}/{firebase_id}"
     bucket = storage.bucket()
     blob = bucket.get_blob(blob_name)
@@ -90,20 +118,26 @@ async def delete_room_photo(
     if photo is None:
         raise NotFoundError("Photo id")
     photo_id = photo["room_photo_id"]
-    photo_response = requests.delete(
-        f"{ROOM_SERVER_API_URL}/rooms/{room_id}/photos/{photo_id}"
-    )
-    response.status_code = photo_response.status_code
-    return photo_response.json()
+
+    room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
+    photo_response, status_code = Requester.room_srv_fetch("DELETE", room_photo_path)
+    response.status_code = status_code
+    return photo_response
 
 
 @router.patch(
     "/users/{user_id}/photo",
     response_model=UserSchema,
+    dependencies=[Depends(check_token)],
 )
 async def update_user_profile_picture(
-    user_id: int, response: Response, file: UploadFile = File(...)
+    user_id: int,
+    response: Response,
+    file: UploadFile = File(...),
+    uuid: int = Depends(get_uuid_from_xtoken),
 ):
+    if not AuthSender.has_permission_to_modify(user_id, uuid):
+        raise UnauthorizedRequestError("You can't modify the photo of another user!")
     _, image_extension = os.path.splitext(file.filename)
     filename = f"{USER_IMAGES_PATH}/{user_id}/profile{image_extension}"
 
@@ -115,8 +149,9 @@ async def update_user_profile_picture(
     image_url = blob.public_url
 
     user_patch = {"photo": image_url}
-    user_response = requests.patch(
-        f"{USER_SERVER_API_URL}/users/{user_id}", json=user_patch
+    user_profile_path = f"/users/{user_id}"
+    user_response, status_code = Requester.user_srv_fetch(
+        "PATCH", user_profile_path, user_patch
     )
-    response.status_code = user_response.status_code
-    return user_response.json()
+    response.status_code = status_code
+    return user_response
