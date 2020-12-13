@@ -3,7 +3,6 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-
 from tests.mock_models.user_reviews_models import (MockUserReviewListResponse,
                                                    MockUserReviewResponse)
 from tests.utils import (APPSERVER_URL, GUEST_REVIEW_REGEX, HOST_REVIEW_REGEX,
@@ -79,8 +78,10 @@ def test_get_all_user_host_reviews(test_app):
     response_json = response.json()
 
     assert response.status_code == expected_status
-    for i, response_rating in enumerate(response_json):
-        check_responses_equality(response_rating, test_review_list[i], attrs_to_test)
+    for i, response_rating in enumerate(response_json["reviews"]):
+        check_responses_equality(
+            response_rating, test_review_list["reviews"][i], attrs_to_test
+        )
 
 
 @responses.activate
@@ -100,8 +101,10 @@ def test_get_all_user_guest_reviews(test_app):
     response_json = response.json()
 
     assert response.status_code == expected_status
-    for i, response_rating in enumerate(response_json):
-        check_responses_equality(response_rating, test_review_list[i], attrs_to_test)
+    for i, response_rating in enumerate(response_json["reviews"]):
+        check_responses_equality(
+            response_rating, test_review_list["reviews"][i], attrs_to_test
+        )
 
 
 @responses.activate
