@@ -45,6 +45,19 @@ async def create_user(
     return user
 
 
+@router.get(
+    "/me", 
+    response_model=UserDB, 
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)]
+)
+async def get_user(response: Response, uuid: int = Depends(get_uuid_from_xtoken)):
+    path = f"/users/{uuid}"
+    user, status_code = Requester.user_srv_fetch(method="GET", path=path)
+    response.status_code = status_code
+    return user
+
+
 @router.get("/{user_id}", response_model=UserDB, status_code=HTTP_200_OK)
 async def get_user(user_id: int, response: Response):
     path = f"/users/{user_id}"
