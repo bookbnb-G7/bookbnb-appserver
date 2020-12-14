@@ -1,4 +1,3 @@
-import os
 from typing import Optional
 
 from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
@@ -15,7 +14,6 @@ from fastapi import APIRouter, Depends, Header, Response
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
-API_URL = os.environ["USERSERVER_URL"]
 
 
 @router.post(
