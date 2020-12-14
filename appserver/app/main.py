@@ -1,4 +1,5 @@
-from app.api.routes import file_upload_router, room_router, user_router
+from app.api.routes import (booking_router, file_upload_router, room_router,
+                            user_router)
 # from app.db import engine, metadata, database
 from app.config import firebase_authenticate, get_settings
 from app.db import Base, engine
@@ -39,3 +40,4 @@ async def http_exception_handler(request, exc):
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])
 app.include_router(file_upload_router.router, tags=["Images"])
+app.include_router(booking_router.router, tags=["Bookings"])
