@@ -70,6 +70,10 @@ class AuthSender:
             user_id != viewer_id
         )  # or cls.is_user_admin(viewer_id)[0].get("admin", False)
 
+    @classmethod
+    def can_book_room(cls, user_id, requester_id):
+        return user_id != requester_id
+
     """
 
     @classmethod
