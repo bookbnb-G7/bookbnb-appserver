@@ -1,6 +1,8 @@
+import logging
+import logging.config
+
 from app.api.routes import (booking_router, file_upload_router, room_router,
                             user_router)
-# from app.db import engine, metadata, database
 from app.config import firebase_authenticate, get_settings
 from app.db import Base, engine
 from app.errors.auth_error import AuthException
@@ -8,8 +10,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+logging.config.fileConfig("appserver/app/logging.ini", disable_existing_loggers=False)
 Base.metadata.create_all(engine)
-
 if get_settings().environment == "production":
     firebase_authenticate()
 

@@ -1,6 +1,9 @@
+import logging
 import os
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class Requester:
@@ -9,17 +12,13 @@ class Requester:
     POST_SERVER_API_KEY = os.environ["POST_SERVER_API_KEY"]
     USER_SERVER_API_KEY = os.environ["USER_SERVER_API_KEY"]
 
-    # tal vez estaria bueno meterlo en una env var
     POST_API_URL = os.environ["POSTSERVER_URL"]
     AUTH_API_URL = os.environ["AUTHSERVER_URL"]
     USER_API_URL = os.environ["USERSERVER_URL"]
 
-    # def room_srv_fetch(cls, method, url, extra_headers, payload):
-
     @classmethod
     def room_srv_fetch(cls, method, path, payload=None, extra_headers=None):
         header = {"api-key": cls.POST_SERVER_API_KEY}
-        print(f"La api key del post server es: {cls.POST_SERVER_API_KEY}")
 
         if extra_headers is not None:
             header.update(extra_headers)
@@ -66,9 +65,8 @@ class Requester:
 
     @classmethod
     def _fetch(cls, method, url, headers, payload):
-        # try:
-        # cls.logger().info(f"Launching {method} request at {url}. Payload: {payload}")
-        # cls.logger().debug(f"Using extra headers: {headers}")
+        logger.info("Sending method %s to url: %s", method, url)
+        logger.debug("Header: %s, payload %s", headers, payload)
 
         response = requests.request(method, url, json=payload, headers=headers)
         return response.json(), response.status_code

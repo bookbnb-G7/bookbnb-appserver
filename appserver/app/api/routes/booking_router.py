@@ -1,4 +1,5 @@
 import json
+import logging
 
 from app.api.models.bookings_models import (RoomBookingDB, RoomBookingList,
                                             RoomBookingSchema, UserBooking,
@@ -12,6 +13,7 @@ from app.services.requester import Requester
 from fastapi import APIRouter, Depends, HTTPException
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
