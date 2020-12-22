@@ -12,6 +12,7 @@ from app.utils.image_utils import IdGenerator
 from fastapi import APIRouter, Depends, File, Response, UploadFile
 from firebase_admin import storage
 from sqlalchemy.orm import Session
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 USER_IMAGES_PATH = "users"
 ROOM_IMAGES_PATH = "rooms"
@@ -25,18 +26,18 @@ router = APIRouter()
 @router.post(
     "/rooms/{room_id}/photos",
     response_model=RoomPhoto,
+    status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
 async def add_room_picture(
     room_id: int,
-    response: Response,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = f"/rooms/{room_id}"
-    room, _ = Requester.room_srv_fetch("GET", room_path)
-    # ! Chequear status_code y levantar error a mano si no es 200
+    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
+
     if not AuthSender.has_permission_to_modify(room["owner_uuid"], uuid):
         raise UnauthorizedRequestError("You can't add photos to another user room!")
 
@@ -51,32 +52,34 @@ async def add_room_picture(
 
     room_photo_path = f"/rooms/{room_id}/photos"
     new_photo_request = {"url": image_url, "firebase_id": firebase_id}
-    photo_response, status_code = Requester.room_srv_fetch(
-        "POST", room_photo_path, new_photo_request
+    photo_response, _ = Requester.room_srv_fetch(
+        "POST", room_photo_path, {HTTP_201_CREATED}, payload=new_photo_request
     )
     photo_id = photo_response["id"]
 
     RoomPhotoDAO.add_new_room_photo(db, firebase_id, photo_id)
-    response.status_code = status_code
     return photo_response
 
 
-@router.get("/rooms/{room_id}/photos", response_model=RoomPhotoList)
+@router.get(
+    "/rooms/{room_id}/photos", response_model=RoomPhotoList, status_code=HTTP_200_OK
+)
 async def get_all_room_photos(
     room_id: int,
-    response: Response,
 ):
     room_photo_path = f"/rooms/{room_id}/photos"
-    photo_response, status_code = Requester.room_srv_fetch("GET", room_photo_path)
-    response.status_code = status_code
+    photo_response, _ = Requester.room_srv_fetch("GET", room_photo_path, {HTTP_200_OK})
     return photo_response
 
 
-@router.get("/rooms/{room_id}/photos/{firebase_id}", response_model=RoomPhoto)
+@router.get(
+    "/rooms/{room_id}/photos/{firebase_id}",
+    response_model=RoomPhoto,
+    status_code=HTTP_200_OK,
+)
 async def get_room_photo(
     room_id: int,
     firebase_id: int,
-    response: Response,
     db: Session = Depends(get_db),
 ):
     photo = RoomPhotoDAO.get_room_photo(db, firebase_id)
@@ -84,26 +87,25 @@ async def get_room_photo(
     photo_id = photo["room_photo_id"]
     room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
 
-    photo_response, status_code = Requester.room_srv_fetch("GET", room_photo_path)
-    response.status_code = status_code
+    photo_response, _ = Requester.room_srv_fetch("GET", room_photo_path, {HTTP_200_OK})
     return photo_response
 
 
 @router.delete(
     "/rooms/{room_id}/photos/{firebase_id}",
     response_model=RoomPhoto,
+    status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def delete_room_photo(
     room_id: int,
     firebase_id: int,
-    response: Response,
     db: Session = Depends(get_db),
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = f"/rooms/{room_id}"
-    room, _ = Requester.room_srv_fetch("GET", room_path)
-    # ! Chequear status_code y levantar error a mano si no es 200
+    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
+
     if not AuthSender.has_permission_to_modify(room["owner_uuid"], uuid):
         raise UnauthorizedRequestError("You can't delete photos of another user room!")
 
@@ -120,14 +122,16 @@ async def delete_room_photo(
     photo_id = photo["room_photo_id"]
 
     room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
-    photo_response, status_code = Requester.room_srv_fetch("DELETE", room_photo_path)
-    response.status_code = status_code
+    photo_response, _ = Requester.room_srv_fetch(
+        "DELETE", room_photo_path, {HTTP_200_OK}
+    )
     return photo_response
 
 
 @router.patch(
     "/users/{user_id}/photo",
     response_model=UserSchema,
+    status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def update_user_profile_picture(
@@ -150,8 +154,7 @@ async def update_user_profile_picture(
 
     user_patch = {"photo": image_url}
     user_profile_path = f"/users/{user_id}"
-    user_response, status_code = Requester.user_srv_fetch(
-        "PATCH", user_profile_path, user_patch
+    user_response, _ = Requester.user_srv_fetch(
+        "PATCH", user_profile_path, {HTTP_200_OK}, payload=user_patch
     )
-    response.status_code = status_code
     return user_response
