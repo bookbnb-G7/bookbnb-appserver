@@ -1,5 +1,5 @@
-from typing import Any, Dict
+from requests.models import Response
 
 
-def get_error_message(response: Dict[str, Any]):
-    return response["detail"]
+def get_error_message(response: Response):
+    return response.json()["detail"]

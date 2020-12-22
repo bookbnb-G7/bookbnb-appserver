@@ -7,10 +7,9 @@ from app.api.models.bookings_models import (RoomBookingDB, RoomBookingList,
 from app.dependencies import check_token, get_uuid_from_xtoken
 from app.errors.http_error import (NotAllowedRequestError,
                                    UnauthorizedRequestError)
-from app.errors.utils import get_error_message
 from app.services.authsender import AuthSender
 from app.services.requester import Requester
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 logger = logging.getLogger(__name__)
@@ -22,9 +21,7 @@ router = APIRouter()
 )
 async def get_all_room_bookings(room_id: int):
     path = f"/rooms/{room_id}/bookings"
-    bookings, status_code = Requester.room_srv_fetch("GET", path)
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(bookings))
+    bookings, _ = Requester.room_srv_fetch("GET", path, {HTTP_200_OK})
 
     return bookings
 
@@ -41,10 +38,7 @@ async def add_booking_to_room(
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = f"/rooms/{room_id}"
-    room, status_code = Requester.room_srv_fetch("GET", room_path)
-
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(room))
+    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
     if not AuthSender.can_book_room(room["owner_uuid"], uuid):
         raise NotAllowedRequestError("Can't create booking of your own room")
@@ -53,24 +47,16 @@ async def add_booking_to_room(
     payload_booking = payload.dict()
     payload_booking.update({"user_id": uuid})
     serialized_booking_payload = json.dumps(payload_booking, default=str)
-    booking, status_code = Requester.room_srv_fetch(
-        "POST", booking_path, serialized_booking_payload
+    booking, _ = Requester.room_srv_fetch(
+        "POST", booking_path, {HTTP_201_CREATED}, payload=serialized_booking_payload
     )
-
-    if status_code != HTTP_201_CREATED:
-        raise HTTPException(status_code=status_code, detail=get_error_message(booking))
 
     user_path = f"/users/{uuid}/bookings"
     booking_id = booking["id"]
     user_booking_payload = {"booking_id": booking_id, "room_id": room_id}
-    user_booking, status_code = Requester.user_srv_fetch(
-        "POST", user_path, user_booking_payload
+    Requester.user_srv_fetch(
+        "POST", user_path, {HTTP_201_CREATED}, payload=user_booking_payload
     )
-
-    if status_code != HTTP_201_CREATED:
-        raise HTTPException(
-            status_code=status_code, detail=user_booking.json()["detail"]
-        )
 
     return booking
 
@@ -82,10 +68,7 @@ async def add_booking_to_room(
 )
 async def get_room_booking(room_id: int, booking_id: int):
     path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, status_code = Requester.room_srv_fetch("GET", path)
-
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(booking))
+    booking, _ = Requester.room_srv_fetch("GET", path, {HTTP_200_OK})
 
     return booking
 
@@ -100,24 +83,15 @@ async def delete_room_booking(
     room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
 ):
     booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, status_code = Requester.room_srv_fetch("GET", booking_path)
-
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(booking))
+    booking, _ = Requester.room_srv_fetch("GET", booking_path, {HTTP_200_OK})
 
     if not AuthSender.has_permission_to_modify(uuid, booking["user_id"]):
         raise UnauthorizedRequestError("Can't delete other users bookings")
 
-    booking, status_code = Requester.room_srv_fetch("DELETE", booking_path)
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(booking))
+    booking, _ = Requester.room_srv_fetch("DELETE", booking_path, {HTTP_200_OK})
 
     user_path = f"/users/{uuid}/bookings/{booking_id}"
-    user_booking, status_code = Requester.user_srv_fetch("DELETE", user_path)
-    if status_code != HTTP_200_OK:
-        raise HTTPException(
-            status_code=status_code, detail=get_error_message(user_booking)
-        )
+    Requester.user_srv_fetch("DELETE", user_path, {HTTP_200_OK})
 
     return booking
 
@@ -129,10 +103,7 @@ async def delete_room_booking(
 )
 async def get_user_booking(room_id: int, booking_id: int):
     path = f"/users/{room_id}/bookings/{booking_id}"
-    booking, status_code = Requester.user_srv_fetch("GET", path)
-
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(booking))
+    booking, _ = Requester.user_srv_fetch("GET", path, {HTTP_200_OK})
 
     return booking
 
@@ -142,8 +113,6 @@ async def get_user_booking(room_id: int, booking_id: int):
 )
 async def get_all_user_bookings(room_id: int):
     path = f"/users/{room_id}/bookings"
-    bookings, status_code = Requester.user_srv_fetch("GET", path)
-    if status_code != HTTP_200_OK:
-        raise HTTPException(status_code=status_code, detail=get_error_message(bookings))
+    bookings, _ = Requester.user_srv_fetch("GET", path, {HTTP_200_OK})
 
     return bookings

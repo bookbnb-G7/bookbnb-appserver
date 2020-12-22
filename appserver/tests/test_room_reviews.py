@@ -29,7 +29,7 @@ def test_post_room_review(test_app, monkeypatch):
         responses.GET,
         re.compile(POSTSERVER_ROOM_REGEX),
         json=test_room,
-        status=expected_status,
+        status=HTTP_200_OK,
     )
     responses.add(
         responses.GET,

@@ -82,7 +82,7 @@ def test_upload_room_photo(test_app, monkeypatch):
         responses.GET,
         re.compile(POSTSERVER_ROOM_REGEX),
         json=test_room,
-        status=expected_status,
+        status=HTTP_200_OK,
     )
     responses.add(
         responses.POST,

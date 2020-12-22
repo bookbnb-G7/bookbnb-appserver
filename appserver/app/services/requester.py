@@ -2,6 +2,8 @@ import logging
 import os
 
 import requests
+from app.errors.utils import get_error_message
+from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +19,9 @@ class Requester:
     USER_API_URL = os.environ["USERSERVER_URL"]
 
     @classmethod
-    def room_srv_fetch(cls, method, path, payload=None, extra_headers=None):
+    def room_srv_fetch(
+        cls, method, path, expected_statuses, payload=None, extra_headers=None
+    ):
         header = {"api-key": cls.POST_SERVER_API_KEY}
 
         if extra_headers is not None:
@@ -28,10 +32,12 @@ class Requester:
 
         url = cls.POST_API_URL + path
 
-        return cls._fetch(method, url, header, payload)
+        return cls._fetch(method, url, header, payload, expected_statuses)
 
     @classmethod
-    def auth_srv_fetch(cls, method, path, payload=None, extra_headers=None):
+    def auth_srv_fetch(
+        cls, method, path, expected_statuses, payload=None, extra_headers=None
+    ):
         header = {"api-key": cls.AUTH_SERVER_API_KEY}
         print(f"La api key del post server es: {header}")
 
@@ -43,10 +49,12 @@ class Requester:
 
         url = cls.AUTH_API_URL + path
 
-        return cls._fetch(method, url, header, payload)
+        return cls._fetch(method, url, header, payload, expected_statuses)
 
     @classmethod
-    def user_srv_fetch(cls, method, path, payload=None, extra_headers=None):
+    def user_srv_fetch(
+        cls, method, path, expected_statuses, payload=None, extra_headers=None
+    ):
         header = {"api_key": cls.USER_SERVER_API_KEY}
 
         if extra_headers is not None:
@@ -61,12 +69,18 @@ class Requester:
                 {os.environ['USERSERVER_URL']}"
         )
 
-        return cls._fetch(method, url, header, payload)
+        return cls._fetch(method, url, header, payload, expected_statuses)
 
     @classmethod
-    def _fetch(cls, method, url, headers, payload):
+    def _fetch(cls, method, url, headers, payload, expected_statuses):
         logger.info("Sending method %s to url: %s", method, url)
         logger.debug("Header: %s, payload %s", headers, payload)
 
         response = requests.request(method, url, json=payload, headers=headers)
+        response_code = response.status_code
+        if response_code not in expected_statuses:
+            raise HTTPException(
+                status_code=response_code, detail=get_error_message(response)
+            )
+
         return response.json(), response.status_code
