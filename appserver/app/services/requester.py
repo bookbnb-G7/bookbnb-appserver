@@ -55,7 +55,7 @@ class Requester:
     def user_srv_fetch(
         cls, method, path, expected_statuses, payload=None, extra_headers=None
     ):
-        header = {"api_key": cls.USER_SERVER_API_KEY}
+        header = {"api-key": cls.USER_SERVER_API_KEY}
 
         if extra_headers is not None:
             header.update(extra_headers)
