@@ -1,3 +1,4 @@
+from typing import Optional
 from app.api.models.room_model import RoomDB, RoomList, RoomSchema, RoomUpdate
 from app.api.models.room_rating_model import (RoomRatingDB, RoomRatingList,
                                               RoomRatingSchema,
@@ -43,9 +44,39 @@ async def create_room(payload: RoomSchema, uuid: int = Depends(get_uuid_from_xto
 
 
 @router.get("", response_model=RoomList, status_code=HTTP_200_OK)
-async def get_all_rooms():
+async def get_all_rooms(
+    date_begins: Optional[str] = None,
+    date_ends: Optional[str] = None,
+    longitude: Optional[float] = None,
+    latitude: Optional[float] = None,
+    people: Optional[int] = None
+):
+    query = "?"
+    path = "/rooms"
+
+    if date_begins is not None:
+        query = query + f'date_begins={date_begins}&'
+
+    if date_ends is not None:
+        query = query + f'date_ends={date_ends}&'
+
+    if longitude is not None:
+        query = query + f'longitude={longitude}&'
+
+    if latitude is not None:
+        query = query + f'latitude={latitude}&'
+
+    if people is not None:
+        query = query + f'people={people}&'
+
+    if len(query) > 1:
+        # strip last & in the query
+        query = query[:(len(query) - 1)]
+        path = path + "/" + query
+
+
     rooms, _ = Requester.room_srv_fetch(
-        method="GET", path="/rooms", expected_statuses={HTTP_200_OK}
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
     return rooms
 
