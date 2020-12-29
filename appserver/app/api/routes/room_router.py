@@ -1,4 +1,5 @@
 from typing import Optional
+
 from app.api.models.room_model import RoomDB, RoomList, RoomSchema, RoomUpdate
 from app.api.models.room_rating_model import (RoomRatingDB, RoomRatingList,
                                               RoomRatingSchema,
@@ -49,31 +50,30 @@ async def get_all_rooms(
     date_ends: Optional[str] = None,
     longitude: Optional[float] = None,
     latitude: Optional[float] = None,
-    people: Optional[int] = None
+    people: Optional[int] = None,
 ):
     query = "?"
     path = "/rooms"
 
     if date_begins is not None:
-        query = query + f'date_begins={date_begins}&'
+        query = query + f"date_begins={date_begins}&"
 
     if date_ends is not None:
-        query = query + f'date_ends={date_ends}&'
+        query = query + f"date_ends={date_ends}&"
 
     if longitude is not None:
-        query = query + f'longitude={longitude}&'
+        query = query + f"longitude={longitude}&"
 
     if latitude is not None:
-        query = query + f'latitude={latitude}&'
+        query = query + f"latitude={latitude}&"
 
     if people is not None:
-        query = query + f'people={people}&'
+        query = query + f"people={people}&"
 
     if len(query) > 1:
         # strip last & in the query
-        query = query[:(len(query) - 1)]
+        query = query[: (len(query) - 1)]
         path = path + "/" + query
-
 
     rooms, _ = Requester.room_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
