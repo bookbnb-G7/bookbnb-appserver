@@ -8,11 +8,11 @@ class RoomBookingSchema(BaseModel):
     date_ends: datetime
     date_begins: datetime
     amount_of_people: int
+    user_id: int
 
 
 class RoomBookingDB(RoomBookingSchema):
     id: int
-    user_id: int
     room_id: int
     total_price: float
     created_at: datetime

@@ -4,14 +4,16 @@ import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.mock_models.user_models import (MockUserListResponse,
-                                           MockUserResponse)
+                                           MockUserResponse,
+                                           MockPaymentWalletResponse)
 from tests.utils import (APPSERVER_URL, AUTH_REGEX, USER_REGEX,
-                         check_responses_equality)
+                         PAYMENT_WALLET_REGEX, check_responses_equality)
 
 
 @responses.activate
 def test_create_user(test_app, monkeypatch):
     test_user = MockUserResponse().dict()
+    test_wallet = MockPaymentWalletResponse().dict()
     expected_status = HTTP_201_CREATED
     attrs_to_test = [
         "firstname",
@@ -36,6 +38,12 @@ def test_create_user(test_app, monkeypatch):
         re.compile(USER_REGEX),
         json=test_user,
         status=expected_status,
+    )
+    responses.add(
+        responses.POST,
+        re.compile(PAYMENT_WALLET_REGEX),
+        json=test_wallet,
+        status=expected_status
     )
     response = test_app.post(f"{APPSERVER_URL}/users", json=test_user, headers=header)
 

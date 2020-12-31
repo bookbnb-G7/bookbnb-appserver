@@ -33,6 +33,23 @@ async def create_room(payload: RoomSchema, uuid: int = Depends(get_uuid_from_xto
 
     req_payload = payload.dict()
     req_payload.update({"owner_uuid": uuid, "owner": owner})
+
+    payment_payload = {
+        "ownerId": req_payload["owner_uuid"],
+        "price": req_payload["price_per_day"]
+    }
+
+    # Create room in payment server and generate an ID
+    room_pay_srv, _ = Requester.payment_fetch(
+        method="POST",
+        path="/rooms",
+        expected_statuses={HTTP_201_CREATED},
+        payload=payment_payload
+    )
+
+    # Add id to the room created in room server
+    req_payload["id"] = room_pay_srv["id"]
+
     room, _ = Requester.room_srv_fetch(
         method="POST",
         path="/rooms",
@@ -118,6 +135,9 @@ async def update_room(
         expected_statuses={HTTP_200_OK},
         payload=room_req_payload,
     )
+
+    # TODO: Patch room price in payment server
+
     return room
 
 
@@ -141,6 +161,9 @@ async def delete_room(room_id: int, viewer_uuid: int = Depends(get_uuid_from_xto
     room, _ = Requester.room_srv_fetch(
         method="DELETE", path=path, expected_statuses={HTTP_200_OK}
     )
+
+    # TODO: Delete room in payment server
+
     return room
 
 

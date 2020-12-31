@@ -4,14 +4,16 @@ import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.mock_models.room_models import (MockRoomListResponse,
-                                           MockRoomResponse)
+                                           MockRoomResponse,
+                                           MockPaymentRoomResponse)
 from tests.mock_models.user_models import MockUserResponse
 from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
-                         check_responses_equality)
+                         PAYMENT_ROOM_REGEX, check_responses_equality)
 
 
 @responses.activate
 def test_create_room(test_app, monkeypatch):
+    test_payment_room = MockPaymentRoomResponse().dict()
     test_room = MockRoomResponse().dict()
     test_user = MockUserResponse().dict()
     test_user["id"] = test_room["owner_uuid"]
@@ -31,6 +33,12 @@ def test_create_room(test_app, monkeypatch):
         re.compile(USER_REGEX),
         json=test_user,
         status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.POST,
+        re.compile(PAYMENT_ROOM_REGEX),
+        json=test_payment_room,
+        status=expected_status
     )
     responses.add(
         responses.POST,

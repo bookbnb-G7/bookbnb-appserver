@@ -6,19 +6,29 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.mock_models.booking_models import (MockBookingListResponse,
                                               MockBookingResponse,
                                               MockUserBookingListResponse,
-                                              MockUserBookingResponse)
+                                              MockUserBookingResponse,
+                                              MockPaymentBookingResponse)
 from tests.mock_models.room_models import MockRoomResponse
 from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
-                         check_responses_equality)
+                         PAYMENT_BOOKING_REGEX, PAYMENT_BOOKING_ACCEPT_REGEX,
+                         PAYMENT_BOOKING_REJECT_REGEX, check_responses_equality)
 
+
+# TODO: Mock accept, Mock reject
+# TODO: mock get /me/wallet in test_users.py
 
 @responses.activate
 def test_add_room_booking(test_app, monkeypatch):
+    # return value of post to payment server
+    test_booking_payment = MockPaymentBookingResponse().dict()
+
+    # return value of post to post server
     test_booking = MockBookingResponse().dict()
     test_booking_payload = {
         "date_begins": test_booking["date_begins"],
         "date_ends": test_booking["date_ends"],
         "amount_of_people": test_booking["amount_of_people"],
+        "user_id": test_booking["user_id"]
     }
     test_room = MockRoomResponse().dict()
     test_user_booking = MockUserBookingResponse().dict()
@@ -35,6 +45,7 @@ def test_add_room_booking(test_app, monkeypatch):
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    # monkeypatch.setattr(AuthSender, "can_book_room_payment", lambda x: True)
     monkeypatch.setattr(AuthSender, "can_book_room", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
 
@@ -43,6 +54,12 @@ def test_add_room_booking(test_app, monkeypatch):
         re.compile(POSTSERVER_ROOM_REGEX),
         json=test_room,
         status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.POST,
+        re.compile(PAYMENT_BOOKING_REGEX),
+        json=test_booking_payment,
+        status=expected_status,
     )
     responses.add(
         responses.POST,
@@ -64,6 +81,7 @@ def test_add_room_booking(test_app, monkeypatch):
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_booking, attrs_to_test)
 
+# TODO: Mock accept, Mock reject
 
 @responses.activate
 def test_get_room_booking(test_app, monkeypatch):

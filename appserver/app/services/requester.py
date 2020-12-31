@@ -13,10 +13,12 @@ class Requester:
     AUTH_SERVER_API_KEY = os.environ["AUTH_SERVER_API_KEY"]
     POST_SERVER_API_KEY = os.environ["POST_SERVER_API_KEY"]
     USER_SERVER_API_KEY = os.environ["USER_SERVER_API_KEY"]
+    PAYMENT_API_KEY = os.environ["PAYMENT_API_KEY"]
 
     POST_API_URL = os.environ["POSTSERVER_URL"]
     AUTH_API_URL = os.environ["AUTHSERVER_URL"]
     USER_API_URL = os.environ["USERSERVER_URL"]
+    PAYMENT_API_URL = os.environ["PAYMENT_URL"]
 
     @classmethod
     def room_srv_fetch(
@@ -68,6 +70,22 @@ class Requester:
             f"La url de user es: {url}, la env var resulto: \
                 {os.environ['USERSERVER_URL']}"
         )
+
+        return cls._fetch(method, url, header, payload, expected_statuses)
+
+    @classmethod
+    def payment_fetch(
+        cls, method, path, expected_statuses, payload=None, extra_headers=None
+    ):
+        header = {"api-key": cls.PAYMENT_API_KEY}
+
+        if extra_headers is not None:
+            header.update(extra_headers)
+
+        if payload is None:
+            payload = {}
+
+        url = cls.PAYMENT_API_URL + path
 
         return cls._fetch(method, url, header, payload, expected_statuses)
 

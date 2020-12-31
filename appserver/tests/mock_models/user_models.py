@@ -42,3 +42,9 @@ class MockUserListResponse(MockResponse):
                 },
             ],
         }
+
+class MockPaymentWalletResponse(MockResponse):
+    def dict(self):
+        return {
+            "uuid": 4,
+        }
