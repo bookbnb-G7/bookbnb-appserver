@@ -7,15 +7,15 @@ from tests.mock_models.booking_models import (MockBookingListResponse,
                                               MockBookingResponse,
                                               MockUserBookingListResponse,
                                               MockUserBookingResponse,
-                                              MockPaymentBookingResponse)
+                                              MockPaymentBookingResponse,
+                                              MockBookingAcceptedResponse,
+                                              MockPaymentBookingAcceptedResponse)
 from tests.mock_models.room_models import MockRoomResponse
 from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
+                         POSTSERVER_ROOM_BOOKING_REGEX,
                          PAYMENT_BOOKING_REGEX, PAYMENT_BOOKING_ACCEPT_REGEX,
                          PAYMENT_BOOKING_REJECT_REGEX, check_responses_equality)
 
-
-# TODO: Mock accept, Mock reject
-# TODO: mock get /me/wallet in test_users.py
 
 @responses.activate
 def test_add_room_booking(test_app, monkeypatch):
@@ -81,7 +81,60 @@ def test_add_room_booking(test_app, monkeypatch):
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_booking, attrs_to_test)
 
-# TODO: Mock accept, Mock reject
+
+# Mock accept
+@responses.activate
+def test_accept_room_booking(test_app, monkeypatch):
+    test_booking = MockBookingResponse().dict()
+    test_booking_id = test_booking["id"]
+    test_user_id = test_booking["user_id"]
+    test_room_id = test_booking["room_id"]
+    test_payment_booking_accepted = MockPaymentBookingAcceptedResponse().dict()
+    test_booking_accepted = MockBookingAcceptedResponse().dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "user_id",
+        "amount_of_people",
+        "id",
+        "room_id",
+        "total_price",
+        "status",
+    ]
+
+    header = {"x-access-token": "tokenrefalso"}
+
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_booking,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.POST,
+        re.compile(PAYMENT_BOOKING_ACCEPT_REGEX),
+        json=test_payment_booking_accepted,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.PATCH,
+        re.compile(POSTSERVER_ROOM_BOOKING_REGEX),
+        json=test_booking_accepted,
+        status=HTTP_200_OK,
+    )
+    response = test_app.post(
+        f"{APPSERVER_URL}/rooms/{test_room_id}/bookings/{test_booking_id}/accept",
+        headers=header
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_booking_accepted, attrs_to_test)
+
+
+# TODO: Mock reject
+
 
 @responses.activate
 def test_get_room_booking(test_app, monkeypatch):

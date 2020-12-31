@@ -112,7 +112,7 @@ def test_get_self_user(test_app, monkeypatch):
 
 @responses.activate
 def test_get_self_user_wallet(test_app, monkeypatch):
-    # TODO: GET {appserver_url}/users/me/wallet
+    # GET {appserver_url}/users/me/wallet
 
     test_wallet = MockPaymentWalletResponse().dict()
     test_user_id = 1
