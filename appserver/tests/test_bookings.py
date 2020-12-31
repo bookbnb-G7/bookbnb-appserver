@@ -9,7 +9,8 @@ from tests.mock_models.booking_models import (MockBookingListResponse,
                                               MockUserBookingResponse,
                                               MockPaymentBookingResponse,
                                               MockBookingAcceptedResponse,
-                                              MockPaymentBookingAcceptedResponse)
+                                              MockPaymentBookingAcceptedResponse,
+                                              MockPaymentBookingRejectedResponse)
 from tests.mock_models.room_models import MockRoomResponse
 from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
                          POSTSERVER_ROOM_BOOKING_REGEX,
@@ -133,7 +134,61 @@ def test_accept_room_booking(test_app, monkeypatch):
     check_responses_equality(response.json(), test_booking_accepted, attrs_to_test)
 
 
-# TODO: Mock reject
+# Mock reject
+@responses.activate
+def test_reject_room_booking(test_app, monkeypatch):
+    test_booking = MockBookingResponse().dict()
+    test_booking_id = test_booking["id"]
+    test_user_id = test_booking["user_id"]
+    test_room_id = test_booking["room_id"]
+    test_payment_booking_rejected = MockPaymentBookingRejectedResponse().dict()
+    test_user_booking = MockUserBookingResponse().dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "user_id",
+        "amount_of_people",
+        "id",
+        "room_id",
+        "total_price",
+        "status",
+    ]
+
+    header = {"x-access-token": "tokenrefalso"}
+
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_booking,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.POST,
+        re.compile(PAYMENT_BOOKING_REJECT_REGEX),
+        json=test_payment_booking_rejected,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.DELETE,
+        re.compile(POSTSERVER_ROOM_BOOKING_REGEX),
+        json=test_booking,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.DELETE,
+        re.compile(USER_REGEX),
+        json=test_user_booking,
+        status=expected_status,
+    )
+    response = test_app.post(
+        f"{APPSERVER_URL}/rooms/{test_room_id}/bookings/{test_booking_id}/reject",
+        headers=header
+    )
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), test_booking, attrs_to_test)
 
 
 @responses.activate
