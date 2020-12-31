@@ -15,6 +15,7 @@ class RoomBookingDB(RoomBookingSchema):
     id: int
     room_id: int
     total_price: float
+    status: int
     created_at: datetime
     updated_at: datetime
 

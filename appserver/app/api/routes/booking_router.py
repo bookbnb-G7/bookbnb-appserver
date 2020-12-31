@@ -51,8 +51,8 @@ async def add_booking_to_room(
     payload_booking = {
         "bookerId": payload.user_id,
         "roomId": room_id,
-        "dateFrom": payload.date_begins.strftime('%Y-%m-%d'),
-        "dateTo": payload.date_ends.strftime('%Y-%m-%d')
+        "dateFrom": payload.date_begins.strftime('%d-%m-%Y'),
+        "dateTo": payload.date_ends.strftime('%d-%m-%Y')
     }
     booking, _ = Requester.payment_fetch(
         method="POST",
@@ -66,8 +66,9 @@ async def add_booking_to_room(
     booking_path = f"/rooms/{room_id}/bookings"
     payload_booking = payload.dict()
     payload_booking.update({"user_id": uuid})
-    # Add the booking id received from the payment server
+    # Add the booking id and status received from the payment server
     payload_booking["id"] = booking["id"]
+    payload_booking["status"] = booking["bookingStatus"]
     serialized_booking_payload = json.dumps(payload_booking, default=str)
     booking, _ = Requester.room_srv_fetch(
         "POST", booking_path, {HTTP_201_CREATED}, payload=serialized_booking_payload
@@ -80,12 +81,9 @@ async def add_booking_to_room(
         "POST", user_path, {HTTP_201_CREATED}, payload=user_booking_payload
     )
 
-    # TODO: save status in post server
-
     return booking
 
 
-# TODO: post to endpoint room/id/bookings/id/accept
 @router.post(
     "/rooms/{room_id}/bookings/{booking_id}/accept",
     response_model=RoomBookingDB,
@@ -100,14 +98,18 @@ async def accept_room_booking(
     if not AuthSender.has_permission_to_modify(uuid, booking["user_id"]):
         raise UnauthorizedRequestError("Can't accept other users bookings")
 
-    # TODO: actualizar este path
     path = f"/bookings/{booking_id}/accept/"
     book_accepted, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK})
 
-    return book_accepted
+    # Update status to confirmed in post server
+    booking_status = {"status": book_accepted["bookingStatus"]}
+    booking, _ = Requester.room_srv_fetch(
+        "PATCH", booking_path, {HTTP_200_OK}, payload=booking_status
+    )
+
+    return booking
 
 
-# TODO: post to endpoint room/id/bookings/id/reject
 @router.post(
     "/rooms/{room_id}/bookings/{booking_id}/reject",
     response_model=RoomBookingDB,
@@ -125,17 +127,15 @@ async def reject_room_booking(
     path = f"/bookings/{booking_id}/reject/"
     book_rejected, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK})
 
-    # TODO: if success delete booking in room server and userserver 
-    # (check if reject fails, does it return a status code != 200 ?)
+    # Delete the rejected booking in post server and user server
     booking, _ = Requester.room_srv_fetch("DELETE", booking_path, {HTTP_200_OK})
 
     user_path = f"/users/{uuid}/bookings/{booking_id}"
     Requester.user_srv_fetch("DELETE", user_path, {HTTP_200_OK})
 
-    return book_rejected
+    return booking
 
 
-# TODO: get should make a get to payment server to check status
 @router.get(
     "/rooms/{room_id}/bookings/{booking_id}",
     response_model=RoomBookingDB,
@@ -144,8 +144,6 @@ async def reject_room_booking(
 async def get_room_booking(room_id: int, booking_id: int):
     path = f"/rooms/{room_id}/bookings/{booking_id}"
     booking, _ = Requester.room_srv_fetch("GET", path, {HTTP_200_OK})
-
-    # get to booking server and append status to booking (the return value)
 
     return booking
 

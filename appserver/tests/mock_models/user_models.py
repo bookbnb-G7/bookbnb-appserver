@@ -47,4 +47,6 @@ class MockPaymentWalletResponse(MockResponse):
     def dict(self):
         return {
             "uuid": 4,
+            "address": "fake_addr",
+            "mnemonic": "word word word word word word word word word word word word"
         }

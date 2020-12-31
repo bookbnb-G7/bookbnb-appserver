@@ -41,11 +41,11 @@ def test_add_room_booking(test_app, monkeypatch):
         "id",
         "room_id",
         "total_price",
+        "status",
     ]
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    # monkeypatch.setattr(AuthSender, "can_book_room_payment", lambda x: True)
     monkeypatch.setattr(AuthSender, "can_book_room", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
 
@@ -95,6 +95,7 @@ def test_get_room_booking(test_app, monkeypatch):
         "id",
         "room_id",
         "total_price",
+        "status",
     ]
 
     responses.add(
@@ -122,6 +123,7 @@ def test_get_all_room_bookings(test_app):
         "id",
         "room_id",
         "total_price",
+        "status",
     ]
 
     responses.add(
@@ -155,6 +157,7 @@ def test_delete_room_booking(test_app, monkeypatch):
         "id",
         "room_id",
         "total_price",
+        "status",
     ]
     header = {"x-access-token": "tokenrefalso"}
 

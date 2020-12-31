@@ -11,6 +11,7 @@ class MockBookingResponse(MockResponse):
             "id": 7,
             "room_id": 5,
             "total_price": 876.5,
+            "status": 1,
             "created_at": "2020-12-14T01:16:34.275Z",
             "updated_at": "2020-12-14T01:16:34.275Z",
         }
@@ -30,6 +31,7 @@ class MockBookingListResponse(MockResponse):
                     "id": 7,
                     "room_id": 6,
                     "total_price": 876.5,
+                    "status": 1,
                     "created_at": "2020-12-14T01:16:34.275Z",
                     "updated_at": "2020-12-14T01:16:34.275Z",
                 },
@@ -41,6 +43,7 @@ class MockBookingListResponse(MockResponse):
                     "id": 8,
                     "room_id": 6,
                     "total_price": 466.3,
+                    "status": 1,
                     "created_at": "2020-12-14T01:16:34.275Z",
                     "updated_at": "2020-12-14T01:16:34.275Z",
                 },

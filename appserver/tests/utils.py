@@ -23,6 +23,8 @@ GUEST_REVIEW_REGEX = rf"{USER_API_URL}/users/?[0-9]*[/]?guest_reviews/?"
 USER_REGEX = rf"{USER_API_URL}/?[0-9]*[/]?"
 RATING_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?ratings/?"
 REVIEW_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?reviews/?"
+APPSERVER_ME_REGEX = rf"{APPSERVER_URL}/users/me/?"
+APPSERVER_WALLET_REGEX = rf"{APPSERVER_URL}/users/me/wallet?"
 
 
 class MockResponse:
