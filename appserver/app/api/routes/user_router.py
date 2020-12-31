@@ -1,7 +1,7 @@
 from typing import Optional
 
 from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
-                                       UserUpdateSchema)
+                                       UserUpdateSchema, WalletDB)
 from app.api.models.user_rating_model import (UserRatingList, UserRatingSchema,
                                               UserRatingUpdate)
 from app.api.models.user_review_model import (UserReviewList, UserReviewSchema,
@@ -74,7 +74,7 @@ async def get_current_user(uuid: int = Depends(get_uuid_from_xtoken)):
 
 @router.get(
     "/me/wallet",
-    response_model=UserDB,
+    response_model=WalletDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )

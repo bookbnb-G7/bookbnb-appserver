@@ -97,3 +97,9 @@ class UserUpdateSchema(BaseModel):
                 "lastname": "Zucaritas",
             }
         }
+
+
+class WalletDB(BaseModel):
+    uuid: int
+    address: str
+    mnemonic: str
