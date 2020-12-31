@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 from app.errors.http_error import NotFoundError
 from app.services.requester import Requester
+from starlette.status import HTTP_200_OK
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class AuthSender:
         response, code = Requester.auth_srv_fetch(
             method="POST",
             path="/auth/sign-in",
+            expected_statuses={HTTP_200_OK},
             payload={},
             extra_headers=cls.tkn_hdr(token),
         )
@@ -37,7 +39,11 @@ class AuthSender:
         #    return int(token)
 
         response, code = Requester.auth_srv_fetch(
-            method="GET", path="/user/id", payload={}, extra_headers=cls.tkn_hdr(token)
+            method="GET",
+            path="/user/id",
+            expected_statuses={HTTP_200_OK},
+            payload={},
+            extra_headers=cls.tkn_hdr(token),
         )
         logger.debug(
             "Auth server get uuid response: %s, status_code: %s", response, code
