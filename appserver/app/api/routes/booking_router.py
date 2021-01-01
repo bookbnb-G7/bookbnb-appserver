@@ -99,8 +99,8 @@ async def accept_room_booking(
         raise UnauthorizedRequestError("Can't accept other users bookings")
 
     path = f"/bookings/{booking_id}/accept/"
-    payload = {"roomOwnerId": room["owner_uuid"]}
-    book_accepted, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK}, payload=payload)
+    payload_accept = {"roomOwnerId": room["owner_uuid"]}
+    book_accepted, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK}, payload=payload_accept)
 
     # Update status to confirmed in post server
     booking_status = {"status": book_accepted["bookingStatus"]}
@@ -120,16 +120,19 @@ async def accept_room_booking(
 async def reject_room_booking(
     room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
 ):
-    booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch("GET", booking_path, {HTTP_200_OK})
 
-    if not AuthSender.has_permission_to_modify(uuid, booking["user_id"]):
+    room_path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
+
+    if not AuthSender.has_permission_to_modify(uuid, room["owner_uuid"]):
         raise UnauthorizedRequestError("Can't reject other users bookings")
 
     path = f"/bookings/{booking_id}/reject/"
-    book_rejected, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK})
+    payload_reject = {"roomOwnerId": room["owner_uuid"]}
+    book_rejected, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK}, payload=payload_reject)
 
     # Delete the rejected booking in post server and user server
+    booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
     booking, _ = Requester.room_srv_fetch("DELETE", booking_path, {HTTP_200_OK})
 
     user_path = f"/users/{uuid}/bookings/{booking_id}"
