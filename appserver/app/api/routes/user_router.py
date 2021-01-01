@@ -1,7 +1,7 @@
 from typing import Optional
 
 from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
-                                       UserUpdateSchema)
+                                       UserUpdateSchema, WalletDB)
 from app.api.models.user_rating_model import (UserRatingList, UserRatingSchema,
                                               UserRatingUpdate)
 from app.api.models.user_review_model import (UserReviewList, UserReviewSchema,
@@ -44,6 +44,17 @@ async def create_user(
         expected_statuses={HTTP_201_CREATED},
         payload=payload_user,
     )
+
+    # create wallet
+    path = "/wallets"
+    payload_wallet = {"uuid": registered_user["uuid"]}
+    wallet, _ = Requester.payment_fetch(
+        method="POST",
+        path=path,
+        expected_statuses={HTTP_201_CREATED},
+        payload=payload_wallet
+    )
+
     return user
 
 
@@ -59,6 +70,20 @@ async def get_current_user(uuid: int = Depends(get_uuid_from_xtoken)):
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
     return user
+
+
+@router.get(
+    "/me/wallet",
+    response_model=WalletDB,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def get_current_user_wallet(uuid: int = Depends(get_uuid_from_xtoken)):
+    path = f"/wallets/{uuid}"
+    wallet, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+    return wallet
 
 
 @router.get("/{user_id}", response_model=UserDB, status_code=HTTP_200_OK)

@@ -39,3 +39,11 @@ class MockRoomListResponse(MockResponse):
                 },
             ],
         }
+
+class MockPaymentRoomResponse(MockResponse):
+    def dict(self):
+        return {
+            "id": 4,
+            "price": 5,
+            "ownerId": 3
+        }
