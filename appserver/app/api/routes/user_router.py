@@ -95,6 +95,20 @@ async def get_user(user_id: int):
     return user
 
 
+# TODO: BORRAR ESTE ENDPOINT
+@router.get(
+    "/wallet/{user_id}",
+    response_model=WalletDB,
+    status_code=HTTP_200_OK,
+)
+async def get_user_wallet(user_id: int):
+    path = f"/wallets/{user_id}"
+    wallet, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+    return wallet
+
+
 @router.patch(
     "/{user_id}",
     response_model=UserSchema,
