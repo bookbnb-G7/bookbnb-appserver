@@ -86,12 +86,12 @@ def test_add_room_booking(test_app, monkeypatch):
 # Mock accept
 @responses.activate
 def test_accept_room_booking(test_app, monkeypatch):
-    test_booking = MockBookingResponse().dict()
-    test_booking_id = test_booking["id"]
-    test_user_id = test_booking["user_id"]
-    test_room_id = test_booking["room_id"]
-    test_payment_booking_accepted = MockPaymentBookingAcceptedResponse().dict()
+    test_room = MockRoomResponse().dict()
     test_booking_accepted = MockBookingAcceptedResponse().dict()
+    test_booking_id = test_booking_accepted["id"]
+    test_user_id = test_booking_accepted["user_id"]
+    test_room_id = test_booking_accepted["room_id"]
+    test_payment_booking_accepted = MockPaymentBookingAcceptedResponse().dict()
     expected_status = HTTP_200_OK
     attrs_to_test = [
         "user_id",
@@ -111,7 +111,7 @@ def test_accept_room_booking(test_app, monkeypatch):
     responses.add(
         responses.GET,
         re.compile(POSTSERVER_ROOM_REGEX),
-        json=test_booking,
+        json=test_room,
         status=HTTP_200_OK,
     )
     responses.add(

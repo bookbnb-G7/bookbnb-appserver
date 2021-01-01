@@ -92,17 +92,19 @@ async def add_booking_to_room(
 async def accept_room_booking(
     room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
 ):
-    booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch("GET", booking_path, {HTTP_200_OK})
+    room_path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
-    if not AuthSender.has_permission_to_modify(uuid, booking["user_id"]):
+    if not AuthSender.has_permission_to_modify(uuid, room["owner_uuid"]):
         raise UnauthorizedRequestError("Can't accept other users bookings")
 
     path = f"/bookings/{booking_id}/accept/"
-    book_accepted, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK})
+    payload = {"roomOwnerId": room["owner_uuid"]}
+    book_accepted, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK}, payload=payload)
 
     # Update status to confirmed in post server
     booking_status = {"status": book_accepted["bookingStatus"]}
+    booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
     booking, _ = Requester.room_srv_fetch(
         "PATCH", booking_path, {HTTP_200_OK}, payload=booking_status
     )
