@@ -7,6 +7,9 @@ from pydantic import BaseModel
 class RoomSchema(BaseModel):
     type: str
     price_per_day: int
+    latitude: float
+    longitude: float
+    capacity: int
 
     class Config:
         schema_extra = {
@@ -32,6 +35,9 @@ class RoomDB(RoomSchema):
                 "owner": "Johnny",
                 "owner_uuid": 45,
                 "price_per_day": 67,
+                "latitude": 0.0,
+                "longitude": 0.0,
+                "capacity": 1,
                 "created_at": "2020-11-20T18:02:20.965Z",
                 "updated_at": "2020-11-20T18:02:20.965Z",
             }
@@ -61,6 +67,9 @@ class RoomList(BaseModel):
                         "owner": "Alice",
                         "owner_id": 44,
                         "price_per_day": 67,
+                        "latitude": 0.0,
+                        "longitude": 0.0,
+                        "capacity": 1,
                         "created_at": "2020-11-20T18:02:20.965Z",
                         "updated_at": "2020-11-20T18:02:20.965Z",
                     },
@@ -70,6 +79,9 @@ class RoomList(BaseModel):
                         "owner": "Bob",
                         "owner_id": 17,
                         "price_per_day": 872,
+                        "latitude": 0.0,
+                        "longitude": 0.0,
+                        "capacity": 1,
                         "created_at": "2019-11-20T18:06:37.767Z",
                         "updated_at": "2020-11-20T18:06:37.767Z",
                     },
