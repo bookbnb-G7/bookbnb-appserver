@@ -5,7 +5,7 @@ from functools import lru_cache
 from firebase_admin import credentials, initialize_app
 from pydantic import BaseSettings
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
 @lru_cache()
 def get_settings() -> Settings:
-    log.info("Loading config settings from the environment...")
+    logger.info("Loading config settings from the environment...")
     return Settings()
 
 
@@ -36,3 +36,4 @@ def firebase_authenticate():
         }
     )
     initialize_app(cred, {"storageBucket": storage_bucket})
+    logger.info("Authenticated in firebase successfully")

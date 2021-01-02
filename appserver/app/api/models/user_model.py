@@ -25,15 +25,9 @@ class UserSchema(BaseModel):
                 + "2020/07/zuck_sunscreen.jpg",
             }
         }
-        
-class UserDB(BaseModel):
-    firstname: str
-    lastname: str
-    email: str
-    phonenumber: str
-    country: str
-    birthdate: str
-    photo: Optional[str] = None
+
+
+class UserDB(UserSchema):
     id: int
 
     class Config:
@@ -47,6 +41,7 @@ class UserDB(BaseModel):
                 "birthdate": "1984-05-14",
                 "photo": "https://melmagazine.com/wp-content/uploads/"
                 + "2020/07/zuck_sunscreen.jpg",
+                "id": 16,
             }
         }
 
@@ -58,7 +53,7 @@ class UserListSchema(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "amount": 0,
+                "amount": 2,
                 "users": [
                     {
                         "firstname": "Mark",
@@ -69,6 +64,7 @@ class UserListSchema(BaseModel):
                         "birthdate": "1984-05-14",
                         "photo": "https://melmagazine.com/wp-content/"
                         + "uploads/2020/07/zuck_sunscreen.jpg",
+                        "id": 14,
                     },
                     {
                         "firstname": "Jack",
@@ -79,6 +75,7 @@ class UserListSchema(BaseModel):
                         "birthdate": "1976-11-19",
                         "photo": "https://i.insider.com/5e5e32fafee23d6a26433d83?"
                         + "width=750&format=jpeg&auto=webp",
+                        "id": 9,
                     },
                 ],
             }
@@ -100,3 +97,9 @@ class UserUpdateSchema(BaseModel):
                 "lastname": "Zucaritas",
             }
         }
+
+
+class WalletDB(BaseModel):
+    uuid: int
+    address: str
+    mnemonic: str

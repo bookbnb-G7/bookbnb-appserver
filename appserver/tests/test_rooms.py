@@ -1,111 +1,70 @@
 import re
 
 import responses
+from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from tests.utils import MockResponse, check_responses_equality
-
-"""
-from app.api.routes.room_router import API_URL
-
-POSTSERVER_ROOM_REGEX = rf"{API_URL}/?[0-9]*[/]?"
-
-
-class MockRoomResponse(MockResponse):
-    def dict(self):
-        return {
-            "type": "Apartment",
-            "owner": "Carlito",
-            "owner_id": 10,
-            "price_per_day": 999,
-            "id": 0,
-            "created_at": "2020-11-10T22:51:03.539Z",
-            "updated_at": "2020-11-10T22:51:03.539Z",
-        }
-
-
-class MockRoomListResponse(MockResponse):
-    def dict(self):
-        return {
-            "amount": 2,
-            "rooms": [
-                {
-                    "type": "Apartment",
-                    "owner": "Carlito",
-                    "owner_id": 10,
-                    "price_per_day": 999,
-                    "id": 0,
-                    "created_at": "2020-11-10T22:51:03.539Z",
-                    "updated_at": "2020-11-10T22:51:03.539Z",
-                },
-                {
-                    "type": "House",
-                    "owner": "Freee",
-                    "owner_id": 11,
-                    "price_per_day": 123,
-                    "id": 1,
-                    "created_at": "2020-11-10T22:51:03.539Z",
-                    "updated_at": "2020-11-10T22:51:03.539Z",
-                },
-            ],
-        }
+from tests.mock_models.room_models import (MockRoomListResponse,
+                                           MockRoomResponse,
+                                           MockPaymentRoomResponse)
+from tests.mock_models.user_models import MockUserResponse
+from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
+                         PAYMENT_ROOM_REGEX, check_responses_equality)
 
 
 @responses.activate
-def test_create_room(test_app):
-    mock_room_response = MockRoomResponse()
-    test_room = mock_room_response.dict()
+def test_create_room(test_app, monkeypatch):
+    test_payment_room = MockPaymentRoomResponse().dict()
+    test_room = MockRoomResponse().dict()
+    test_user = MockUserResponse().dict()
+    test_user["id"] = test_room["owner_uuid"]
+    test_room["owner"] = f"{test_user['firstname']} {test_user['lastname']}"
+
     expected_status = HTTP_201_CREATED
-    attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
+    attrs_to_test = ["type", "owner", "owner_uuid", "price_per_day"]
+    header = {"x-access-token": "tokenrefalso"}
 
-    responses.add(
-        responses.POST,
-        re.compile(POSTSERVER_ROOM_REGEX),
-        json=mock_room_response.dict(),
-        status=expected_status,
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_room["owner_uuid"]
     )
-    response = test_app.post(f"{API_URL}/", json=test_room)
-    assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_room, attrs_to_test)
-
-
-@responses.activate
-def test_get_room_by_id(test_app):
-    mock_room_response = MockRoomResponse()
-    test_room = mock_room_response.dict()
-    test_room_id = test_room["id"]
-    expected_status = HTTP_200_OK
-    attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
 
     responses.add(
         responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.POST,
+        re.compile(PAYMENT_ROOM_REGEX),
+        json=test_payment_room,
+        status=expected_status
+    )
+    responses.add(
+        responses.POST,
         re.compile(POSTSERVER_ROOM_REGEX),
-        json=mock_room_response.dict(),
+        json=test_room,
         status=expected_status,
     )
-
-    response = test_app.get(f"{API_URL}/{test_room_id}")
+    response = test_app.post(f"{APPSERVER_URL}/rooms", json=test_room, headers=header)
     assert response.status_code == expected_status
-    response_json = response.json()
-
     check_responses_equality(response.json(), test_room, attrs_to_test)
-    assert response_json["id"] == test_room_id
 
 
 @responses.activate
 def test_get_all_rooms(test_app):
-    mock_room_list_response = MockRoomListResponse()
-    test_room_list = mock_room_list_response.dict()
+    test_room_list = MockRoomListResponse().dict()
     expected_status = HTTP_200_OK
-    attrs_to_test = ["type", "owner", "owner_id", "price_per_day"]
+    attrs_to_test = ["type", "owner", "owner_uuid", "price_per_day"]
 
     responses.add(
         responses.GET,
         re.compile(POSTSERVER_ROOM_REGEX),
-        json=mock_room_list_response.dict(),
+        json=test_room_list,
         status=expected_status,
     )
 
-    response = test_app.get(f"{API_URL}/")
+    response = test_app.get(f"{APPSERVER_URL}/rooms")
     assert response.status_code == expected_status
     response_json = response.json()
 
@@ -119,38 +78,87 @@ def test_get_all_rooms(test_app):
 
 
 @responses.activate
-def test_update_room(test_app):
-    mock_room_response = MockRoomResponse()
-    test_full_room = mock_room_response.dict()
+def test_get_room_by_id(test_app):
+    test_room = MockRoomResponse().dict()
+    test_room_id = test_room["id"]
+    expected_status = HTTP_200_OK
+    attrs_to_test = ["type", "owner", "owner_uuid", "price_per_day"]
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_room,
+        status=expected_status,
+    )
+
+    response = test_app.get(f"{APPSERVER_URL}/rooms/{test_room_id}")
+    assert response.status_code == expected_status
+    response_json = response.json()
+
+    check_responses_equality(response.json(), test_room, attrs_to_test)
+    assert response_json["id"] == test_room_id
+
+
+@responses.activate
+def test_update_room(test_app, monkeypatch):
+    test_full_room = MockRoomResponse().dict()
     test_room_id = test_full_room["id"]
     expected_status = HTTP_200_OK
     attrs_to_test = ["type", "price_per_day"]
     test_room = {attr: test_full_room[attr] for attr in attrs_to_test}
+    header = {"x-access-token": "tokenrefalso"}
 
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_full_room["owner_uuid"]
+    )
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_full_room,
+        status=expected_status,
+    )
     responses.add(
         responses.PATCH,
         re.compile(POSTSERVER_ROOM_REGEX),
-        json=mock_room_response.dict(),
+        json=test_full_room,
         status=expected_status,
     )
-    response = test_app.patch(f"{API_URL}/{test_room_id}", json=test_room)
+    response = test_app.patch(
+        f"{APPSERVER_URL}/rooms/{test_room_id}", json=test_room, headers=header
+    )
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_room, attrs_to_test)
 
 
 @responses.activate
-def test_delete_room(test_app):
-    mock_room_response = MockRoomResponse()
-    test_room = mock_room_response.dict()
+def test_delete_room(test_app, monkeypatch):
+    test_room = MockRoomResponse().dict()
     test_room_id = test_room["id"]
     expected_status = HTTP_200_OK
+    attrs_to_test = ["type", "owner", "owner_uuid", "price_per_day"]
+    header = {"x-access-token": "tokenrefalso"}
 
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_room["owner_uuid"]
+    )
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_room,
+        status=expected_status,
+    )
     responses.add(
         responses.DELETE,
         re.compile(POSTSERVER_ROOM_REGEX),
-        json=mock_room_response.dict(),
+        json=test_room,
         status=expected_status,
     )
-    response = test_app.delete(f"{API_URL}/{test_room_id}")
+    response = test_app.delete(f"{APPSERVER_URL}/rooms/{test_room_id}", headers=header)
     assert response.status_code == expected_status
-"""
+
+    response_json = response.json()
+    check_responses_equality(response_json, test_room, attrs_to_test)

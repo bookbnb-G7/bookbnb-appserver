@@ -1,3 +1,5 @@
+from typing import Optional
+
 from app.api.models.room_model import RoomDB, RoomList, RoomSchema, RoomUpdate
 from app.api.models.room_rating_model import (RoomRatingDB, RoomRatingList,
                                               RoomRatingSchema,
@@ -9,7 +11,7 @@ from app.dependencies import check_token, get_uuid_from_xtoken
 from app.errors.http_error import BadRequestError
 from app.services.authsender import AuthSender
 from app.services.requester import Requester
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
@@ -18,40 +20,90 @@ router = APIRouter()
 
 
 @router.post(
-    "/",
+    "",
     response_model=RoomDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
-async def create_room(
-    payload: RoomSchema, response: Response, uuid: int = Depends(get_uuid_from_xtoken)
-):
-
-    path = f"users/{uuid}"
-    user = Requester.fetch_srv_users(method="GET", path=path)
+async def create_room(payload: RoomSchema, uuid: int = Depends(get_uuid_from_xtoken)):
+    path = f"/users/{uuid}"
+    user, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     owner = f"{user['firstname']} {user['lastname']}"
 
-    payload = payload.dict().add(owner_uuid=uuid, owner=owner)
-    room, status_code = Requester.room_srv_fetch(
-        method="POST", path="/rooms", payload=payload
+    req_payload = payload.dict()
+    req_payload.update({"owner_uuid": uuid, "owner": owner})
+
+    payment_payload = {
+        "ownerId": req_payload["owner_uuid"],
+        "price": req_payload["price_per_day"]
+    }
+
+    # Create room in payment server and generate an ID
+    room_pay_srv, _ = Requester.payment_fetch(
+        method="POST",
+        path="/rooms",
+        expected_statuses={HTTP_201_CREATED},
+        payload=payment_payload
     )
-    response.status_code = status_code
+
+    # Add id to the room created in room server
+    req_payload["id"] = room_pay_srv["id"]
+
+    room, _ = Requester.room_srv_fetch(
+        method="POST",
+        path="/rooms",
+        expected_statuses={HTTP_201_CREATED},
+        payload=req_payload,
+    )
 
     return room
 
 
-@router.get("/", response_model=RoomList, status_code=HTTP_200_OK)
-async def get_all_rooms(response: Response):
-    rooms, status_code = Requester.room_srv_fetch(method="GET", path="/rooms")
-    response.status_code = status_code
+@router.get("", response_model=RoomList, status_code=HTTP_200_OK)
+async def get_all_rooms(
+    date_begins: Optional[str] = None,
+    date_ends: Optional[str] = None,
+    longitude: Optional[float] = None,
+    latitude: Optional[float] = None,
+    people: Optional[int] = None,
+):
+    query = "?"
+    path = "/rooms"
+
+    if date_begins is not None:
+        query = query + f"date_begins={date_begins}&"
+
+    if date_ends is not None:
+        query = query + f"date_ends={date_ends}&"
+
+    if longitude is not None:
+        query = query + f"longitude={longitude}&"
+
+    if latitude is not None:
+        query = query + f"latitude={latitude}&"
+
+    if people is not None:
+        query = query + f"people={people}&"
+
+    if len(query) > 1:
+        # strip last & in the query
+        query = query[: (len(query) - 1)]
+        path = path + "/" + query
+
+    rooms, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     return rooms
 
 
 @router.get("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
-async def get_room(room_id: int, response: Response):
-    path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(method="GET", path=path)
-    response.status_code = status_code
+async def get_room(room_id: int):
+    path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     return room
 
 
@@ -64,22 +116,28 @@ async def get_room(room_id: int, response: Response):
 async def update_room(
     payload: RoomUpdate,
     room_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_modify(viewer_uuid, room["owner_uuid"]):
         raise BadRequestError("You can't update other users rooms!")
 
-    payload = payload.dict(exclude_unset=True)
+    room_req_payload = payload.dict(exclude_unset=True)
 
-    path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(
-        method="PATCH", path=path, payload=payload
+    path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch(
+        method="PATCH",
+        path=path,
+        expected_statuses={HTTP_200_OK},
+        payload=room_req_payload,
     )
-    response.status_code = status_code
+
+    # TODO: Patch room price in payment server
+
     return room
 
 
@@ -89,19 +147,23 @@ async def update_room(
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
-async def delete_room(
-    room_id: int, response: Response, viewer_uuid: int = Depends(get_uuid_from_xtoken)
-):
+async def delete_room(room_id: int, viewer_uuid: int = Depends(get_uuid_from_xtoken)):
 
     path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_modify(viewer_uuid, room["owner_uuid"]):
         raise BadRequestError("You can't delete other users rooms!")
 
     path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(method="DELETE", path=path)
-    response.status_code = status_code
+    room, _ = Requester.room_srv_fetch(
+        method="DELETE", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    # TODO: Delete room in payment server
+
     return room
 
 
@@ -120,50 +182,58 @@ async def delete_room(
 async def rate_room(
     payload: RoomRatingSchema,
     room_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    room_path = f"/rooms/{room_id}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_comment(viewer_uuid, room["owner_uuid"]):
         raise BadRequestError("You can't rate your own rooms!")
 
-    path = "/users" + f"/{viewer_uuid}"
-    user, status_code = Requester.user_srv_fetch(method="GET", path=path)
+    user_path = f"/users/{viewer_uuid}"
+    user, _ = Requester.user_srv_fetch(
+        method="GET", path=user_path, expected_statuses={HTTP_200_OK}
+    )
     reviewer_name = f"{user['firstname']} {user['lastname']}"
 
-    payload = payload.dict().add(reviewer_name=reviewer_name, reviewer_uuid=viewer_uuid)
+    rating_req_payload = payload.dict()
+    rating_req_payload.update({"reviewer": reviewer_name, "reviewer_id": viewer_uuid})
 
-    path = "/rooms" + f"/{room_id}/ratings"
-    rating, status_code = Requester.room_srv_fetch(
-        method="POST", path=path, payload=payload
+    room_rating_path = f"/rooms/{room_id}/ratings"
+    rating, _ = Requester.room_srv_fetch(
+        method="POST",
+        path=room_rating_path,
+        expected_statuses={HTTP_201_CREATED},
+        payload=rating_req_payload,
     )
-    response.status_code = status_code
     return rating
 
 
 @router.get(
     "/{room_id}/ratings/{rating_id}",
-    response_model=RoomRatingDB,
     status_code=HTTP_200_OK,
+    response_model=RoomRatingDB,
 )
-async def get_room_rating(room_id: int, rating_id: int, response: Response):
+async def get_room_rating(room_id: int, rating_id: int):
 
-    path = "/rooms" + f"/{room_id}/ratings/{rating_id}"
-    rating, status_code = Requester.room_srv_fetch(method="GET", path=path)
-    response.status_code = status_code
+    path = f"/rooms/{room_id}/ratings/{rating_id}"
+    rating, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     return rating
 
 
 @router.get(
     "/{room_id}/ratings", response_model=RoomRatingList, status_code=HTTP_200_OK
 )
-async def get_all_room_ratings(room_id: int, response: Response):
+async def get_all_room_ratings(room_id: int):
 
-    path = "/rooms" + f"/{room_id}/ratings"
-    ratings, status_code = Requester.room_srv_fetch(method="GET", path=path)
-    response.status_code = status_code
+    path = f"/rooms/{room_id}/ratings"
+    ratings, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     return ratings
 
 
@@ -177,23 +247,26 @@ async def update_room_rating(
     payload: RoomRatingUpdate,
     room_id: int,
     rating_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    path = f"/rooms/{room_id}/ratings/{rating_id}"
-    rating, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    room_path = f"/rooms/{room_id}/ratings/{rating_id}"
+    rating, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_modify(viewer_uuid, rating["reviewer_id"]):
         raise BadRequestError("You can't update other users room ratings!")
 
-    payload = payload.dict(exclude_unset=True)
+    rating_req_payload = payload.dict(exclude_unset=True)
 
-    path = "/rooms" + f"/{room_id}/ratings/{rating_id}"
-    rating, status_code = Requester.room_srv_fetch(
-        method="PATCH", path=path, payload=payload
+    rating_path = f"/rooms/{room_id}/ratings/{rating_id}"
+    rating, _ = Requester.room_srv_fetch(
+        method="PATCH",
+        path=rating_path,
+        expected_statuses={HTTP_200_OK},
+        payload=rating_req_payload,
     )
 
-    response.status_code = status_code
     return rating
 
 
@@ -206,19 +279,21 @@ async def update_room_rating(
 async def delete_room_rating(
     room_id: int,
     rating_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
 
-    path = f"/{room_id}/ratings/{rating_id}"
-    rating, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    room_path = f"/rooms/{room_id}/ratings/{rating_id}"
+    rating, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_modify(viewer_uuid, rating["reviewer_id"]):
         raise BadRequestError("You can't delete other users room ratings!")
 
-    path = f"/{room_id}/ratings/{rating_id}"
-    rating, status_code = Requester.room_srv_fetch(method="DELETE", path=path)
-    response.status_code = status_code
+    rating_path = f"/rooms/{room_id}/ratings/{rating_id}"
+    rating, _ = Requester.room_srv_fetch(
+        method="DELETE", path=rating_path, expected_statuses={HTTP_200_OK}
+    )
     return rating
 
 
@@ -237,27 +312,33 @@ async def delete_room_rating(
 async def review_room(
     payload: RoomReviewSchema,
     room_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
 
-    path = "/rooms" + f"/{room_id}"
-    room, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    room_path = "/rooms" + f"/{room_id}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_comment(viewer_uuid, room["owner_uuid"]):
         raise BadRequestError("You can't review your own rooms!")
 
-    path = "/users" + f"/{viewer_uuid}"
-    user, status_code = Requester.user_srv_fetch(method="GET", path=path)
+    user_path = "/users" + f"/{viewer_uuid}"
+    user, _ = Requester.user_srv_fetch(
+        method="GET", path=user_path, expected_statuses={HTTP_200_OK}
+    )
     reviewer_name = f"{user['firstname']} {user['lastname']}"
 
-    payload = payload.dict().add(reviewer_name=reviewer_name, reviewer_uuid=viewer_uuid)
+    review_payload = payload.dict()
+    review_payload.update({"reviewer": reviewer_name, "reviewer_id": viewer_uuid})
 
-    path = "/rooms" + f"/{room_id}/reviews"
-    review, status_code = Requester.room_srv_fetch(
-        method="POST", path=path, payload=payload
+    review_path = "/rooms" + f"/{room_id}/reviews"
+    review, _ = Requester.room_srv_fetch(
+        method="POST",
+        path=review_path,
+        expected_statuses={HTTP_201_CREATED},
+        payload=review_payload,
     )
-    response.status_code = status_code
     return review
 
 
@@ -266,22 +347,24 @@ async def review_room(
     response_model=RoomReviewDB,
     status_code=HTTP_200_OK,
 )
-async def get_room_review(room_id: int, review_id: int, response: Response):
+async def get_room_review(room_id: int, review_id: int):
 
     path = "/rooms" + f"/{room_id}/reviews/{review_id}"
-    review, status_code = Requester.room_srv_fetch(method="GET", path=path)
-    response.status_code = status_code
+    review, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     return review
 
 
 @router.get(
     "/{room_id}/reviews", response_model=RoomReviewList, status_code=HTTP_200_OK
 )
-async def get_all_room_reviews(room_id: int, response: Response):
+async def get_all_room_reviews(room_id: int):
 
     path = "/rooms" + f"/{room_id}/reviews"
-    reviews, status_code = Requester.room_srv_fetch(method="GET", path=path)
-    response.status_code = status_code
+    reviews, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
     return reviews
 
 
@@ -295,22 +378,25 @@ async def update_room_review(
     payload: RoomReviewUpdate,
     room_id: int,
     review_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
 
     path = f"/rooms/{room_id}/reviews/{review_id}"
-    review, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    review, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_modify(viewer_uuid, review["reviewer_id"]):
         raise BadRequestError("You can't update other users room reviews!")
 
-    payload = payload.dict(exclude_unset=True)
-    path = "/rooms" + f"/{room_id}/reviewes/{review_id}"
-    review, status_code = Requester.room_srv_fetch(
-        method="PATCH", path=path, payload=payload
+    review_rew_payload = payload.dict(exclude_unset=True)
+    path = f"/rooms/{room_id}/reviews/{review_id}"
+    review, _ = Requester.room_srv_fetch(
+        method="PATCH",
+        path=path,
+        expected_statuses={HTTP_200_OK},
+        payload=review_rew_payload,
     )
-    response.status_code = status_code
     return review
 
 
@@ -323,19 +409,20 @@ async def update_room_review(
 async def delete_room_review(
     room_id: int,
     review_id: int,
-    response: Response,
     viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
 
-    path = f"/{room_id}/reviews/{review_id}"
-    review, status_code = Requester.room_srv_fetch(method="GET", path=path)
+    review_path = f"/rooms/{room_id}/reviews/{review_id}"
+    review, _ = Requester.room_srv_fetch(
+        method="GET", path=review_path, expected_statuses={HTTP_200_OK}
+    )
 
     if not AuthSender.has_permission_to_modify(viewer_uuid, review["reviewer_id"]):
         raise BadRequestError("You can't delete other users room reviews!")
 
-    path = f"/{room_id}/reviews/{review_id}"
-    review, status_code = Requester.room_srv_fetch(method="DELETE", path=path)
-    response.status_code = status_code
+    review, _ = Requester.room_srv_fetch(
+        method="DELETE", path=review_path, expected_statuses={HTTP_200_OK}
+    )
     return review
 
 

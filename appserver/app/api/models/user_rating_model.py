@@ -31,4 +31,7 @@ class UserRatingUpdate(BaseModel):
         }
 
 
-UserRatingList = List[UserRatingSchema]
+class UserRatingList(BaseModel):
+    userId: int
+    amount: int
+    ratings: List[UserRatingSchema]

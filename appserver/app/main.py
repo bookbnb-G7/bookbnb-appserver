@@ -1,5 +1,9 @@
-from app.api.routes import file_upload_router, room_router, user_router
-# from app.db import engine, metadata, database
+import logging
+import logging.config
+import os
+
+from app.api.routes import (booking_router, file_upload_router, room_router,
+                            user_router)
 from app.config import firebase_authenticate, get_settings
 from app.db import Base, engine
 from app.errors.auth_error import AuthException
@@ -7,8 +11,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
-Base.metadata.create_all(engine)
+logging_conf_path = os.path.join(os.path.dirname(__file__), "logging.ini")
+logging.config.fileConfig(logging_conf_path, disable_existing_loggers=False)
 
+Base.metadata.create_all(engine)
 if get_settings().environment == "production":
     firebase_authenticate()
 
@@ -39,3 +45,4 @@ async def http_exception_handler(request, exc):
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])
 app.include_router(file_upload_router.router, tags=["Images"])
+app.include_router(booking_router.router, tags=["Bookings"])
