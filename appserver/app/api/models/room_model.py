@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class RoomSchema(BaseModel):
     type: str
-    price_per_day: float
+    price_per_day: int
 
     class Config:
         schema_extra = {
@@ -40,7 +40,7 @@ class RoomDB(RoomSchema):
 
 class RoomUpdate(BaseModel):
     type: Optional[str] = None
-    price_per_day: Optional[float] = None
+    price_per_day: Optional[int] = None
 
     class Config:
         schema_extra = {"example": {"price_per_day": 456}}
