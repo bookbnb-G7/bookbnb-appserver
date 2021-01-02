@@ -1,12 +1,12 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import List
 
 from pydantic import BaseModel
 
 
 class RoomBookingSchema(BaseModel):
-    date_ends: datetime
-    date_begins: datetime
+    date_ends: date
+    date_begins: date
     amount_of_people: int
     user_id: int
 

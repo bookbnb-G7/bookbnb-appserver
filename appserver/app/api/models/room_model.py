@@ -16,6 +16,9 @@ class RoomSchema(BaseModel):
             "example": {
                 "type": "Apartment",
                 "price_per_day": 67,
+                "latitude": 0.0,
+                "longitude": 0.0,
+                "capacity": 1,
             }
         }
 

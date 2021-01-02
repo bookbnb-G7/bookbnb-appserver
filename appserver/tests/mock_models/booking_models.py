@@ -5,8 +5,8 @@ class MockBookingResponse(MockResponse):
     def dict(self):
         return {
             "user_id": 4,
-            "date_ends": "2020-12-19T01:16:34.275Z",
-            "date_begins": "2020-12-14T01:16:34.275Z",
+            "date_ends": "2020-12-19",
+            "date_begins": "2020-12-14",
             "amount_of_people": 2,
             "id": 7,
             "room_id": 5,
@@ -21,8 +21,8 @@ class MockBookingAcceptedResponse(MockResponse):
     def dict(self):
         return {
             "user_id": 4,
-            "date_ends": "2020-12-19T01:16:34.275Z",
-            "date_begins": "2020-12-14T01:16:34.275Z",
+            "date_ends": "2020-12-19",
+            "date_begins": "2020-12-14",
             "amount_of_people": 2,
             "id": 7,
             "room_id": 5,
@@ -41,8 +41,8 @@ class MockBookingListResponse(MockResponse):
             "bookings": [
                 {
                     "user_id": 4,
-                    "date_ends": "2020-12-14T01:16:34.275Z",
-                    "date_begins": "2020-12-19T01:16:34.275Z",
+                    "date_ends": "2020-12-14",
+                    "date_begins": "2020-12-19",
                     "amount_of_people": 2,
                     "id": 7,
                     "room_id": 6,
@@ -53,8 +53,8 @@ class MockBookingListResponse(MockResponse):
                 },
                 {
                     "user_id": 4,
-                    "date_ends": "2020-10-04T01:16:34.275Z",
-                    "date_begins": "2020-10-01T01:16:34.275Z",
+                    "date_ends": "2020-10-04",
+                    "date_begins": "2020-10-01",
                     "amount_of_people": 2,
                     "id": 8,
                     "room_id": 6,
