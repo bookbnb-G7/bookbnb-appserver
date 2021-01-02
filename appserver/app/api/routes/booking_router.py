@@ -69,9 +69,10 @@ async def add_booking_to_room(
     # Add the booking id and status received from the payment server
     payload_booking["id"] = booking["id"]
     payload_booking["status"] = booking["bookingStatus"]
-    serialized_booking_payload = json.dumps(payload_booking, default=str)
+    payload_booking["date_begins"] = payload_booking["date_begins"].strftime('%Y-%m-%d')
+    payload_booking["date_ends"] = payload_booking["date_ends"].strftime('%Y-%m-%d')
     booking, _ = Requester.room_srv_fetch(
-        "POST", booking_path, {HTTP_201_CREATED}, payload=serialized_booking_payload
+        "POST", booking_path, {HTTP_201_CREATED}, payload=payload_booking
     )
 
     user_path = f"/users/{uuid}/bookings"
