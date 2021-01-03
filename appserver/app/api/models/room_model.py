@@ -6,10 +6,10 @@ from pydantic import BaseModel
 
 class RoomSchema(BaseModel):
     type: str
-    price_per_day: int
+    capacity: int
     latitude: float
     longitude: float
-    capacity: int
+    price_per_day: int
 
     class Config:
         schema_extra = {

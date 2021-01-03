@@ -1,6 +1,5 @@
+from typing import List
 from datetime import datetime
-from typing import List, Optional
-
 from pydantic import BaseModel
 
 
@@ -11,17 +10,6 @@ class RoomReviewSchema(BaseModel):
         schema_extra = {
             "example": {
                 "review": "Excelente, prepara un buen guiso de lentejas",
-            }
-        }
-
-
-class RoomReviewUpdate(BaseModel):
-    review: Optional[str] = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "review": "Me gusto",
             }
         }
 

@@ -1,6 +1,5 @@
+from typing import List
 from datetime import datetime
-from typing import List, Optional
-
 from pydantic import BaseModel
 
 
@@ -11,17 +10,6 @@ class RoomRatingSchema(BaseModel):
         schema_extra = {
             "example": {
                 "rating": 4,
-            }
-        }
-
-
-class RoomRatingUpdate(BaseModel):
-    rating: Optional[int] = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "rating": 5,
             }
         }
 

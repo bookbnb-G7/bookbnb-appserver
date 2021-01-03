@@ -78,7 +78,7 @@ def test_get_user_by_id(test_app):
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_user, attrs_to_test)
 
-
+'''
 @responses.activate
 def test_get_self_user(test_app, monkeypatch):
     # GET {appserver_url}/users/me
@@ -136,6 +136,7 @@ def test_get_self_user_wallet(test_app, monkeypatch):
 
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_wallet, attrs_to_test)
+'''
 
 
 @responses.activate
