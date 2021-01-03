@@ -199,7 +199,7 @@ def test_get_self_user_rooms(test_app, monkeypatch):
     # a problem when checking that each booking has the same "created_at"
     # and "updated_at" attribute, the problem is due to the datetime handling
     check_responses_equality(response_json, test_room_list,  ["amount"])
-    assert response["rooms"] is not None
+    assert response_json["rooms"] is not None
 
     rooms = response_json["rooms"]
     test_rooms = test_room_list["rooms"]
