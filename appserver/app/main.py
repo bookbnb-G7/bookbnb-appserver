@@ -3,7 +3,7 @@ import logging.config
 import os
 
 from app.api.routes import (booking_router, file_upload_router,
-                            room_router, user_router)
+                            room_router, user_router, me_router)
 from app.config import firebase_authenticate, get_settings
 from app.db import Base, engine
 from app.errors.auth_error import AuthException
@@ -41,37 +41,8 @@ async def http_exception_handler(_request, exc):
     error = {"error": exc.detail}
     return JSONResponse(status_code=exc.status_code, content=error)
 
-
-app.include_router(booking_router.router, tags=["Bookings"])
-app.include_router(file_upload_router.router, tags=["Images"])
-app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
+app.include_router(me_router.router, prefix="/me", tags=["me"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])
-
-'''
-@app.get(
-    "/users/me",
-    response_model=UserDB,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def get_current_user(uuid: int = Depends(get_uuid_from_xtoken)):
-    path = f"/users/{uuid}"
-    user, _ = Requester.user_srv_fetch(
-        method="GET", path=path, expected_statuses={HTTP_200_OK}
-    )
-    return user
-
-
-@app.get(
-    "/users/me/wallet",
-    response_model=WalletDB,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def get_current_user_wallet(uuid: int = Depends(get_uuid_from_xtoken)):
-    path = f"/wallets/{uuid}"
-    wallet, _ = Requester.payment_fetch(
-        method="GET", path=path, expected_statuses={HTTP_200_OK}
-    )
-    return wallet
-'''
+app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
+app.include_router(booking_router.router, prefix="/bookings", tags=["Bookings"])
+app.include_router(file_upload_router.router, tags=["Images"])

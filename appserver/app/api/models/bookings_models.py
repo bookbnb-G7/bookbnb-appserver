@@ -1,37 +1,32 @@
-from datetime import date, datetime
+from datetime import date
 from typing import List
 
 from pydantic import BaseModel
 
-
-class RoomBookingSchema(BaseModel):
-    date_ends: date
-    date_begins: date
-    amount_of_people: int
-    user_id: int
+# TODO: Change file name to booking_model.py
 
 
-class RoomBookingDB(RoomBookingSchema):
+class BookingSchema(BaseModel):
+    room_id: int
+    date_from: date
+    date_to: date
+
+
+class BookingDB(BookingSchema):
     id: int
-    room_id: int
-    total_price: float
-    status: int
-    created_at: datetime
-    updated_at: datetime
+    price: int
+    booker_id: int
+    room_owner_id: int
+    booking_status: int
+    transaction_hash: str
+    transaction_status: int
 
 
-class RoomBookingList(BaseModel):
+class BookingList(BaseModel):
     amount: int
-    room_id: int
-    bookings: List[RoomBookingDB]
+    bookings: List[BookingDB]
 
 
-class UserBooking(BaseModel):
-    booking_id: int
-    room_id: int
-
-
-class UserBookingList(BaseModel):
-    userId: int
-    amount: int
-    roomBookings: List[UserBooking]
+class BookingsUserList(BaseModel):
+    made: BookingList
+    received: BookingList

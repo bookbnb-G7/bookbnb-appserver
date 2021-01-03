@@ -4,117 +4,42 @@ from tests.utils import MockResponse
 class MockBookingResponse(MockResponse):
     def dict(self):
         return {
-            "user_id": 4,
-            "date_ends": "2020-12-19",
-            "date_begins": "2020-12-14",
-            "amount_of_people": 2,
-            "id": 7,
-            "room_id": 5,
-            "total_price": 876.5,
-            "status": 1,
-            "created_at": "2020-12-14T01:16:34.275Z",
-            "updated_at": "2020-12-14T01:16:34.275Z",
+            "id": 4,
+            "price": 5,
+            "roomId": 5,
+            "bookerId": 5,
+            "roomOwnerId": 8,
+            "dateFrom": "2020-12-14",
+            "dateTo": "2020-12-19",
+            "bookingStatus": 0,
+            "transactionStatus": 3,
+            "transactionHash": "HASHRELOCO"
         }
 
 
 class MockBookingAcceptedResponse(MockResponse):
     def dict(self):
         return {
-            "user_id": 4,
-            "date_ends": "2020-12-19",
-            "date_begins": "2020-12-14",
-            "amount_of_people": 2,
-            "id": 7,
-            "room_id": 5,
-            "total_price": 876.5,
-            "status": 2,
-            "created_at": "2020-12-14T01:16:34.275Z",
-            "updated_at": "2020-12-14T01:16:34.275Z",
-        }
-
-
-class MockBookingListResponse(MockResponse):
-    def dict(self):
-        return {
-            "amount": 2,
-            "room_id": 6,
-            "bookings": [
-                {
-                    "user_id": 4,
-                    "date_ends": "2020-12-14",
-                    "date_begins": "2020-12-19",
-                    "amount_of_people": 2,
-                    "id": 7,
-                    "room_id": 6,
-                    "total_price": 876.5,
-                    "status": 1,
-                    "created_at": "2020-12-14T01:16:34.275Z",
-                    "updated_at": "2020-12-14T01:16:34.275Z",
-                },
-                {
-                    "user_id": 4,
-                    "date_ends": "2020-10-04",
-                    "date_begins": "2020-10-01",
-                    "amount_of_people": 2,
-                    "id": 8,
-                    "room_id": 6,
-                    "total_price": 466.3,
-                    "status": 1,
-                    "created_at": "2020-12-14T01:16:34.275Z",
-                    "updated_at": "2020-12-14T01:16:34.275Z",
-                },
-            ],
-        }
-
-
-class MockUserBookingResponse(MockResponse):
-    def dict(self):
-        return {
-            "booking_id": 4,
-            "room_id": 5,
-        }
-
-
-class MockUserBookingListResponse(MockResponse):
-    def dict(self):
-        return {
-            "userId": 5,
-            "amount": 2,
-            "roomBookings": [
-                {
-                    "booking_id": 4,
-                    "room_id": 5,
-                },
-                {
-                    "booking_id": 6,
-                    "room_id": 9,
-                },
-            ],
-        }
-
-
-class MockPaymentBookingResponse(MockResponse):
-    def dict(self):
-        return {
             "id": 4,
             "price": 5,
             "roomId": 5,
             "bookerId": 5,
+            "roomOwnerId": 8,
             "dateFrom": "2020-12-14",
             "dateTo": "2020-12-19",
-            "bookingStatus": 1,
+            "bookingStatus": 2,
             "transactionStatus": 3,
             "transactionHash": "HASHRELOCO"
         }
 
-
-class MockPaymentBookingAcceptedResponse(MockResponse):
+class MockBookingRejectedResponse(MockResponse):
     def dict(self):
         return {
             "id": 4,
             "price": 5,
             "roomId": 5,
             "bookerId": 5,
+            "roomOwnerId": 8,
             "dateFrom": "2020-12-14",
             "dateTo": "2020-12-19",
             "bookingStatus": 2,
@@ -123,16 +48,44 @@ class MockPaymentBookingAcceptedResponse(MockResponse):
         }
 
 
-class MockPaymentBookingRejectedResponse(MockResponse):
+
+class MockBookingListResponse(MockResponse):
+    def dict(self):
+        return {
+            "amount": 2,
+            "bookings": [
+                {
+                    "id": 4,
+                    "price": 5,
+                    "roomId": 5,
+                    "bookerId": 5,
+                    "roomOwnerId": 8,
+                    "dateFrom": "2020-12-14",
+                    "dateTo": "2020-12-19",
+                    "bookingStatus": 0,
+                    "transactionStatus": 3,
+                    "transactionHash": "HASHRELOCO"
+                },
+                {
+                    "id": 8,
+                    "price": 20,
+                    "roomId": 6,
+                    "bookerId": 4,
+                    "roomOwnerId": 9,
+                    "dateFrom": "2020-10-01",
+                    "dateTo": "2020-10-04",
+                    "bookingStatus": 0,
+                    "transactionStatus": 3,
+                    "transactionHash": "HASHRELOCO"
+                },
+            ],
+        }
+
+
+class MockRoomBookingResponse(MockResponse):
     def dict(self):
         return {
             "id": 4,
-            "price": 5,
-            "roomId": 5,
-            "bookerId": 5,
-            "dateFrom": "2020-12-14",
-            "dateTo": "2020-12-19",
-            "bookingStatus": 3,
-            "transactionStatus": 3,
-            "transactionHash": "HASHRELOCO"
+            "date_from": "2020-12-14",
+            "date_to": "2020-12-19"
         }
