@@ -194,87 +194,104 @@ def test_reject_room_booking(test_app, monkeypatch):
     test_camel = payment_camel_to_snake(test_booking_rejected)
     check_responses_equality(response.json(), test_camel, attrs_to_test)
 
-# TODO: Get all, GET single, delete
 
-
-'''
 @responses.activate
-def test_get_room_booking(test_app, monkeypatch):
-    test_booking = MockBookingResponse().dict()
-    test_room_id = test_booking["room_id"]
-    test_booking_id = test_booking["id"]
+def test_get_all_room_bookings(test_app):
+    test_booking_list = MockBookingListResponse().dict()
     expected_status = HTTP_200_OK
     attrs_to_test = [
-        "user_id",
-        "amount_of_people",
         "id",
+        "price",
         "room_id",
-        "total_price",
-        "status",
+        "booker_id",
+        "room_owner_id",
+        "date_from",
+        "date_to",
+        "booking_status",
+        "transaction_hash",
+        "transaction_status",
     ]
 
     responses.add(
         responses.GET,
-        re.compile(POSTSERVER_ROOM_REGEX),
+        re.compile(PAYMENT_BOOKING_REGEX),
+        json=test_booking_list,
+        status=HTTP_200_OK,
+    )
+
+    response = test_app.get(f"{APPSERVER_URL}/bookings")
+    response_json = response.json()
+    assert response.status_code == expected_status
+
+    # TODO: Change BookingDB model to match camelcase in payment server
+    for i in range(len(test_booking_list)):
+        test_booking_list[i] = payment_camel_to_snake(test_booking_list[i])
+
+    booking_list = {
+        "amount": len(test_booking_list),
+        "bookings": test_booking_list
+    }
+
+    check_responses_equality(response_json, booking_list, ["amount", "bookings"])
+
+    for i, booking in enumerate(booking_list["bookings"]):
+        check_responses_equality(booking, response_json["bookings"][i], attrs_to_test)
+
+
+@responses.activate
+def test_get_room_booking(test_app, monkeypatch):
+    test_booking = MockBookingResponse().dict()
+    test_booking_id = test_booking["id"]
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "id",
+        "price",
+        "room_id",
+        "booker_id",
+        "room_owner_id",
+        "date_from",
+        "date_to",
+        "booking_status",
+        "transaction_hash",
+        "transaction_status",
+    ]
+
+    responses.add(
+        responses.GET,
+        re.compile(PAYMENT_BOOKING_REGEX),
         json=test_booking,
         status=HTTP_200_OK,
     )
 
     response = test_app.get(
-        f"{APPSERVER_URL}/rooms/{test_room_id}/bookings/{test_booking_id}"
+        f"{APPSERVER_URL}/bookings/{test_booking_id}"
     )
     assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_booking, attrs_to_test)
 
-
-@responses.activate
-def test_get_all_room_bookings(test_app):
-    test_booking_list = MockBookingListResponse().dict()
-    test_room_id = test_booking_list["room_id"]
-    expected_status = HTTP_200_OK
-    attrs_to_test = [
-        "user_id",
-        "amount_of_people",
-        "id",
-        "room_id",
-        "total_price",
-        "status",
-    ]
-
-    responses.add(
-        responses.GET,
-        re.compile(POSTSERVER_ROOM_REGEX),
-        json=test_booking_list,
-        status=HTTP_200_OK,
-    )
-
-    response = test_app.get(f"{APPSERVER_URL}/rooms/{test_room_id}/bookings/")
-    response_json = response.json()
-    assert response.status_code == expected_status
-    check_responses_equality(response_json, test_booking_list, ["amount", "room_id"])
-
-    for i, booking in enumerate(test_booking_list["bookings"]):
-        check_responses_equality(booking, response_json["bookings"][i], attrs_to_test)
-
+    # TODO: Change BookingDB model to match camelcase in payment server
+    test_camel = payment_camel_to_snake(test_booking)
+    check_responses_equality(response.json(), test_camel, attrs_to_test)
 
 @responses.activate
 def test_delete_room_booking(test_app, monkeypatch):
     test_booking = MockBookingResponse().dict()
     test_booking_id = test_booking["id"]
-    test_room = MockRoomResponse().dict()
-    test_user_booking = MockUserBookingResponse().dict()
-    test_user_id = test_booking["user_id"]
-    test_room_id = test_room["owner_uuid"]
+    test_room_booking = MockRoomBookingResponse().dict()
     expected_status = HTTP_200_OK
     attrs_to_test = [
-        "user_id",
-        "amount_of_people",
         "id",
+        "price",
         "room_id",
-        "total_price",
-        "status",
+        "booker_id",
+        "room_owner_id",
+        "date_from",
+        "date_to",
+        "booking_status",
+        "transaction_hash",
+        "transaction_status",
     ]
     header = {"x-access-token": "tokenrefalso"}
+    test_user_id = 1
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
@@ -282,30 +299,33 @@ def test_delete_room_booking(test_app, monkeypatch):
 
     responses.add(
         responses.GET,
-        re.compile(POSTSERVER_ROOM_REGEX),
+        re.compile(PAYMENT_BOOKING_REGEX),
+        json=test_booking,
+        status=expected_status,
+    )
+    responses.add(
+        responses.DELETE,
+        re.compile(PAYMENT_BOOKING_REGEX),
         json=test_booking,
         status=expected_status,
     )
     responses.add(
         responses.DELETE,
         re.compile(POSTSERVER_ROOM_REGEX),
-        json=test_booking,
-        status=expected_status,
-    )
-    responses.add(
-        responses.DELETE,
-        re.compile(USER_REGEX),
-        json=test_user_booking,
+        json=test_room_booking,
         status=expected_status,
     )
     response = test_app.delete(
-        f"{APPSERVER_URL}/rooms/{test_room_id}/bookings/{test_booking_id}",
+        f"{APPSERVER_URL}/bookings/{test_booking_id}",
         headers=header,
     )
     assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_booking, attrs_to_test)
 
+    # TODO: Change BookingDB model to match camelcase in payment server
+    test_camel = payment_camel_to_snake(test_booking)
+    check_responses_equality(response.json(), test_camel, attrs_to_test)
 
+'''
 @responses.activate
 def test_get_user_booking(test_app):
     test_user_booking = MockUserBookingResponse().dict()

@@ -51,35 +51,32 @@ class MockBookingRejectedResponse(MockResponse):
 
 class MockBookingListResponse(MockResponse):
     def dict(self):
-        return {
-            "amount": 2,
-            "bookings": [
-                {
-                    "id": 4,
-                    "price": 5,
-                    "roomId": 5,
-                    "bookerId": 5,
-                    "roomOwnerId": 8,
-                    "dateFrom": "2020-12-14",
-                    "dateTo": "2020-12-19",
-                    "bookingStatus": 0,
-                    "transactionStatus": 3,
-                    "transactionHash": "HASHRELOCO"
-                },
-                {
-                    "id": 8,
-                    "price": 20,
-                    "roomId": 6,
-                    "bookerId": 4,
-                    "roomOwnerId": 9,
-                    "dateFrom": "2020-10-01",
-                    "dateTo": "2020-10-04",
-                    "bookingStatus": 0,
-                    "transactionStatus": 3,
-                    "transactionHash": "HASHRELOCO"
-                },
-            ],
-        }
+        return [
+            {
+                "id": 4,
+                "price": 5,
+                "roomId": 5,
+                "bookerId": 5,
+                "roomOwnerId": 8,
+                "dateFrom": "2020-12-14",
+                "dateTo": "2020-12-19",
+                "bookingStatus": 0,
+                "transactionStatus": 3,
+                "transactionHash": "HASHRELOCO"
+            },
+            {
+                "id": 8,
+                "price": 20,
+                "roomId": 6,
+                "bookerId": 4,
+                "roomOwnerId": 9,
+                "dateFrom": "2020-10-01",
+                "dateTo": "2020-10-04",
+                "bookingStatus": 0,
+                "transactionStatus": 3,
+                "transactionHash": "HASHRELOCO"
+            },
+        ]
 
 
 class MockRoomBookingResponse(MockResponse):

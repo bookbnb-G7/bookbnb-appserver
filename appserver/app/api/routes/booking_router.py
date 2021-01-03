@@ -48,7 +48,7 @@ async def get_all_bookings(
     bookingStatus: Optional[int] = None,
 ):
     query = "?"
-    path = ""
+    path = "/bookings"
 
     if bookerId is not None:
         query = query + f"bookerId={bookerId}&"
