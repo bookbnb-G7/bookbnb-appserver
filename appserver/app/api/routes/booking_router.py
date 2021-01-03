@@ -1,16 +1,17 @@
-import json
 import logging
-import datetime
 
-from app.api.models.bookings_models import (RoomBookingDB, RoomBookingList,
-                                            RoomBookingSchema, UserBooking,
-                                            UserBookingList)
+from app.api.models.bookings_models import (BookingDB,
+                                            BookingList,
+                                            BookingSchema)
+
 from app.dependencies import check_token, get_uuid_from_xtoken
+
 from app.errors.http_error import (NotAllowedRequestError,
                                    UnauthorizedRequestError)
-from app.services.authsender import AuthSender
-from app.services.requester import Requester
+
 from fastapi import APIRouter, Depends
+from app.services.requester import Requester
+from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 logger = logging.getLogger(__name__)
@@ -18,26 +19,26 @@ router = APIRouter()
 
 
 @router.get(
-    "/rooms/{room_id}/bookings", response_model=RoomBookingList, status_code=HTTP_200_OK
+    "", response_model=BookingList, status_code=HTTP_200_OK
 )
-async def get_all_room_bookings(room_id: int):
-    path = f"/rooms/{room_id}/bookings"
-    bookings, _ = Requester.room_srv_fetch("GET", path, {HTTP_200_OK})
-
-    return bookings
+async def get_all_bookings():
+    '''
+    return by query params
+    '''
 
 
 @router.post(
-    "/rooms/{room_id}/bookings",
-    response_model=RoomBookingDB,
+    "",
+    response_model=BookingDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
-async def add_booking_to_room(
+async def create_new_booking(
     room_id: int,
-    payload: RoomBookingSchema,
+    payload: BookingSchema,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
+    '''
     room_path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
@@ -83,16 +84,18 @@ async def add_booking_to_room(
     )
 
     return booking
+    '''
 
 
 @router.post(
-    "/rooms/{room_id}/bookings/{booking_id}/accept",
-    response_model=RoomBookingDB,
+    "/{booking_id}/accept",
+    response_model=BookingDB,
     status_code=HTTP_200_OK,
 )
-async def accept_room_booking(
+async def accept_booking(
     room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
 ):
+    '''
     room_path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
@@ -111,17 +114,18 @@ async def accept_room_booking(
     )
 
     return booking
+    '''
 
 
 @router.post(
-    "/rooms/{room_id}/bookings/{booking_id}/reject",
-    response_model=RoomBookingDB,
+    "/{booking_id}/reject",
+    response_model=BookingDB,
     status_code=HTTP_200_OK,
 )
-async def reject_room_booking(
+async def reject_booking(
     room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
 ):
-
+    '''
     room_path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
@@ -140,29 +144,33 @@ async def reject_room_booking(
     Requester.user_srv_fetch("DELETE", user_path, {HTTP_200_OK})
 
     return booking
+    '''
 
 
 @router.get(
-    "/rooms/{room_id}/bookings/{booking_id}",
-    response_model=RoomBookingDB,
+    "/{booking_id}",
+    response_model=BookingDB,
     status_code=HTTP_200_OK,
 )
-async def get_room_booking(room_id: int, booking_id: int):
+async def get_booking(room_id: int, booking_id: int):
+    '''
     path = f"/rooms/{room_id}/bookings/{booking_id}"
     booking, _ = Requester.room_srv_fetch("GET", path, {HTTP_200_OK})
 
     return booking
+    '''
 
 
 @router.delete(
-    "/rooms/{room_id}/bookings/{booking_id}",
-    response_model=RoomBookingDB,
+    "/{booking_id}",
+    response_model=BookingDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
-async def delete_room_booking(
+async def delete_booking(
     room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
 ):
+    '''
     booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
     booking, _ = Requester.room_srv_fetch("GET", booking_path, {HTTP_200_OK})
 
@@ -175,25 +183,4 @@ async def delete_room_booking(
     Requester.user_srv_fetch("DELETE", user_path, {HTTP_200_OK})
 
     return booking
-
-
-@router.get(
-    "/users/{room_id}/bookings/{booking_id}",
-    response_model=UserBooking,
-    status_code=HTTP_200_OK,
-)
-async def get_user_booking(room_id: int, booking_id: int):
-    path = f"/users/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.user_srv_fetch("GET", path, {HTTP_200_OK})
-
-    return booking
-
-
-@router.get(
-    "/users/{room_id}/bookings", response_model=UserBookingList, status_code=HTTP_200_OK
-)
-async def get_all_user_bookings(room_id: int):
-    path = f"/users/{room_id}/bookings"
-    bookings, _ = Requester.user_srv_fetch("GET", path, {HTTP_200_OK})
-
-    return bookings
+    '''
