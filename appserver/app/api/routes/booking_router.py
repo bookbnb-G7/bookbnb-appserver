@@ -4,6 +4,7 @@ from app.api.models.bookings_models import (BookingDB,
                                             BookingList,
                                             BookingSchema)
 
+from typing import Optional
 from app.dependencies import check_token, get_uuid_from_xtoken
 
 from app.errors.http_error import (NotAllowedRequestError,
@@ -12,19 +13,74 @@ from app.errors.http_error import (NotAllowedRequestError,
 from fastapi import APIRouter, Depends
 from app.services.requester import Requester
 from app.services.authsender import AuthSender
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from starlette.status import (HTTP_200_OK,
+                              HTTP_201_CREATED,
+                              HTTP_404_NOT_FOUND)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def payment_camel_to_snake(payment_payload):
+    booking_camel = {
+        "id": payment_payload["id"],
+        "price": payment_payload["price"],
+        "room_id": payment_payload["roomId"],
+        "booker_id": payment_payload["bookerId"],
+        "room_owner_id": payment_payload["roomOwnerId"],
+        "date_from": payment_payload["dateFrom"],
+        "date_to": payment_payload["dateTo"],
+        "booking_status": payment_payload["bookingStatus"],
+        "transaction_hash": payment_payload["transactionHash"],
+        "transaction_status": payment_payload["transactionStatus"]
+    }
+
+    return booking_camel
+
+
 @router.get(
     "", response_model=BookingList, status_code=HTTP_200_OK
 )
-async def get_all_bookings():
-    '''
-    return by query params
-    '''
+async def get_all_bookings(
+    bookerId: Optional[int] = None,
+    roomOwnerId: Optional[int] = None,
+    roomId: Optional[int] = None,
+    bookingStatus: Optional[int] = None,
+):
+    query = "?"
+    path = ""
+
+    if bookerId is not None:
+        query = query + f"bookerId={bookerId}&"
+
+    if roomOwnerId is not None:
+        query = query + f"roomOwnerId={roomOwnerId}&"
+
+    if roomId is not None:
+        query = query + f"roomId={roomId}&"
+
+    if bookingStatus is not None:
+        query = query + f"bookingStatus={bookingStatus}&"
+
+    if len(query) > 1:
+        # strip last & in the query
+        query = query[: (len(query) - 1)]
+        path = path + "/" + query
+
+    bookings, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    # TODO: Change BookingDB model to match camelcase in payment server
+    for i in range(len(bookings)):
+        bookings[i] = payment_camel_to_snake(bookings[i])
+
+    booking_list = {
+        "amount": len(bookings),
+        "bookings": bookings
+    }
+
+    return booking_list
 
 
 @router.post(
@@ -34,11 +90,11 @@ async def get_all_bookings():
     dependencies=[Depends(check_token)],
 )
 async def create_new_booking(
-    room_id: int,
     payload: BookingSchema,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    '''
+
+    room_id = payload.room_id
     room_path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
@@ -48,12 +104,11 @@ async def create_new_booking(
     # Create intent book in payment server
 
     booking_path = "/bookings"
-    payload_booking = payload.dict()
     payload_booking = {
-        "bookerId": payload.user_id,
+        "bookerId": uuid,
         "roomId": room_id,
-        "dateFrom": payload.date_begins.strftime('%d-%m-%Y'),
-        "dateTo": payload.date_ends.strftime('%d-%m-%Y')
+        "dateFrom": payload.date_from.strftime('%d-%m-%Y'),
+        "dateTo": payload.date_to.strftime('%d-%m-%Y')
     }
     booking, _ = Requester.payment_fetch(
         method="POST",
@@ -63,88 +118,91 @@ async def create_new_booking(
     )
 
     # Create booking in room server
-
     booking_path = f"/rooms/{room_id}/bookings"
-    payload_booking = payload.dict()
-    payload_booking.update({"user_id": uuid})
-    # Add the booking id and status received from the payment server
-    payload_booking["id"] = booking["id"]
-    payload_booking["status"] = booking["bookingStatus"]
-    payload_booking["date_begins"] = payload_booking["date_begins"].strftime('%Y-%m-%d')
-    payload_booking["date_ends"] = payload_booking["date_ends"].strftime('%Y-%m-%d')
-    booking, _ = Requester.room_srv_fetch(
+    # Add the booking id received from the payment server
+    payload_booking = {
+        "id": booking["id"],
+        "date_from": payload.date_from.strftime('%Y-%m-%d'),
+        "date_to": payload.date_to.strftime('%Y-%m-%d')
+    }
+
+    booking_room, _ = Requester.room_srv_fetch(
         "POST", booking_path, {HTTP_201_CREATED}, payload=payload_booking
     )
 
-    user_path = f"/users/{uuid}/bookings"
-    booking_id = booking["id"]
-    user_booking_payload = {"booking_id": booking_id, "room_id": room_id}
-    Requester.user_srv_fetch(
-        "POST", user_path, {HTTP_201_CREATED}, payload=user_booking_payload
-    )
+    # TODO: Change BookingDB model to match camelcase in payment server
+    booking_camel = payment_camel_to_snake(booking)
 
-    return booking
-    '''
+    return booking_camel
 
 
 @router.post(
     "/{booking_id}/accept",
     response_model=BookingDB,
     status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
 )
 async def accept_booking(
-    room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
+    booking_id: int,
+    uuid: int = Depends(get_uuid_from_xtoken)
 ):
-    '''
-    room_path = f"/rooms/{room_id}"
-    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
+    path = f"/bookings/{booking_id}"
+    booking, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+    room_owner_id = booking["roomOwnerId"]
 
-    if not AuthSender.has_permission_to_modify(uuid, room["owner_uuid"]):
+    if not AuthSender.has_permission_to_modify(uuid, room_owner_id):
         raise UnauthorizedRequestError("Can't accept other users bookings")
 
-    path = f"/bookings/{booking_id}/accept/"
-    payload_accept = {"roomOwnerId": room["owner_uuid"]}
-    book_accepted, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK}, payload=payload_accept)
-
-    # Update status to confirmed in post server
-    booking_status = {"status": book_accepted["bookingStatus"]}
-    booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch(
-        "PATCH", booking_path, {HTTP_200_OK}, payload=booking_status
+    path = f"/bookings/{booking_id}/accept"
+    payload_accept = {"roomOwnerId": room_owner_id}
+    book_accepted, _ = Requester.payment_fetch(
+        "POST", path, {HTTP_200_OK}, payload=payload_accept
     )
 
-    return booking
-    '''
+    # TODO: Change BookingDB model to match camelcase in payment server
+    booking_camel = payment_camel_to_snake(book_accepted)
+
+    return booking_camel
 
 
 @router.post(
     "/{booking_id}/reject",
     response_model=BookingDB,
     status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
 )
 async def reject_booking(
-    room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
+    booking_id: int,
+    uuid: int = Depends(get_uuid_from_xtoken)
 ):
-    '''
-    room_path = f"/rooms/{room_id}"
-    room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
+    path = f"/bookings/{booking_id}"
+    booking, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+    room_id = booking["roomId"]
+    room_owner_id = booking["roomOwnerId"]
 
-    if not AuthSender.has_permission_to_modify(uuid, room["owner_uuid"]):
+    if not AuthSender.has_permission_to_modify(uuid, room_owner_id):
         raise UnauthorizedRequestError("Can't reject other users bookings")
 
-    path = f"/bookings/{booking_id}/reject/"
-    payload_reject = {"roomOwnerId": room["owner_uuid"]}
-    book_rejected, _ = Requester.payment_fetch("POST", path, {HTTP_200_OK}, payload=payload_reject)
+    path = f"/bookings/{booking_id}/reject"
+    payload_reject = {"roomOwnerId": room_owner_id}
+    book_rejected, _ = Requester.payment_fetch(
+        "POST", path, {HTTP_200_OK}, payload=payload_reject
+    )
 
-    # Delete the rejected booking in post server and user server
+    # Delete the rejected booking in post server
     booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch("DELETE", booking_path, {HTTP_200_OK})
+    booking, _ = Requester.room_srv_fetch(
+        "DELETE", booking_path, {HTTP_200_OK}
+    )
 
-    user_path = f"/users/{uuid}/bookings/{booking_id}"
-    Requester.user_srv_fetch("DELETE", user_path, {HTTP_200_OK})
+    # TODO: Change BookingDB model to match camelcase in payment server
+    booking_camel = payment_camel_to_snake(book_rejected)
 
-    return booking
-    '''
+    return booking_camel
 
 
 @router.get(
@@ -152,13 +210,16 @@ async def reject_booking(
     response_model=BookingDB,
     status_code=HTTP_200_OK,
 )
-async def get_booking(room_id: int, booking_id: int):
-    '''
-    path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch("GET", path, {HTTP_200_OK})
+async def get_booking(booking_id: int):
+    path = f"/bookings/{booking_id}"
+    booking, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
 
-    return booking
-    '''
+    # TODO: Change BookingDB model to match camelcase in payment server
+    booking_camel = payment_camel_to_snake(booking)
+
+    return booking_camel
 
 
 @router.delete(
@@ -168,19 +229,32 @@ async def get_booking(room_id: int, booking_id: int):
     dependencies=[Depends(check_token)],
 )
 async def delete_booking(
-    room_id: int, booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)
+    booking_id: int,
+    uuid: int = Depends(get_uuid_from_xtoken)
 ):
-    '''
+    path = f"/bookings/{booking_id}"
+    booking, _ = Requester.payment_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+    room_id = booking["roomId"]
+    room_owner_id = booking["roomOwnerId"]
+
+    if not AuthSender.has_permission_to_modify(uuid, room_owner_id):
+        raise UnauthorizedRequestError("Can't reject other users bookings")
+
+    path = f"/bookings/{booking_id}"
+    book_deleted, _ = Requester.payment_fetch(
+        "DELETE", path, {HTTP_200_OK}
+    )
+
+    # Delete the rejected booking in post server,
+    # if it is not found it is also OK!
     booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch("GET", booking_path, {HTTP_200_OK})
+    booking, _ = Requester.room_srv_fetch(
+        "DELETE", booking_path, {HTTP_200_OK, HTTP_404_NOT_FOUND}
+    )
 
-    if not AuthSender.has_permission_to_modify(uuid, booking["user_id"]):
-        raise UnauthorizedRequestError("Can't delete other users bookings")
+    # TODO: Change BookingDB model to match camelcase in payment server
+    booking_camel = payment_camel_to_snake(book_deleted)
 
-    booking, _ = Requester.room_srv_fetch("DELETE", booking_path, {HTTP_200_OK})
-
-    user_path = f"/users/{uuid}/bookings/{booking_id}"
-    Requester.user_srv_fetch("DELETE", user_path, {HTTP_200_OK})
-
-    return booking
-    '''
+    return booking_camel
