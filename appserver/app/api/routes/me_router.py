@@ -44,11 +44,11 @@ async def get_current_user_wallet(uuid: int = Depends(get_uuid_from_xtoken)):
     dependencies=[Depends(check_token)],
 )
 async def get_current_user_bookings(uuid: int = Depends(get_uuid_from_xtoken)):
-    path = f"/bookings/?roomOwnerId={uuid}"
+    path = f"/bookings?roomOwnerId={uuid}"
     bookings_received, _ = Requester.payment_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
-    path = f"/bookings/?bookerId={uuid}"
+    path = f"/bookings?bookerId={uuid}"
     bookings_made, _ = Requester.payment_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
