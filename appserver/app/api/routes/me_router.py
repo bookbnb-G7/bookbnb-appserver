@@ -9,6 +9,23 @@ from app.dependencies import check_token, get_uuid_from_xtoken
 router = APIRouter()
 
 
+def payment_camel_to_snake(payment_payload):
+    booking_camel = {
+        "id": payment_payload["id"],
+        "price": payment_payload["price"],
+        "room_id": payment_payload["roomId"],
+        "booker_id": payment_payload["bookerId"],
+        "room_owner_id": payment_payload["roomOwnerId"],
+        "date_from": payment_payload["dateFrom"],
+        "date_to": payment_payload["dateTo"],
+        "booking_status": payment_payload["bookingStatus"],
+        "transaction_hash": payment_payload["transactionHash"],
+        "transaction_status": payment_payload["transactionStatus"]
+    }
+
+    return booking_camel
+
+
 @router.get(
     "",
     response_model=UserDB,
@@ -53,9 +70,22 @@ async def get_current_user_bookings(uuid: int = Depends(get_uuid_from_xtoken)):
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
 
+    # TODO: Change BookingDB model to match camelcase in payment server
+    for i in range(len(bookings_made)):
+        bookings_made[i] = payment_camel_to_snake(bookings_made[i])
+
+    for i in range(len(bookings_received)):
+        bookings_received[i] = payment_camel_to_snake(bookings_received[i])
+
     bookings = {
-        "made": bookings_made,
-        "received": bookings_received
+        "made": {
+            "amount": len(bookings_made),
+            "bookings": bookings_made,
+        },
+        "received": {
+            "amount": len(bookings_received),
+            "bookings": bookings_received,
+        }
     }
 
     return bookings
@@ -68,7 +98,7 @@ async def get_current_user_bookings(uuid: int = Depends(get_uuid_from_xtoken)):
     dependencies=[Depends(check_token)],
 )
 async def get_current_user_rooms(uuid: int = Depends(get_uuid_from_xtoken)):
-    path = f"/rooms/?owner_uuid={uuid}"
+    path = f"/rooms?owner_uuid={uuid}"
     rooms, _ = Requester.room_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
