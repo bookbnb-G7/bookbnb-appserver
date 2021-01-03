@@ -23,6 +23,7 @@ class MockRoomListResponse(MockResponse):
             "amount": 2,
             "rooms": [
                 {
+                    "id": 0,
                     "type": "Apartment",
                     "owner": "Carlito",
                     "owner_uuid": 10,
@@ -30,11 +31,11 @@ class MockRoomListResponse(MockResponse):
                     "latitude": 0.0,
                     "longitude": 0.0,
                     "capacity": 1,
-                    "id": 0,
                     "created_at": "2020-11-10T22:51:03.539Z",
                     "updated_at": "2020-11-10T22:51:03.539Z",
                 },
                 {
+                    "id": 1,
                     "type": "House",
                     "owner": "Freee",
                     "owner_uuid": 11,
@@ -42,12 +43,12 @@ class MockRoomListResponse(MockResponse):
                     "latitude": 0.0,
                     "longitude": 0.0,
                     "capacity": 1,
-                    "id": 1,
                     "created_at": "2020-11-10T22:51:03.539Z",
                     "updated_at": "2020-11-10T22:51:03.539Z",
                 },
             ],
         }
+
 
 class MockPaymentRoomResponse(MockResponse):
     def dict(self):
