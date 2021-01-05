@@ -68,7 +68,8 @@ async def create_room(
 async def get_all_rooms(
     date_begins: Optional[str] = None, date_ends: Optional[str] = None,
     longitude: Optional[float] = None, latitude: Optional[float] = None,
-    people: Optional[int] = None,
+    people: Optional[int] = None, min_price: Optional[int] = None,
+    max_price: Optional[int] = None
 ):
     query = "?"
     path = "/rooms"
@@ -87,6 +88,12 @@ async def get_all_rooms(
 
     if people is not None:
         query = query + f"people={people}&"
+
+    if min_price is not None:
+        query = query + f"min_price={min_price}&"
+
+    if max_price is not None:
+        query = query + f"max_price={max_price}&"
 
     if len(query) > 1:
         # strip last & in the query
