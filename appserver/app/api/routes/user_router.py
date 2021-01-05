@@ -1,19 +1,18 @@
 from typing import Optional
-
-from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
-                                       UserUpdateSchema, WalletDB)
-from app.api.models.user_rating_model import (UserRatingList, UserRatingSchema,
-                                              UserRatingUpdate)
-from app.api.models.user_review_model import (UserReviewList, UserReviewSchema,
-                                              UserReviewUpdate)
-from app.dependencies import check_token, get_uuid_from_xtoken
-from app.errors.http_error import UnauthorizedRequestError
-from app.services.authsender import AuthSender
 from app.services.requester import Requester
+from app.services.authsender import AuthSender
 from fastapi import APIRouter, Depends, Header
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from app.errors.http_error import UnauthorizedRequestError
+from app.dependencies import check_token, get_uuid_from_xtoken
+from app.api.models.user_model import (UserDB, UserListSchema,
+                                       UserSchema, UserUpdateSchema)
+from app.api.models.user_rating_model import UserRatingList, UserRatingSchema
+from app.api.models.user_review_model import UserReviewList, UserReviewSchema
 
 router = APIRouter()
+
+# -----------------------------------USERS--------------------------------------#
 
 
 @router.post(
@@ -58,34 +57,6 @@ async def create_user(
     return user
 
 
-@router.get(
-    "/me",
-    response_model=UserDB,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def get_current_user(uuid: int = Depends(get_uuid_from_xtoken)):
-    path = f"/users/{uuid}"
-    user, _ = Requester.user_srv_fetch(
-        method="GET", path=path, expected_statuses={HTTP_200_OK}
-    )
-    return user
-
-
-@router.get(
-    "/me/wallet",
-    response_model=WalletDB,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def get_current_user_wallet(uuid: int = Depends(get_uuid_from_xtoken)):
-    path = f"/wallets/{uuid}"
-    wallet, _ = Requester.payment_fetch(
-        method="GET", path=path, expected_statuses={HTTP_200_OK}
-    )
-    return wallet
-
-
 @router.get("/{user_id}", response_model=UserDB, status_code=HTTP_200_OK)
 async def get_user(user_id: int):
     path = f"/users/{user_id}"
@@ -93,20 +64,6 @@ async def get_user(user_id: int):
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
     return user
-
-
-# TODO: BORRAR ESTE ENDPOINT
-@router.get(
-    "/wallet/{user_id}",
-    response_model=WalletDB,
-    status_code=HTTP_200_OK,
-)
-async def get_user_wallet(user_id: int):
-    path = f"/wallets/{user_id}"
-    wallet, _ = Requester.payment_fetch(
-        method="GET", path=path, expected_statuses={HTTP_200_OK}
-    )
-    return wallet
 
 
 @router.patch(
@@ -134,7 +91,8 @@ async def update_user(
 
 
 @router.delete(
-    "/{user_id}", status_code=HTTP_200_OK, dependencies=[Depends(check_token)]
+    "/{user_id}", status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)]
 )
 async def delete_user(user_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     if not AuthSender.has_permission_to_modify(uuid, user_id):
@@ -147,13 +105,21 @@ async def delete_user(user_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     return new_user_info
 
 
-@router.get("", response_model=UserListSchema, status_code=HTTP_200_OK)
+@router.get(
+    "", response_model=UserListSchema,
+    status_code=HTTP_200_OK)
 async def get_all_users():
     path = "/users"
     users, _ = Requester.user_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
     return users
+
+
+# ------------------------------------------------------------------------------#
+
+
+# --------------------------RATINGS/REVIEWS-------------------------------------#
 
 
 @router.post(
@@ -352,106 +318,6 @@ async def get_single_guest_rating(user_id: int, rating_id: int):
     return user_ratings
 
 
-@router.patch(
-    "/{user_id}/host_reviews/{review_id}",
-    response_model=UserReviewSchema,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def update_host_review(
-    user_id: int,
-    review_id: int,
-    payload: UserReviewUpdate,
-    uuid: int = Depends(get_uuid_from_xtoken),
-):
-    review_path = f"/users/{user_id}/host_reviews/{review_id}"
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't edit a review of another user")
-
-    review, _ = Requester.user_srv_fetch(
-        method="PATCH",
-        path=review_path,
-        expected_statuses={HTTP_200_OK},
-        payload=payload.dict(exclude_unset=True),
-    )
-    return review
-
-
-@router.patch(
-    "/{user_id}/host_ratings/{rating_id}",
-    response_model=UserRatingSchema,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def update_host_rating(
-    user_id: int,
-    rating_id: int,
-    payload: UserRatingUpdate,
-    uuid: int = Depends(get_uuid_from_xtoken),
-):
-    review_path = f"/users/{user_id}/host_ratings/{rating_id}"
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't edit a rating of another user")
-
-    review, _ = Requester.user_srv_fetch(
-        method="PATCH",
-        path=review_path,
-        expected_statuses={HTTP_200_OK},
-        payload=payload.dict(exclude_unset=True),
-    )
-    return review
-
-
-@router.patch(
-    "/{user_id}/guest_reviews/{review_id}",
-    response_model=UserReviewSchema,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def update_guest_review(
-    user_id: int,
-    review_id: int,
-    payload: UserReviewUpdate,
-    uuid: int = Depends(get_uuid_from_xtoken),
-):
-    review_path = f"/users/{user_id}/guest_reviews/{review_id}"
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't edit a review of another user")
-
-    review, _ = Requester.user_srv_fetch(
-        method="PATCH",
-        path=review_path,
-        expected_statuses={HTTP_200_OK},
-        payload=payload.dict(exclude_unset=True),
-    )
-    return review
-
-
-@router.patch(
-    "/{user_id}/guest_ratings/{rating_id}",
-    response_model=UserRatingSchema,
-    status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)],
-)
-async def update_guest_rating(
-    user_id: int,
-    rating_id: int,
-    payload: UserRatingUpdate,
-    uuid: int = Depends(get_uuid_from_xtoken),
-):
-    rating_path = f"/users/{user_id}/guest_ratings/{rating_id}"
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't edit a rating of another user")
-
-    review, _ = Requester.user_srv_fetch(
-        method="PATCH",
-        path=rating_path,
-        expected_statuses={HTTP_200_OK},
-        payload=payload.dict(exclude_unset=True),
-    )
-    return review
-
-
 @router.delete(
     "/{user_id}/host_reviews/{review_id}",
     status_code=HTTP_200_OK,
@@ -530,3 +396,6 @@ async def delete_guest_rating(
         method="DELETE", path=rating_path, expected_statuses={HTTP_200_OK}
     )
     return review
+
+
+# ------------------------------------------------------------------------------#

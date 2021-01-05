@@ -105,42 +105,6 @@ def test_get_all_room_reviews(test_app):
 
 
 @responses.activate
-def test_update_room_review(test_app, monkeypatch):
-    test_full_review = MockReviewResponse().dict()
-    test_review_id = 1
-    test_room_id = 2
-    expected_status = HTTP_200_OK
-    attrs_to_test = ["review"]
-    test_review = {attr: test_full_review[attr] for attr in attrs_to_test}
-    header = {"x-access-token": "tokenrefalso"}
-
-    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
-    monkeypatch.setattr(
-        AuthSender, "get_uuid_from_token", lambda x: test_full_review["reviewer_id"]
-    )
-    responses.add(
-        responses.GET,
-        re.compile(REVIEW_REGEX),
-        json=test_full_review,
-        status=expected_status,
-    )
-    responses.add(
-        responses.PATCH,
-        re.compile(REVIEW_REGEX),
-        json=test_full_review,
-        status=expected_status,
-    )
-    response = test_app.patch(
-        f"{APPSERVER_URL}/rooms/{test_room_id}/reviews/{test_review_id}",
-        json=test_review,
-        headers=header,
-    )
-    assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_review, attrs_to_test)
-
-
-@responses.activate
 def test_delete_room_review(test_app, monkeypatch):
     test_review = MockReviewResponse().dict()
     test_review_id = test_review["id"]

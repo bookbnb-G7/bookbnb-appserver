@@ -8,6 +8,9 @@ class MockRoomResponse(MockResponse):
             "owner": "Carlito",
             "owner_uuid": 10,
             "price_per_day": 999,
+            "latitude": 0.0,
+            "longitude": 0.0,
+            "capacity": 1,
             "id": 0,
             "created_at": "2020-11-10T22:51:03.539Z",
             "updated_at": "2020-11-10T22:51:03.539Z",
@@ -20,25 +23,32 @@ class MockRoomListResponse(MockResponse):
             "amount": 2,
             "rooms": [
                 {
+                    "id": 0,
                     "type": "Apartment",
                     "owner": "Carlito",
                     "owner_uuid": 10,
                     "price_per_day": 999,
-                    "id": 0,
+                    "latitude": 0.0,
+                    "longitude": 0.0,
+                    "capacity": 1,
                     "created_at": "2020-11-10T22:51:03.539Z",
                     "updated_at": "2020-11-10T22:51:03.539Z",
                 },
                 {
+                    "id": 1,
                     "type": "House",
                     "owner": "Freee",
                     "owner_uuid": 11,
                     "price_per_day": 123,
-                    "id": 1,
+                    "latitude": 0.0,
+                    "longitude": 0.0,
+                    "capacity": 1,
                     "created_at": "2020-11-10T22:51:03.539Z",
                     "updated_at": "2020-11-10T22:51:03.539Z",
                 },
             ],
         }
+
 
 class MockPaymentRoomResponse(MockResponse):
     def dict(self):

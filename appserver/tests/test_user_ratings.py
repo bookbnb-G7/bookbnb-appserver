@@ -152,62 +152,6 @@ def test_get_single_host_rating(test_app):
 
 
 @responses.activate
-def test_update_host_rating(test_app, monkeypatch):
-    test_full_rating = MockUserRatingResponse().dict()
-    test_user_id = 1
-    test_rating_id = 2
-    expected_status = HTTP_200_OK
-    attrs_to_test = ["rating"]
-    test_rating = {attr: test_full_rating[attr] for attr in attrs_to_test}
-    header = {"x-access-token": "tokenrefalso"}
-
-    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
-    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_rating)
-    responses.add(
-        responses.PATCH,
-        re.compile(HOST_RATING_REGEX),
-        json=test_full_rating,
-        status=expected_status,
-    )
-    response = test_app.patch(
-        f"{APPSERVER_URL}/users/{test_user_id}/host_ratings/{test_rating_id}",
-        json=test_rating,
-        headers=header,
-    )
-    assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_rating, attrs_to_test)
-
-
-@responses.activate
-def test_update_guest_rating(test_app, monkeypatch):
-    test_full_rating = MockUserRatingResponse().dict()
-    test_user_id = 1
-    test_rating_id = 2
-    expected_status = HTTP_200_OK
-    attrs_to_test = ["rating"]
-    test_rating = {attr: test_full_rating[attr] for attr in attrs_to_test}
-    header = {"x-access-token": "tokenrefalso"}
-
-    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
-    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_rating)
-    responses.add(
-        responses.PATCH,
-        re.compile(GUEST_RATING_REGEX),
-        json=test_full_rating,
-        status=expected_status,
-    )
-    response = test_app.patch(
-        f"{APPSERVER_URL}/users/{test_user_id}/guest_ratings/{test_rating_id}",
-        json=test_rating,
-        headers=header,
-    )
-    assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_rating, attrs_to_test)
-
-
-@responses.activate
 def test_delete_host_rating(test_app, monkeypatch):
     test_rating = MockUserRatingResponse().dict()
     test_user_id = test_rating["reviewer_id"]

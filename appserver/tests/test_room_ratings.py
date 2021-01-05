@@ -1,5 +1,4 @@
 import re
-
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
@@ -101,42 +100,6 @@ def test_get_all_room_ratings(test_app):
         check_responses_equality(
             response_rating, test_ratings[i], room_attrs_to_compare
         )
-
-
-@responses.activate
-def test_update_room_rating(test_app, monkeypatch):
-    test_full_rating = MockRatingResponse().dict()
-    test_rating_id = 1
-    test_room_id = 2
-    expected_status = HTTP_200_OK
-    attrs_to_test = ["rating"]
-    test_rating = {attr: test_full_rating[attr] for attr in attrs_to_test}
-    header = {"x-access-token": "tokenrefalso"}
-
-    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
-    monkeypatch.setattr(
-        AuthSender, "get_uuid_from_token", lambda x: test_full_rating["reviewer_id"]
-    )
-    responses.add(
-        responses.GET,
-        re.compile(RATING_REGEX),
-        json=test_full_rating,
-        status=expected_status,
-    )
-    responses.add(
-        responses.PATCH,
-        re.compile(RATING_REGEX),
-        json=test_full_rating,
-        status=expected_status,
-    )
-    response = test_app.patch(
-        f"{APPSERVER_URL}/rooms/{test_room_id}/ratings/{test_rating_id}",
-        json=test_rating,
-        headers=header,
-    )
-    assert response.status_code == expected_status
-    check_responses_equality(response.json(), test_rating, attrs_to_test)
 
 
 @responses.activate
