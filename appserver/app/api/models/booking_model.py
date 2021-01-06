@@ -3,8 +3,6 @@ from typing import List
 
 from pydantic import BaseModel
 
-# TODO: Change file name to booking_model.py
-
 
 class BookingSchema(BaseModel):
     room_id: int

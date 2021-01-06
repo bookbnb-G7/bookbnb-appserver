@@ -9,6 +9,7 @@ class RoomSchema(BaseModel):
     capacity: int
     latitude: float
     longitude: float
+    location: str
     price_per_day: int
 
     class Config:
@@ -18,6 +19,7 @@ class RoomSchema(BaseModel):
                 "price_per_day": 67,
                 "latitude": 0.0,
                 "longitude": 0.0,
+                "location": "USA",
                 "capacity": 1,
             }
         }
@@ -40,6 +42,7 @@ class RoomDB(RoomSchema):
                 "price_per_day": 67,
                 "latitude": 0.0,
                 "longitude": 0.0,
+                "location": "USA",
                 "capacity": 1,
                 "created_at": "2020-11-20T18:02:20.965Z",
                 "updated_at": "2020-11-20T18:02:20.965Z",
@@ -50,6 +53,10 @@ class RoomDB(RoomSchema):
 class RoomUpdate(BaseModel):
     type: Optional[str] = None
     price_per_day: Optional[int] = None
+    capacity: Optional[int] = None
+    location: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     class Config:
         schema_extra = {"example": {"price_per_day": 456}}
@@ -62,7 +69,7 @@ class RoomList(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "amount": 0,
+                "amount": 2,
                 "rooms": [
                     {
                         "id": 9,
@@ -72,6 +79,7 @@ class RoomList(BaseModel):
                         "price_per_day": 67,
                         "latitude": 0.0,
                         "longitude": 0.0,
+                        "location": "USA",
                         "capacity": 1,
                         "created_at": "2020-11-20T18:02:20.965Z",
                         "updated_at": "2020-11-20T18:02:20.965Z",
@@ -84,6 +92,7 @@ class RoomList(BaseModel):
                         "price_per_day": 872,
                         "latitude": 0.0,
                         "longitude": 0.0,
+                        "location": "USA",
                         "capacity": 1,
                         "created_at": "2019-11-20T18:06:37.767Z",
                         "updated_at": "2020-11-20T18:06:37.767Z",
