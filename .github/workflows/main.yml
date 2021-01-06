@@ -1,0 +1,51 @@
+name: Continuous Integration and Delivery
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: build and up
+        run: docker-compose up -d --build
+      - name: run pytest
+        run: docker exec bookbnb-appserver_web pytest --cov=appserver
+      - name: Coveralls
+        run: docker exec -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} bookbnb-appserver_web coveralls
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
+  deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: test
+
+    env:
+      HEROKU_APP_NAME: bookbnb-appserver
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: install heroku-cli
+        run: wget -qO- https://toolbelt.heroku.com/install.sh | sh
+      - name: logins
+        run: |
+          echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+          echo ${HEROKU_API_KEY} | docker login -u ${HEROKU_USERNAME} --password-stdin registry.heroku.com
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          HEROKU_USERNAME: ${{ secrets.HEROKU_USERNAME }}
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: push container
+        run: |
+          docker build . -t facutorraca/${HEROKU_APP_NAME}
+          docker tag facutorraca/${HEROKU_APP_NAME} registry.heroku.com/${HEROKU_APP_NAME}/web;
+          docker push facutorraca/${HEROKU_APP_NAME};
+      - name: release
+        run: |
+          heroku container:push web --app ${HEROKU_APP_NAME};
+          HEROKU_API_KEY=${HEROKU_API_KEY} heroku container:release web --app ${HEROKU_APP_NAME};
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
