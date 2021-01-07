@@ -5,23 +5,25 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    env:
+        APPSERVER_URL: ${{ secrets.APPSERVER_URL }}
+        AUTHSERVER_URL: ${{ secrets.AUTHSERVER_URL }}
+        PAYMENT_URL: ${{ secrets.PAYMENT_URL }}
+        POSTSERVER_URL: ${{ secrets.POSTSERVER_URL }}
+        USERSERVER_URL: ${{ secrets.USERSERVER_URL }}
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+    
     steps:
       - uses: actions/checkout@v2
       - name: build and up
-        run: APPSERVER_URL=${APPSERVER_URL} AUTHSERVER_URL=${AUTHSERVER_URL} PAYMENT_URL=${PAYMENT_URL} POSTSERVER_URL=${POSTSERVER_URL}\
-             USERSERVER_URL=${USERSERVER_URL} docker-compose up -d --build
+        run: docker-compose up -d --build
              
       - name: run pytest
         run: docker exec bookbnb-appserver_web pytest --cov=appserver
       - name: Coveralls
         run: docker exec -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} bookbnb-appserver_web coveralls
-        env:
-          APPSERVER_URL: ${{ secrets.APPSERVER_URL }}
-          AUTHSERVER_URL: ${{ secrets.AUTHSERVER_URL }}
-          PAYMENT_URL: ${{ secrets.PAYMENT_URL }}
-          POSTSERVER_URL: ${{ secrets.POSTSERVER_URL }}
-          USERSERVER_URL: ${{ secrets.USERSERVER_URL }}
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+
   
   deploy:
     if: github.ref == 'refs/heads/master'
