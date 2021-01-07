@@ -4,6 +4,8 @@ from tests.utils import MockResponse
 class MockRoomResponse(MockResponse):
     def dict(self):
         return {
+            "title": "Exclusive offer in Las Toninas",
+            "description": "Apartment with sights to the almighty beach",
             "type": "Apartment",
             "owner": "Carlito",
             "owner_uuid": 10,
@@ -25,6 +27,8 @@ class MockRoomListResponse(MockResponse):
             "rooms": [
                 {
                     "id": 0,
+                    "title": "Exclusive offer in Las Toninas",
+                    "description": "Apartment with sights to the almighty beach",
                     "type": "Apartment",
                     "owner": "Carlito",
                     "owner_uuid": 10,
@@ -38,6 +42,8 @@ class MockRoomListResponse(MockResponse):
                 },
                 {
                     "id": 1,
+                    "title": "House offer in Las Toninas",
+                    "description": "Masion-like House available for 1",
                     "type": "House",
                     "owner": "Freee",
                     "owner_uuid": 11,

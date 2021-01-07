@@ -5,6 +5,8 @@ from pydantic import BaseModel
 
 
 class RoomSchema(BaseModel):
+    title: str
+    description: str
     type: str
     capacity: int
     latitude: float
@@ -15,6 +17,8 @@ class RoomSchema(BaseModel):
     class Config:
         schema_extra = {
             "example": {
+                "title": "Exclusive offer in Las Toninas",
+                "description": "Apartment with sights to the almighty beach",
                 "type": "Apartment",
                 "price_per_day": 67,
                 "latitude": 0.0,
@@ -36,6 +40,8 @@ class RoomDB(RoomSchema):
         schema_extra = {
             "example": {
                 "id": 2,
+                "title": "Exclusive offer in Las Toninas",
+                "description": "Apartment with sights to the almighty beach",
                 "type": "Apartment",
                 "owner": "Johnny",
                 "owner_uuid": 45,
@@ -51,6 +57,8 @@ class RoomDB(RoomSchema):
 
 
 class RoomUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
     type: Optional[str] = None
     price_per_day: Optional[int] = None
     capacity: Optional[int] = None
@@ -73,6 +81,8 @@ class RoomList(BaseModel):
                 "rooms": [
                     {
                         "id": 9,
+                        "title": "Exclusive offer in Las Toninas",
+                        "description": "Apartment with sights to the almighty beach",
                         "type": "Apartment",
                         "owner": "Alice",
                         "owner_uuid": 44,
@@ -86,6 +96,8 @@ class RoomList(BaseModel):
                     },
                     {
                         "id": 6,
+                        "title": "House for 1 available",
+                        "description": "Mansion-like house in springfield",
                         "type": "House",
                         "owner": "Bob",
                         "owner_uuid": 17,
