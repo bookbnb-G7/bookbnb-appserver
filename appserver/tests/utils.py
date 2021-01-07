@@ -24,6 +24,7 @@ GUEST_REVIEW_REGEX = rf"{USER_API_URL}/users/?[0-9]*[/]?guest_reviews/?"
 USER_REGEX = rf"{USER_API_URL}/?[0-9]*[/]?"
 RATING_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?ratings/?"
 REVIEW_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?reviews/?"
+COMMENT_REGEX = rf"{POST_API_URL}/rooms/?[0-9]*[/]?comments/?"
 APPSERVER_ME_REGEX = rf"{APPSERVER_URL}/me?"
 APPSERVER_WALLET_REGEX = rf"{APPSERVER_URL}/me/wallet?"
 

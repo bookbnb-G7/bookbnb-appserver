@@ -426,7 +426,7 @@ async def get_all_room_comments(room_id: int):
 
 
 @router.delete(
-    "/{room_id}/comments/{review_id}",
+    "/{room_id}/comments/{comment_id}",
     response_model=RoomCommentDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
