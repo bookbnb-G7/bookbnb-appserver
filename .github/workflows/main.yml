@@ -8,7 +8,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: build and up
-        run: docker-compose up -d --build
+        run: APPSERVER_URL=${APPSERVER_URL} AUTHSERVER_URL=${AUTHSERVER_URL} PAYMENT_URL=${PAYMENT_URL} POSTSERVER_URL=${POSTSERVER_URL}\
+             USERSERVER_URL=${USERSERVER_URL} docker-compose up -d --build
+             
       - name: run pytest
         run: docker exec bookbnb-appserver_web pytest --cov=appserver
       - name: Coveralls
