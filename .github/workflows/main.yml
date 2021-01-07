@@ -14,8 +14,13 @@ jobs:
       - name: Coveralls
         run: docker exec -e COVERALLS_REPO_TOKEN=${COVERALLS_REPO_TOKEN} bookbnb-appserver_web coveralls
         env:
+          APPSERVER_URL: ${{ secrets.APPSERVER_URL }}
+          AUTHSERVER_URL: ${{ secrets.AUTHSERVER_URL }}
+          PAYMENT_URL: ${{ secrets.PAYMENT_URL }}
+          POSTSERVER_URL: ${{ secrets.POSTSERVER_URL }}
+          USERSERVER_URL: ${{ secrets.USERSERVER_URL }}
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-
+  
   deploy:
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
