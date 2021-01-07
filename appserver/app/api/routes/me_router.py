@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from starlette.status import HTTP_200_OK
 from app.services.requester import Requester
 from app.api.models.user_model import UserDB, WalletDB
-from app.api.models.bookings_models import BookingsUserList
+from app.api.models.booking_model import BookingsUserList
 from app.api.models.room_model import RoomList
 from app.dependencies import check_token, get_uuid_from_xtoken
 

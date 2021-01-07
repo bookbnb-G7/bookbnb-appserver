@@ -1,6 +1,6 @@
 import logging
 
-from app.api.models.bookings_models import (BookingDB,
+from app.api.models.booking_model import (BookingDB,
                                             BookingList,
                                             BookingSchema)
 

@@ -12,6 +12,8 @@ from app.api.models.room_rating_model import (RoomRatingDB, RoomRatingList,
                                               RoomRatingSchema)
 from app.api.models.room_review_model import (RoomReviewDB, RoomReviewList,
                                               RoomReviewSchema)
+from app.api.models.room_comment_model import (RoomCommentSchema, RoomCommentDB,
+                                               RoomCommentList)
 
 router = APIRouter()
 
@@ -68,7 +70,8 @@ async def create_room(
 async def get_all_rooms(
     date_begins: Optional[str] = None, date_ends: Optional[str] = None,
     longitude: Optional[float] = None, latitude: Optional[float] = None,
-    people: Optional[int] = None,
+    people: Optional[int] = None, min_price: Optional[int] = None,
+    max_price: Optional[int] = None
 ):
     query = "?"
     path = "/rooms"
@@ -87,6 +90,12 @@ async def get_all_rooms(
 
     if people is not None:
         query = query + f"people={people}&"
+
+    if min_price is not None:
+        query = query + f"min_price={min_price}&"
+
+    if max_price is not None:
+        query = query + f"max_price={max_price}&"
 
     if len(query) > 1:
         # strip last & in the query
@@ -359,5 +368,85 @@ async def delete_room_review(
     )
     return review
 
+
+# ------------------------------------------------------------------------------#
+
+
+# -----------------------------ROOMS-COMMENTS-----------------------------------#
+
+@router.post(
+    "/{room_id}/comments",
+    response_model=RoomCommentDB,
+    status_code=HTTP_201_CREATED,
+    dependencies=[Depends(check_token)],
+)
+async def create_room_comment(
+    payload: RoomCommentSchema, room_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
+):
+    room_path = "/rooms" + f"/{room_id}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
+
+    if not AuthSender.has_permission_to_comment(viewer_uuid, room["owner_uuid"]):
+        raise BadRequestError("You can't comment your own rooms!")
+
+    user_path = "/users" + f"/{viewer_uuid}"
+    user, _ = Requester.user_srv_fetch(
+        method="GET", path=user_path, expected_statuses={HTTP_200_OK}
+    )
+    commentator = f"{user['firstname']} {user['lastname']}"
+
+    comment_payload = payload.dict()
+    comment_payload.update({"commentator": commentator, "commentator_id": viewer_uuid})
+
+    comment_path = "/rooms" + f"/{room_id}/comments"
+    comment, _ = Requester.room_srv_fetch(
+        method="POST",
+        path=comment_path,
+        expected_statuses={HTTP_201_CREATED},
+        payload=comment_payload,
+    )
+
+    return comment
+
+
+@router.get(
+    "/{room_id}/comments",
+    response_model=RoomCommentList,
+    status_code=HTTP_200_OK
+)
+async def get_all_room_comments(room_id: int):
+    path = "/rooms" + f"/{room_id}/comments"
+    comments, _ = Requester.room_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+    return comments
+
+
+@router.delete(
+    "/{room_id}/comments/{comment_id}",
+    response_model=RoomCommentDB,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def delete_room_comment(
+    room_id: int,
+    comment_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
+):
+    comment_path = f"/rooms/{room_id}/comments/{comment_id}"
+    comment, _ = Requester.room_srv_fetch(
+        method="GET", path=comment_path, expected_statuses={HTTP_200_OK}
+    )
+
+    if not AuthSender.has_permission_to_modify(viewer_uuid, comment["commentator_id"]):
+        raise BadRequestError("You can't delete other users room comments!")
+
+    comment, _ = Requester.room_srv_fetch(
+        method="DELETE", path=comment_path, expected_statuses={HTTP_200_OK}
+    )
+    return comment
 
 # ------------------------------------------------------------------------------#

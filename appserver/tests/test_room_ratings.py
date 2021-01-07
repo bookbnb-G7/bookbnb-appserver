@@ -43,7 +43,7 @@ def test_post_room_rating(test_app, monkeypatch):
         status=expected_status,
     )
     response = test_app.post(
-        f"{APPSERVER_URL}/rooms/{test_rating['id']}/ratings",
+        f"{APPSERVER_URL}/rooms/{test_room['id']}/ratings",
         json=test_rating,
         headers=header,
     )
