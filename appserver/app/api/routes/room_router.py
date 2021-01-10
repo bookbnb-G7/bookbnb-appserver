@@ -1,14 +1,14 @@
 from app.api.crud.room_photo_dao import RoomPhotoDAO
 from app.db import get_db
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from app.services.requester import Requester
 from app.services.authsender import AuthSender
 from app.services.photouploader import photouploader
+from fastapi import APIRouter, Depends, UploadFile, File
 from app.api.models.room_photo_model import RoomPhoto, RoomPhotoList
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.dependencies import check_token, get_uuid_from_xtoken
-from fastapi import APIRouter, Depends, UploadFile, File, Response
 from app.errors.http_error import BadRequestError, UnauthorizedRequestError, NotFoundError
 
 from app.api.models.room_model import (RoomDB, RoomList,
@@ -74,8 +74,8 @@ async def create_room(
 async def get_all_rooms(
         date_begins: Optional[str] = None, date_ends: Optional[str] = None,
         longitude: Optional[float] = None, latitude: Optional[float] = None,
-        people: Optional[int] = None, min_price: Optional[int] = None,
-        max_price: Optional[int] = None
+        people: Optional[int] = None, type: Optional[List[str]] = None,
+        max_price: Optional[int] = None, min_price: Optional[int] = None
 ):
     query = "?"
     path = "/rooms"
@@ -94,6 +94,9 @@ async def get_all_rooms(
 
     if people is not None:
         query = query + f"people={people}&"
+
+    if type is not None:
+        query = query + f"type={type}&"
 
     if min_price is not None:
         query = query + f"min_price={min_price}&"
