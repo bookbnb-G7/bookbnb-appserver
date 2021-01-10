@@ -1,8 +1,8 @@
 import logging
 
 from app.api.models.booking_model import (BookingDB,
-                                            BookingList,
-                                            BookingSchema)
+                                          BookingList,
+                                          BookingSchema)
 
 from typing import Optional
 from app.dependencies import check_token, get_uuid_from_xtoken

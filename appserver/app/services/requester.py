@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class Requester:
-
     AUTH_SERVER_API_KEY = os.environ["AUTH_SERVER_API_KEY"]
     POST_SERVER_API_KEY = os.environ["POST_SERVER_API_KEY"]
     USER_SERVER_API_KEY = os.environ["USER_SERVER_API_KEY"]

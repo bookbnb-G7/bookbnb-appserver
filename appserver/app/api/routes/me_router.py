@@ -1,10 +1,13 @@
-from fastapi import APIRouter, Depends
-from starlette.status import HTTP_200_OK
+from app.services.notifier import notifier
 from app.services.requester import Requester
-from app.api.models.user_model import UserDB, WalletDB
-from app.api.models.booking_model import BookingsUserList
 from app.api.models.room_model import RoomList
+from app.api.models.token_model import TokenSchema
+from app.services.photouploader import photouploader
+from app.api.models.booking_model import BookingsUserList
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.dependencies import check_token, get_uuid_from_xtoken
+from app.api.models.user_model import UserDB, WalletDB, UserSchema
+from fastapi import APIRouter, Depends, File, Response, UploadFile
 
 router = APIRouter()
 
@@ -104,3 +107,47 @@ async def get_current_user_rooms(uuid: int = Depends(get_uuid_from_xtoken)):
     )
 
     return rooms
+
+
+@router.post(
+    "/token",
+    response_model=TokenSchema,
+    status_code=HTTP_201_CREATED,
+    dependencies=[Depends(check_token)]
+)
+async def set_push_token(payload: TokenSchema, uuid: int = Depends(get_uuid_from_xtoken)):
+    notifier.set_push_token(uuid, payload.push_token)
+    return payload
+
+
+@router.get(
+    "/token",
+    response_model=TokenSchema,
+    status_code=HTTP_201_CREATED,
+    dependencies=[Depends(check_token)]
+)
+async def get_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
+    push_token = notifier.get_push_token(uuid)
+    return {"push_token": push_token}
+
+
+@router.post(
+    "/profile_picture",
+    response_model=UserSchema,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def update_profile_photo(
+    _response: Response,
+    file: UploadFile = File(...),
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+    image_url = photouploader.upload_profile_photo(file, uuid)
+
+    user_patch = {"photo": image_url}
+    user_profile_path = f"/users/{uuid}"
+    user_response, _ = Requester.user_srv_fetch(
+        "PATCH", user_profile_path, {HTTP_200_OK}, payload=user_patch
+    )
+
+    return user_response

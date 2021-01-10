@@ -1,9 +1,8 @@
-import logging
 import os
+import logging
 from functools import lru_cache
-
-from firebase_admin import credentials, initialize_app
 from pydantic import BaseSettings
+from firebase_admin import credentials
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +18,10 @@ def get_settings() -> Settings:
     return Settings()
 
 
-def firebase_authenticate():
-    storage_bucket = os.environ.get("FIREBASE_STORAGE_BUCKET")
-    cred = credentials.Certificate(
+firebase_credentials = None
+
+if os.environ.get("ENVIRONMENT") == "production":
+    firebase_credentials = credentials.Certificate(
         {
             "type": "service_account",
             "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
@@ -35,5 +35,4 @@ def firebase_authenticate():
             "client_x509_cert_url": os.environ.get("FIREBASE_CLIENT_CERT_URL"),
         }
     )
-    initialize_app(cred, {"storageBucket": storage_bucket})
-    logger.info("Authenticated in firebase successfully")
+
