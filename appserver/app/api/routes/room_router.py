@@ -74,7 +74,7 @@ async def create_room(
 async def get_all_rooms(
         date_begins: Optional[str] = None, date_ends: Optional[str] = None,
         longitude: Optional[float] = None, latitude: Optional[float] = None,
-        people: Optional[int] = None, type: Optional[List[str]] = None,
+        people: Optional[int] = None, types: Optional[List[str]] = None,
         max_price: Optional[int] = None, min_price: Optional[int] = None
 ):
     query = "?"
@@ -95,8 +95,8 @@ async def get_all_rooms(
     if people is not None:
         query = query + f"people={people}&"
 
-    if type is not None:
-        query = query + f"type={type}&"
+    if types is not None:
+        query = query + f"type={types}&"
 
     if min_price is not None:
         query = query + f"min_price={min_price}&"
