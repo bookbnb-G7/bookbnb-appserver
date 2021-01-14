@@ -123,12 +123,23 @@ async def set_push_token(payload: TokenSchema, uuid: int = Depends(get_uuid_from
 @router.get(
     "/token",
     response_model=TokenSchema,
-    status_code=HTTP_201_CREATED,
+    status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)]
 )
 async def get_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
     push_token = notifier.get_push_token(uuid)
     return {"push_token": push_token}
+
+
+@router.delete(
+    "/token",
+    response_model=TokenSchema,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)]
+)
+async def get_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
+    removed_token = notifier.remove_push_token(uuid)
+    return {"push_token": removed_token}
 
 
 @router.post(

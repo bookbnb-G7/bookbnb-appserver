@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.services.requester import Requester
 from app.services.authsender import AuthSender
 from app.services.photouploader import photouploader
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from app.api.models.room_photo_model import RoomPhoto, RoomPhotoList
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.dependencies import check_token, get_uuid_from_xtoken
@@ -74,7 +74,7 @@ async def create_room(
 async def get_all_rooms(
         date_begins: Optional[str] = None, date_ends: Optional[str] = None,
         longitude: Optional[float] = None, latitude: Optional[float] = None,
-        people: Optional[int] = None, types: Optional[List[str]] = None,
+        people: Optional[int] = None, types: List[str] = Query(None),
         max_price: Optional[int] = None, min_price: Optional[int] = None
 ):
     query = "?"
@@ -96,7 +96,8 @@ async def get_all_rooms(
         query = query + f"people={people}&"
 
     if types is not None:
-        query = query + f"type={types}&"
+        for type in types:
+            query = query + f"types={type}&"
 
     if min_price is not None:
         query = query + f"min_price={min_price}&"

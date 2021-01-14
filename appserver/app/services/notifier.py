@@ -21,6 +21,11 @@ class Notifier:
     def get_push_token(self, uuid: int):
         return self.db_tokens.child(str(uuid)).get()
 
+    def remove_push_token(self, uuid: int):
+        removed_token = self.get_push_token(uuid)
+        self.db_tokens.child(str(uuid)).delete()
+        return removed_token
+
     def send_notification_test(self, sender: dict, receiver: dict):
         title = 'New test notification.'
         body = f'Body of test notification from {sender["name"]}'
