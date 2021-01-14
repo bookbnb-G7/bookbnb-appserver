@@ -11,8 +11,7 @@ class RoomCommentSchema(BaseModel):
         schema_extra = {
             "example": {
                 "comment": "Nice room",
-                "commentator": "Chayanne",
-                "commentator_id": 27
+                "main_comment_id": 2
             }
         }
 
