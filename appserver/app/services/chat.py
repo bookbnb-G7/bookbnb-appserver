@@ -1,7 +1,8 @@
 import os
-import datetime
 import firebase_admin
+from datetime import datetime
 from firebase_admin import db
+from app.config import firebase_credentials
 
 
 class ChatFirebase:
@@ -15,10 +16,10 @@ class ChatFirebase:
             credentials, {'databaseURL': db_url}, name='bookbnb-chat'
         )
 
-        self.db_chat = db.reference(f'/{chat_db_path}', app=self.app)
-        self.db_message = db.reference(f'/{message_db_path}', app=self.app)
+        self.db_chats = db.reference(f'/{chat_db_path}', app=self.app)
+        self.db_messages = db.reference(f'/{message_db_path}', app=self.app)
 
-    def send_message(self, message, sender, receiver):
+    def send_message(self, message, sender: dict, receiver: dict):
         chat_name = self._create_chat_name(sender["uuid"], receiver["uuid"])
 
         message_data = {
@@ -29,17 +30,57 @@ class ChatFirebase:
             'receiver_uuid': receiver["uuid"],
 
             'message': message,
-            'timestamp': int(datetime.datetime.now().timestamp())
+            'timestamp': int(datetime.now().timestamp())
         }
 
         chat_db_data = {
             'timestamp': message_data['timestamp'],
-            'last_message': message_data['message']
+            'last_message': message_data
         }
 
-        self.db_message.child(chat_name).push(message_data)
-        self.db_chat.child(str(sender['uuid'])).child(str(receiver['uuid'])).set(chat_db_data)
-        self.db_chat.child(str(receiver['uuid'])).child(str(sender['uuid'])).set(chat_db_data)
+        self.db_messages.child(chat_name).push(message_data)
+        self.db_chats.child(str(sender['uuid'])).child(str(receiver['uuid'])).set(chat_db_data)
+        self.db_chats.child(str(receiver['uuid'])).child(str(sender['uuid'])).set(chat_db_data)
+
+        return message_data
+
+    def get_messages_between(self, user_a_uuid: int, user_b_uuid: int):
+        chat_name = self._create_chat_name(user_a_uuid, user_b_uuid)
+
+        chat = self.db_messages.child(chat_name).get()
+
+        messages = []
+        for timestamp, message in chat.items():
+            messages.append(message)
+
+        return messages
+
+    def get_all_chats_from(self, user_uuid: int):
+        chats = self.db_chats.child(str(user_uuid)).get()
+
+        previews = []
+        for chat in chats:
+            if chat is None:
+                continue
+
+            last_message = chat["last_message"]
+
+            if user_uuid == last_message["sender_uuid"]:
+                other_user = last_message["receiver_name"]
+                other_uuid = last_message["receiver_uuid"]
+            else:
+                other_user = last_message["sender_name"]
+                other_uuid = last_message["sender_uuid"]
+
+            preview = {
+                "other_user": other_user,
+                "other_uuid": other_uuid,
+                "last_message": last_message["message"]
+            }
+
+            previews.append(preview)
+
+        return previews
 
     @staticmethod
     def _create_chat_name(sender_uuid, receiver_uuid):
@@ -49,3 +90,24 @@ class ChatFirebase:
             chat_name = f'{receiver_uuid}-{sender_uuid}'
 
         return chat_name
+
+
+class ChatFake:
+    def __init__(self, _credentials):
+        return
+
+    def send_message(self, message, sender, receiver):
+        return
+
+    def get_messages_between(self, user_a, user_b):
+        return
+
+    def get_all_chats_from(self, user):
+        return
+
+
+chat_service = None
+if os.environ.get("ENVIRONMENT") == "production":
+    chat_service = ChatFirebase(firebase_credentials)
+else:
+    chat_service = ChatFake(firebase_credentials)

@@ -1,8 +1,10 @@
 from app.services.notifier import notifier
+from app.services.chat import chat_service
 from app.services.requester import Requester
 from app.api.models.room_model import RoomList
 from app.api.models.token_model import TokenSchema
 from app.services.photouploader import photouploader
+from app.api.models.chat_model import ChatList, ChatDB, MessageSchema, MessageDB
 from app.api.models.booking_model import BookingsUserList
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from app.dependencies import check_token, get_uuid_from_xtoken
@@ -162,3 +164,63 @@ async def update_profile_photo(
     )
 
     return user_response
+
+
+@router.get(
+    "/chats",
+    response_model=ChatList,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)]
+)
+async def get_all_chats(
+    _reponse: Response,
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+    chats = chat_service.get_all_chats_from(uuid)
+    return {"amount": len(chats), "chats": chats}
+
+
+@router.get(
+    "/chats/{other_uuid}",
+    response_model=ChatDB,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)]
+)
+async def get_chat(
+    _reponse: Response,
+    other_uuid: int,
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+    messages = chat_service.get_messages_between(uuid, other_uuid)
+
+    return {"amount": len(messages), "messages": messages}
+
+
+@router.post(
+    "/chats/{other_uuid}",
+    response_model=MessageSchema,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)]
+)
+async def send_message(
+    _reponse: MessageDB,
+    other_uuid: int,
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+    path = f"/users/{uuid}"
+    me, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    path = f"/users/{other_uuid}"
+    other, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    own_name = f"{me.firstname} {me.lastname}"
+    other_name = f"{other.first_name} {other.lastname}"
+
+    own_data = {"name": own_name, "uuid": uuid}
+    other_data = {"name": other_name, "uuid": other_uuid}
+
+    return chat_service.send_message(own_data, other_data)

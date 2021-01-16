@@ -57,7 +57,11 @@ async def create_user(
     return user
 
 
-@router.get("/{user_id}", response_model=UserDB, status_code=HTTP_200_OK)
+@router.get(
+    "/{user_id}",
+    response_model=UserDB,
+    status_code=HTTP_200_OK
+)
 async def get_user(user_id: int):
     path = f"/users/{user_id}"
     user, _ = Requester.user_srv_fetch(
