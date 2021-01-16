@@ -3,14 +3,14 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK
-from tests.mock_models.user_models import (MockUserResponse,
-                                           MockPaymentWalletResponse)
 from tests.mock_models.booking_models import MockBookingListResponse
 from tests.mock_models.room_models import MockRoomListResponse
-from tests.utils import (APPSERVER_URL, USER_REGEX, APPSERVER_ME_REGEX,
-                         APPSERVER_WALLET_REGEX, PAYMENT_WALLET_REGEX,
-                         PAYMENT_BOOKING_REGEX, POSTSERVER_ROOM_REGEX,
-                         check_responses_equality)
+from tests.mock_models.user_models import (MockPaymentWalletResponse,
+                                           MockUserResponse)
+from tests.utils import (APPSERVER_ME_REGEX, APPSERVER_URL,
+                         APPSERVER_WALLET_REGEX, PAYMENT_BOOKING_REGEX,
+                         PAYMENT_WALLET_REGEX, POSTSERVER_ROOM_REGEX,
+                         USER_REGEX, check_responses_equality)
 
 
 def payment_camel_to_snake(payment_payload):
@@ -24,7 +24,7 @@ def payment_camel_to_snake(payment_payload):
         "date_to": payment_payload["dateTo"],
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
-        "transaction_status": payment_payload["transactionStatus"]
+        "transaction_status": payment_payload["transactionStatus"],
     }
 
     return booking_camel
@@ -88,6 +88,7 @@ def test_get_self_user_wallet(test_app, monkeypatch):
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_wallet, attrs_to_test)
 
+
 # TODO: GET me/bookings, GET me/rooms
 
 
@@ -119,18 +120,15 @@ def test_get_self_user_bookings(test_app, monkeypatch):
         responses.GET,
         re.compile(PAYMENT_BOOKING_REGEX),
         json=test_bookings,
-        status=expected_status
+        status=expected_status,
     )
     responses.add(
         responses.GET,
         re.compile(PAYMENT_BOOKING_REGEX),
         json=test_bookings,
-        status=expected_status
+        status=expected_status,
     )
-    response = test_app.get(
-        f"{APPSERVER_URL}/me/bookings",
-        headers=header
-    )
+    response = test_app.get(f"{APPSERVER_URL}/me/bookings", headers=header)
 
     assert response.status_code == expected_status
     response_json = response.json()
@@ -148,18 +146,28 @@ def test_get_self_user_bookings(test_app, monkeypatch):
         "received": {
             "amount": len(test_bookings),
             "bookings": test_bookings,
-        }
+        },
     }
 
     check_responses_equality(response_json, test_bookings_camel, ["made", "received"])
-    check_responses_equality(response_json["made"], test_bookings_camel["made"], ["amount", "bookings"])
-    check_responses_equality(response_json["received"], test_bookings_camel["received"], ["amount", "bookings"])
+    check_responses_equality(
+        response_json["made"], test_bookings_camel["made"], ["amount", "bookings"]
+    )
+    check_responses_equality(
+        response_json["received"],
+        test_bookings_camel["received"],
+        ["amount", "bookings"],
+    )
 
     for i, booking in enumerate(test_bookings_camel["made"]["bookings"]):
-        check_responses_equality(booking, response_json["made"]["bookings"][i], attrs_to_test)
+        check_responses_equality(
+            booking, response_json["made"]["bookings"][i], attrs_to_test
+        )
 
     for i, booking in enumerate(test_bookings_camel["received"]["bookings"]):
-        check_responses_equality(booking, response_json["received"]["bookings"][i], attrs_to_test)
+        check_responses_equality(
+            booking, response_json["received"]["bookings"][i], attrs_to_test
+        )
 
 
 @responses.activate
@@ -199,7 +207,7 @@ def test_get_self_user_rooms(test_app, monkeypatch):
     # a problem when checking that each booking has the same "created_at"
     # and "updated_at" attribute, the problem is due to the datetime handling
 
-    check_responses_equality(response_json, test_room_list,  ["amount"])
+    check_responses_equality(response_json, test_room_list, ["amount"])
     assert response_json["rooms"] is not None
 
     rooms = response_json["rooms"]

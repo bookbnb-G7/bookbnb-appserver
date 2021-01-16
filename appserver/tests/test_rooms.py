@@ -3,12 +3,13 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from tests.mock_models.room_models import (MockRoomListResponse,
-                                           MockRoomResponse,
-                                           MockPaymentRoomResponse)
+from tests.mock_models.room_models import (MockPaymentRoomResponse,
+                                           MockRoomListResponse,
+                                           MockRoomResponse)
 from tests.mock_models.user_models import MockUserResponse
-from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
-                         PAYMENT_ROOM_REGEX, check_responses_equality)
+from tests.utils import (APPSERVER_URL, PAYMENT_ROOM_REGEX,
+                         POSTSERVER_ROOM_REGEX, USER_REGEX,
+                         check_responses_equality)
 
 
 @responses.activate
@@ -30,7 +31,7 @@ def test_create_room(test_app, monkeypatch):
         "latitude",
         "longitude",
         "location",
-        "capacity"
+        "capacity",
     ]
     header = {"x-access-token": "tokenrefalso"}
 
@@ -49,7 +50,7 @@ def test_create_room(test_app, monkeypatch):
         responses.POST,
         re.compile(PAYMENT_ROOM_REGEX),
         json=test_payment_room,
-        status=expected_status
+        status=expected_status,
     )
     responses.add(
         responses.POST,
@@ -76,7 +77,7 @@ def test_get_all_rooms(test_app):
         "latitude",
         "longitude",
         "location",
-        "capacity"
+        "capacity",
     ]
 
     responses.add(
@@ -114,7 +115,7 @@ def test_get_room_by_id(test_app):
         "latitude",
         "longitude",
         "location",
-        "capacity"
+        "capacity",
     ]
 
     responses.add(
@@ -145,7 +146,7 @@ def test_update_room(test_app, monkeypatch):
         "latitude",
         "longitude",
         "location",
-        "capacity"
+        "capacity",
     ]
     test_room = {attr: test_full_room[attr] for attr in attrs_to_test}
     header = {"x-access-token": "tokenrefalso"}
@@ -189,7 +190,7 @@ def test_delete_room(test_app, monkeypatch):
         "latitude",
         "longitude",
         "location",
-        "capacity"
+        "capacity",
     ]
     header = {"x-access-token": "tokenrefalso"}
 

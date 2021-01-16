@@ -1,11 +1,12 @@
-import os
 import logging.config
+import os
+
+from app.api.routes import booking_router, me_router, room_router, user_router
 from app.db import Base, engine
-from fastapi import FastAPI, HTTPException
-from starlette.responses import JSONResponse
 from app.errors.auth_error import AuthException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import booking_router, room_router, user_router, me_router
+from starlette.responses import JSONResponse
 
 logging_conf_path = os.path.join(os.path.dirname(__file__), "logging.ini")
 logging.config.fileConfig(logging_conf_path, disable_existing_loggers=False)
@@ -34,6 +35,7 @@ async def auth_exception_handler(_request, exc):
 async def http_exception_handler(_request, exc):
     error = {"error": exc.detail}
     return JSONResponse(status_code=exc.status_code, content=error)
+
 
 app.include_router(me_router.router, prefix="/me", tags=["me"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])

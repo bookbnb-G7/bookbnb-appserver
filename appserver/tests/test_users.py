@@ -3,12 +3,13 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from tests.mock_models.user_models import (MockUserListResponse,
-                                           MockUserResponse,
-                                           MockPaymentWalletResponse)
-from tests.utils import (APPSERVER_URL, AUTH_REGEX, USER_REGEX,
-                         APPSERVER_ME_REGEX, APPSERVER_WALLET_REGEX,
-                         PAYMENT_WALLET_REGEX, check_responses_equality)
+from tests.mock_models.user_models import (MockPaymentWalletResponse,
+                                           MockUserListResponse,
+                                           MockUserResponse)
+from tests.utils import (APPSERVER_ME_REGEX, APPSERVER_URL,
+                         APPSERVER_WALLET_REGEX, AUTH_REGEX,
+                         PAYMENT_WALLET_REGEX, USER_REGEX,
+                         check_responses_equality)
 
 
 @responses.activate
@@ -44,7 +45,7 @@ def test_create_user(test_app, monkeypatch):
         responses.POST,
         re.compile(PAYMENT_WALLET_REGEX),
         json=test_wallet,
-        status=expected_status
+        status=expected_status,
     )
     response = test_app.post(f"{APPSERVER_URL}/users", json=test_user, headers=header)
 
@@ -77,6 +78,7 @@ def test_get_user_by_id(test_app):
 
     assert response.status_code == expected_status
     check_responses_equality(response.json(), test_user, attrs_to_test)
+
 
 @responses.activate
 def test_edit_user(test_app, monkeypatch):
@@ -114,6 +116,13 @@ def test_delete_user(test_app, monkeypatch):
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
+
+    responses.add(
+        responses.DELETE,
+        re.compile(AUTH_REGEX),
+        json={"email": test_user["email"], "uuid": test_user["id"]},
+        status=HTTP_200_OK,
+    )
     responses.add(
         responses.DELETE,
         re.compile(USER_REGEX),

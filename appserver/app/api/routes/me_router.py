@@ -1,15 +1,16 @@
-from app.services.notifier import notifier
-from app.services.chat import chat_service
-from app.services.requester import Requester
+from app.api.models.booking_model import BookingsUserList
+from app.api.models.chat_model import (ChatDB, ChatList, MessageDB,
+                                       MessageSchema)
 from app.api.models.room_model import RoomList
 from app.api.models.token_model import TokenSchema
-from app.services.photouploader import photouploader
-from app.api.models.chat_model import ChatList, ChatDB, MessageSchema, MessageDB
-from app.api.models.booking_model import BookingsUserList
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from app.api.models.user_model import UserDB, UserSchema, WalletDB
 from app.dependencies import check_token, get_uuid_from_xtoken
-from app.api.models.user_model import UserDB, WalletDB, UserSchema
+from app.services.chat import chat_service
+from app.services.notifier import notifier
+from app.services.photouploader import photouploader
+from app.services.requester import Requester
 from fastapi import APIRouter, Depends, File, Response, UploadFile
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
 
@@ -25,7 +26,7 @@ def payment_camel_to_snake(payment_payload):
         "date_to": payment_payload["dateTo"],
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
-        "transaction_status": payment_payload["transactionStatus"]
+        "transaction_status": payment_payload["transactionStatus"],
     }
 
     return booking_camel
@@ -90,7 +91,7 @@ async def get_current_user_bookings(uuid: int = Depends(get_uuid_from_xtoken)):
         "received": {
             "amount": len(bookings_received),
             "bookings": bookings_received,
-        }
+        },
     }
 
     return bookings
@@ -115,9 +116,11 @@ async def get_current_user_rooms(uuid: int = Depends(get_uuid_from_xtoken)):
     "/token",
     response_model=TokenSchema,
     status_code=HTTP_201_CREATED,
-    dependencies=[Depends(check_token)]
+    dependencies=[Depends(check_token)],
 )
-async def set_push_token(payload: TokenSchema, uuid: int = Depends(get_uuid_from_xtoken)):
+async def set_push_token(
+    payload: TokenSchema, uuid: int = Depends(get_uuid_from_xtoken)
+):
     notifier.set_push_token(uuid, payload.push_token)
     return payload
 
@@ -126,7 +129,7 @@ async def set_push_token(payload: TokenSchema, uuid: int = Depends(get_uuid_from
     "/token",
     response_model=TokenSchema,
     status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)]
+    dependencies=[Depends(check_token)],
 )
 async def get_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
     push_token = notifier.get_push_token(uuid)
@@ -137,9 +140,9 @@ async def get_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
     "/token",
     response_model=TokenSchema,
     status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)]
+    dependencies=[Depends(check_token)],
 )
-async def get_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
+async def delete_push_token(uuid: int = Depends(get_uuid_from_xtoken)):
     removed_token = notifier.remove_push_token(uuid)
     return {"push_token": removed_token}
 
@@ -170,7 +173,7 @@ async def update_profile_photo(
     "/chats",
     response_model=ChatList,
     status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)]
+    dependencies=[Depends(check_token)],
 )
 async def get_all_chats(
     _reponse: Response,
@@ -184,7 +187,7 @@ async def get_all_chats(
     "/chats/{other_uuid}",
     response_model=ChatDB,
     status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)]
+    dependencies=[Depends(check_token)],
 )
 async def get_chat(
     _reponse: Response,
@@ -200,7 +203,7 @@ async def get_chat(
     "/chats/{other_uuid}",
     response_model=MessageSchema,
     status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)]
+    dependencies=[Depends(check_token)],
 )
 async def send_message(
     _reponse: MessageDB,

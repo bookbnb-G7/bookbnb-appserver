@@ -1,14 +1,15 @@
 from typing import Optional
-from app.services.requester import Requester
-from app.services.authsender import AuthSender
-from fastapi import APIRouter, Depends, Header
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from app.errors.http_error import UnauthorizedRequestError
-from app.dependencies import check_token, get_uuid_from_xtoken
-from app.api.models.user_model import (UserDB, UserListSchema,
-                                       UserSchema, UserUpdateSchema)
+
+from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
+                                       UserUpdateSchema)
 from app.api.models.user_rating_model import UserRatingList, UserRatingSchema
 from app.api.models.user_review_model import UserReviewList, UserReviewSchema
+from app.dependencies import check_token, get_uuid_from_xtoken
+from app.errors.http_error import UnauthorizedRequestError
+from app.services.authsender import AuthSender
+from app.services.requester import Requester
+from fastapi import APIRouter, Depends, Header
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
 
@@ -51,17 +52,13 @@ async def create_user(
         method="POST",
         path=path,
         expected_statuses={HTTP_201_CREATED},
-        payload=payload_wallet
+        payload=payload_wallet,
     )
 
     return user
 
 
-@router.get(
-    "/{user_id}",
-    response_model=UserDB,
-    status_code=HTTP_200_OK
-)
+@router.get("/{user_id}", response_model=UserDB, status_code=HTTP_200_OK)
 async def get_user(user_id: int):
     path = f"/users/{user_id}"
     user, _ = Requester.user_srv_fetch(
@@ -95,8 +92,7 @@ async def update_user(
 
 
 @router.delete(
-    "/{user_id}", status_code=HTTP_200_OK,
-    dependencies=[Depends(check_token)]
+    "/{user_id}", status_code=HTTP_200_OK, dependencies=[Depends(check_token)]
 )
 async def delete_user(user_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     if not AuthSender.has_permission_to_modify(uuid, user_id):
@@ -106,12 +102,14 @@ async def delete_user(user_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     new_user_info, _ = Requester.user_srv_fetch(
         method="DELETE", path=path, expected_statuses={HTTP_200_OK}
     )
+
+    auth_path = f"/user/registered/{uuid}"
+    Requester.auth_srv_fetch("DELETE", path=auth_path, expected_statuses={HTTP_200_OK})
+
     return new_user_info
 
 
-@router.get(
-    "", response_model=UserListSchema,
-    status_code=HTTP_200_OK)
+@router.get("", response_model=UserListSchema, status_code=HTTP_200_OK)
 async def get_all_users():
     path = "/users"
     users, _ = Requester.user_srv_fetch(
@@ -401,5 +399,5 @@ async def delete_guest_rating(
     )
     return review
 
-# ----------------------------------------------------------------------------- #
 
+# ----------------------------------------------------------------------------- #

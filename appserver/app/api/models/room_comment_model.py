@@ -1,6 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel
 from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class RoomCommentSchema(BaseModel):
@@ -8,12 +9,7 @@ class RoomCommentSchema(BaseModel):
     main_comment_id: Optional[int] = None
 
     class Config:
-        schema_extra = {
-            "example": {
-                "comment": "Nice room",
-                "main_comment_id": 2
-            }
-        }
+        schema_extra = {"example": {"comment": "Nice room", "main_comment_id": 2}}
 
 
 class RoomCommentDB(RoomCommentSchema):
@@ -56,7 +52,7 @@ class RoomCommentWithAnswers(BaseModel):
                     "created_at": "2020-12-01T19:00:00.033Z",
                     "updated_at": "2020-12-01T19:00:00.033Z",
                 },
-                "answers": []
+                "answers": [],
             }
         }
 
@@ -83,8 +79,8 @@ class RoomCommentList(BaseModel):
                             "created_at": "2020-12-01T19:00:00.033Z",
                             "updated_at": "2020-12-01T19:00:00.033Z",
                         },
-                        "answers": []
+                        "answers": [],
                     }
-                ]
+                ],
             }
         }

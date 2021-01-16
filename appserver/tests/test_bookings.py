@@ -3,17 +3,16 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from tests.mock_models.booking_models import (MockBookingResponse,
-                                              MockBookingAcceptedResponse,
-                                              MockBookingRejectedResponse,
+from tests.mock_models.booking_models import (MockBookingAcceptedResponse,
                                               MockBookingListResponse,
+                                              MockBookingRejectedResponse,
+                                              MockBookingResponse,
                                               MockRoomBookingResponse)
 from tests.mock_models.room_models import MockRoomResponse
-from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, USER_REGEX,
-                         POSTSERVER_ROOM_BOOKING_REGEX,
-                         PAYMENT_BOOKING_REGEX, PAYMENT_BOOKING_ACCEPT_REGEX,
-                         PAYMENT_BOOKING_REJECT_REGEX,
-                         check_responses_equality)
+from tests.utils import (APPSERVER_URL, PAYMENT_BOOKING_ACCEPT_REGEX,
+                         PAYMENT_BOOKING_REGEX, PAYMENT_BOOKING_REJECT_REGEX,
+                         POSTSERVER_ROOM_BOOKING_REGEX, POSTSERVER_ROOM_REGEX,
+                         USER_REGEX, check_responses_equality)
 
 
 def payment_camel_to_snake(payment_payload):
@@ -27,7 +26,7 @@ def payment_camel_to_snake(payment_payload):
         "date_to": payment_payload["dateTo"],
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
-        "transaction_status": payment_payload["transactionStatus"]
+        "transaction_status": payment_payload["transactionStatus"],
     }
 
     return booking_camel
@@ -39,7 +38,7 @@ def test_add_room_booking(test_app, monkeypatch):
     test_booking_payload = {
         "room_id": test_booking["roomId"],
         "date_from": test_booking["dateFrom"],
-        "date_to": test_booking["dateTo"]
+        "date_to": test_booking["dateTo"],
     }
     test_room_booking = MockRoomBookingResponse().dict()
     test_room = MockRoomResponse().dict()
@@ -131,8 +130,7 @@ def test_accept_room_booking(test_app, monkeypatch):
         status=HTTP_200_OK,
     )
     response = test_app.post(
-        f"{APPSERVER_URL}/bookings/{booking_id}/accept",
-        headers=header
+        f"{APPSERVER_URL}/bookings/{booking_id}/accept", headers=header
     )
     assert response.status_code == expected_status
     # TODO: Change BookingDB model to match camelcase in payment server
@@ -186,8 +184,7 @@ def test_reject_room_booking(test_app, monkeypatch):
         status=HTTP_200_OK,
     )
     response = test_app.post(
-        f"{APPSERVER_URL}/bookings/{booking_id}/reject",
-        headers=header
+        f"{APPSERVER_URL}/bookings/{booking_id}/reject", headers=header
     )
     assert response.status_code == expected_status
     # TODO: Change BookingDB model to match camelcase in payment server
@@ -227,10 +224,7 @@ def test_get_all_room_bookings(test_app):
     for i in range(len(test_booking_list)):
         test_booking_list[i] = payment_camel_to_snake(test_booking_list[i])
 
-    booking_list = {
-        "amount": len(test_booking_list),
-        "bookings": test_booking_list
-    }
+    booking_list = {"amount": len(test_booking_list), "bookings": test_booking_list}
 
     check_responses_equality(response_json, booking_list, ["amount", "bookings"])
 
@@ -263,14 +257,13 @@ def test_get_room_booking(test_app, monkeypatch):
         status=HTTP_200_OK,
     )
 
-    response = test_app.get(
-        f"{APPSERVER_URL}/bookings/{test_booking_id}"
-    )
+    response = test_app.get(f"{APPSERVER_URL}/bookings/{test_booking_id}")
     assert response.status_code == expected_status
 
     # TODO: Change BookingDB model to match camelcase in payment server
     test_camel = payment_camel_to_snake(test_booking)
     check_responses_equality(response.json(), test_camel, attrs_to_test)
+
 
 @responses.activate
 def test_delete_room_booking(test_app, monkeypatch):

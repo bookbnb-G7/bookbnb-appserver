@@ -1,19 +1,20 @@
 import os
+
 import firebase_admin
-from firebase_admin import db, messaging
 from app.config import firebase_credentials
+from firebase_admin import db, messaging
 
 
 class Notifier:
     def __init__(self, credentials):
-        db_url = os.environ.get('FIREBASE_DB_URL')
-        notifications_db_path = os.environ.get('FIREBASE_DB_NOTIFICATIONS_PATH')
+        db_url = os.environ.get("FIREBASE_DB_URL")
+        notifications_db_path = os.environ.get("FIREBASE_DB_NOTIFICATIONS_PATH")
 
         self.app = firebase_admin.initialize_app(
-            credentials, {'databaseURL': db_url}, name='bookbnb-notifications'
+            credentials, {"databaseURL": db_url}, name="bookbnb-notifications"
         )
 
-        self.db_tokens = db.reference(f'/{notifications_db_path}', app=self.app)
+        self.db_tokens = db.reference(f"/{notifications_db_path}", app=self.app)
 
     def set_push_token(self, uuid: int, token: str):
         self.db_tokens.update({str(uuid): token})
@@ -27,10 +28,10 @@ class Notifier:
         return removed_token
 
     def send_notification_test(self, sender: dict, receiver: dict):
-        title = 'New test notification.'
+        title = "New test notification."
         body = f'Body of test notification from {sender["name"]}'
 
-        self.notify(title, body, receiver['id'])
+        self.notify(title, body, receiver["id"])
 
     def notify(self, title: str, body: str, uuid: int):
         """
@@ -52,7 +53,7 @@ class Notifier:
                 title=title,
                 body=body,
             ),
-            token=token
+            token=token,
         )
 
         return messaging.send(message, app=self.app)
@@ -69,10 +70,10 @@ class NotifierFake:
         return
 
     def send_notification_test(self, sender: dict, receiver: dict):
-        title = 'New test notification.'
+        title = "New test notification."
         body = f'Body of test notification from {sender["name"]}'
 
-        self.notify(title, body, receiver['id'])
+        self.notify(title, body, receiver["id"])
 
     def notify(self, title: str, body: str, uuid: int):
         return
