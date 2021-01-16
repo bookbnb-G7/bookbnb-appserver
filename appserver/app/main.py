@@ -1,22 +1,16 @@
-import logging
-import logging.config
 import os
-
-from app.api.routes import (booking_router, file_upload_router,
-                            room_router, user_router, me_router)
-from app.config import firebase_authenticate, get_settings
+import logging.config
 from app.db import Base, engine
-from app.errors.auth_error import AuthException
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
+from app.errors.auth_error import AuthException
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.routes import booking_router, room_router, user_router, me_router
 
 logging_conf_path = os.path.join(os.path.dirname(__file__), "logging.ini")
 logging.config.fileConfig(logging_conf_path, disable_existing_loggers=False)
 
 Base.metadata.create_all(engine)
-if get_settings().environment == "production":
-    firebase_authenticate()
 
 app = FastAPI(
     title="BookBNB Appserver", description="Especificacion sobre la API del appserver"
@@ -45,4 +39,3 @@ app.include_router(me_router.router, prefix="/me", tags=["me"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
 app.include_router(booking_router.router, prefix="/bookings", tags=["Bookings"])
-app.include_router(file_upload_router.router, tags=["Images"])
