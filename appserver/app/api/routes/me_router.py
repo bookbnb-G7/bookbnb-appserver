@@ -207,9 +207,9 @@ async def get_chat(
 )
 async def send_message(
     _reponse: Response,
+    payload: MessageSchema,
     other_uuid: int,
     uuid: int = Depends(get_uuid_from_xtoken),
-    payload: MessageSchema,
 ):
     path = f"/users/{uuid}"
     me, _ = Requester.user_srv_fetch(
