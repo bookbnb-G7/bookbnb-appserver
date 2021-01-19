@@ -52,6 +52,9 @@ class ChatFirebase:
 
         chat = self.db_messages.child(chat_name).get()
 
+        if (chat is None):
+            return []
+
         messages = []
         for timestamp, message in chat.items():
             messages.append(message)
