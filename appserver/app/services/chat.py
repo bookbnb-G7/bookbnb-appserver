@@ -64,6 +64,9 @@ class ChatFirebase:
     def get_all_chats_from(self, user_uuid: int):
         chats = self.db_chats.child(str(user_uuid)).get()
 
+        if (chats is None):
+            return []
+
         previews = []
         for chat in chats:
             if chat is None:
