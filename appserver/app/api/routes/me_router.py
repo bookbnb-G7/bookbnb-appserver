@@ -221,8 +221,8 @@ async def send_message(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
 
-    own_name = f"{me.firstname} {me.lastname}"
-    other_name = f"{other.first_name} {other.lastname}"
+    own_name = f"{me['firstname']} {me['lastname']}"
+    other_name = f"{other['firstname']} {other['lastname']}"
 
     own_data = {"name": own_name, "uuid": uuid}
     other_data = {"name": other_name, "uuid": other_uuid}
