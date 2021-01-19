@@ -21,7 +21,7 @@ class ChatPreview(BaseModel):
     last_message: str
 
 
-class ChatDB(ChatPreview):
+class ChatDB(BaseModel):
     amount: int
     messages: List[MessageDB]
 
