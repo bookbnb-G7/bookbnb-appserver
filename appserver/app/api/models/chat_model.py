@@ -4,11 +4,11 @@ from pydantic import BaseModel
 
 
 class MessageSchema(BaseModel):
-    receiver_uuid: int
     message: str
 
 
 class MessageDB(MessageSchema):
+    receiver_uuid: int
     sender_name: str
     receiver_name: str
     sender_uuid: int

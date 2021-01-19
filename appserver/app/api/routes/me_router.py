@@ -201,14 +201,15 @@ async def get_chat(
 
 @router.post(
     "/chats/{other_uuid}",
-    response_model=MessageSchema,
+    response_model=MessageDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def send_message(
-    _reponse: MessageDB,
+    _reponse: Response,
     other_uuid: int,
     uuid: int = Depends(get_uuid_from_xtoken),
+    payload: MessageSchema,
 ):
     path = f"/users/{uuid}"
     me, _ = Requester.user_srv_fetch(
@@ -226,4 +227,4 @@ async def send_message(
     own_data = {"name": own_name, "uuid": uuid}
     other_data = {"name": other_name, "uuid": other_uuid}
 
-    return chat_service.send_message(own_data, other_data)
+    return chat_service.send_message(payload.message, own_data, other_data)
