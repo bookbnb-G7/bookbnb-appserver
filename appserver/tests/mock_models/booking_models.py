@@ -13,7 +13,7 @@ class MockBookingResponse(MockResponse):
             "dateTo": "2020-12-19",
             "bookingStatus": 0,
             "transactionStatus": 3,
-            "transactionHash": "HASHRELOCO"
+            "transactionHash": "HASHRELOCO",
         }
 
 
@@ -29,8 +29,9 @@ class MockBookingAcceptedResponse(MockResponse):
             "dateTo": "2020-12-19",
             "bookingStatus": 2,
             "transactionStatus": 3,
-            "transactionHash": "HASHRELOCO"
+            "transactionHash": "HASHRELOCO",
         }
+
 
 class MockBookingRejectedResponse(MockResponse):
     def dict(self):
@@ -44,9 +45,8 @@ class MockBookingRejectedResponse(MockResponse):
             "dateTo": "2020-12-19",
             "bookingStatus": 2,
             "transactionStatus": 3,
-            "transactionHash": "HASHRELOCO"
+            "transactionHash": "HASHRELOCO",
         }
-
 
 
 class MockBookingListResponse(MockResponse):
@@ -62,7 +62,7 @@ class MockBookingListResponse(MockResponse):
                 "dateTo": "2020-12-19",
                 "bookingStatus": 0,
                 "transactionStatus": 3,
-                "transactionHash": "HASHRELOCO"
+                "transactionHash": "HASHRELOCO",
             },
             {
                 "id": 8,
@@ -74,15 +74,11 @@ class MockBookingListResponse(MockResponse):
                 "dateTo": "2020-10-04",
                 "bookingStatus": 0,
                 "transactionStatus": 3,
-                "transactionHash": "HASHRELOCO"
+                "transactionHash": "HASHRELOCO",
             },
         ]
 
 
 class MockRoomBookingResponse(MockResponse):
     def dict(self):
-        return {
-            "id": 4,
-            "date_from": "2020-12-14",
-            "date_to": "2020-12-19"
-        }
+        return {"id": 4, "date_from": "2020-12-14", "date_to": "2020-12-19"}

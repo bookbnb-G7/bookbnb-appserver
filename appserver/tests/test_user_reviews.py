@@ -151,10 +151,6 @@ def test_get_single_host_review(test_app):
     check_responses_equality(response.json(), test_review, attrs_to_test)
 
 
-
-
-
-
 @responses.activate
 def test_delete_host_review(test_app, monkeypatch):
     test_rating = MockUserReviewResponse().dict()

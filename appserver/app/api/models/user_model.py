@@ -103,3 +103,14 @@ class WalletDB(BaseModel):
     uuid: int
     address: str
     mnemonic: str
+    balance: float
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "uuid": 1,
+                "address": "ABCDEF123",
+                "mnemonic": "word word word word word word word",
+                "balance": 0.24
+            }
+        }

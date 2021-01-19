@@ -1,37 +1,36 @@
-from app.api.crud.room_photo_dao import RoomPhotoDAO
-from app.db import get_db
-from typing import Optional, List
-from sqlalchemy.orm import Session
-from app.services.requester import Requester
-from app.services.authsender import AuthSender
-from app.services.photouploader import photouploader
-from fastapi import APIRouter, Depends, UploadFile, File, Query
-from app.api.models.room_photo_model import RoomPhoto, RoomPhotoList
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-from app.dependencies import check_token, get_uuid_from_xtoken
-from app.errors.http_error import BadRequestError, UnauthorizedRequestError, NotFoundError
+from typing import List, Optional
 
-from app.api.models.room_model import (RoomDB, RoomList,
-                                       RoomSchema, RoomUpdate)
+from app.api.crud.room_photo_dao import RoomPhotoDAO
+from app.api.models.room_comment_model import (RoomCommentDB, RoomCommentList,
+                                               RoomCommentSchema)
+from app.api.models.room_model import RoomDB, RoomList, RoomSchema, RoomUpdate
+from app.api.models.room_photo_model import RoomPhoto, RoomPhotoList
 from app.api.models.room_rating_model import (RoomRatingDB, RoomRatingList,
                                               RoomRatingSchema)
 from app.api.models.room_review_model import (RoomReviewDB, RoomReviewList,
                                               RoomReviewSchema)
-from app.api.models.room_comment_model import (RoomCommentSchema, RoomCommentDB,
-                                               RoomCommentList)
+from app.db import get_db
+from app.dependencies import check_token, get_uuid_from_xtoken
+from app.errors.http_error import (BadRequestError, NotFoundError,
+                                   UnauthorizedRequestError)
+from app.services.authsender import AuthSender
+from app.services.photouploader import photouploader
+from app.services.requester import Requester
+from fastapi import APIRouter, Depends, File, Query, UploadFile
+from sqlalchemy.orm import Session
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
 router = APIRouter()
 
 
 # -----------------------------------ROOMS------------------------------------- #
 @router.post(
-    "", response_model=RoomDB,
+    "",
+    response_model=RoomDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
-async def create_room(
-        payload: RoomSchema, uuid: int = Depends(get_uuid_from_xtoken)
-):
+async def create_room(payload: RoomSchema, uuid: int = Depends(get_uuid_from_xtoken)):
     path = f"/users/{uuid}"
     user, _ = Requester.user_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
@@ -43,7 +42,7 @@ async def create_room(
 
     payment_payload = {
         "ownerId": req_payload["owner_uuid"],
-        "price": req_payload["price_per_day"]
+        "price": req_payload["price_per_day"],
     }
 
     # Create room in payment server and generate an ID
@@ -51,7 +50,7 @@ async def create_room(
         method="POST",
         path="/rooms",
         expected_statuses={HTTP_201_CREATED},
-        payload=payment_payload
+        payload=payment_payload,
     )
 
     # Add id to the room created in room server
@@ -67,15 +66,16 @@ async def create_room(
     return room
 
 
-@router.get(
-    "", response_model=RoomList,
-    status_code=HTTP_200_OK
-)
+@router.get("", response_model=RoomList, status_code=HTTP_200_OK)
 async def get_all_rooms(
-        date_begins: Optional[str] = None, date_ends: Optional[str] = None,
-        longitude: Optional[float] = None, latitude: Optional[float] = None,
-        people: Optional[int] = None, types: List[str] = Query(None),
-        max_price: Optional[int] = None, min_price: Optional[int] = None
+    date_begins: Optional[str] = None,
+    date_ends: Optional[str] = None,
+    longitude: Optional[float] = None,
+    latitude: Optional[float] = None,
+    people: Optional[int] = None,
+    types: List[str] = Query(None),
+    max_price: Optional[int] = None,
+    min_price: Optional[int] = None,
 ):
     query = "?"
     path = "/rooms"
@@ -116,10 +116,7 @@ async def get_all_rooms(
     return rooms
 
 
-@router.get(
-    "/{room_id}", response_model=RoomDB,
-    status_code=HTTP_200_OK
-)
+@router.get("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
 async def get_room(room_id: int):
     path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch(
@@ -129,14 +126,15 @@ async def get_room(room_id: int):
 
 
 @router.patch(
-    "/{room_id}", response_model=RoomDB,
+    "/{room_id}",
+    response_model=RoomDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def update_room(
-        payload: RoomUpdate,
-        room_id: int,
-        viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    payload: RoomUpdate,
+    room_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch(
@@ -162,7 +160,8 @@ async def update_room(
 
 
 @router.delete(
-    "/{room_id}", response_model=RoomDB,
+    "/{room_id}",
+    response_model=RoomDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
@@ -183,6 +182,8 @@ async def delete_room(room_id: int, viewer_uuid: int = Depends(get_uuid_from_xto
     # TODO: Delete room in payment server
 
     return room
+
+
 # ------------------------------------------------------------------------------#
 
 
@@ -194,8 +195,9 @@ async def delete_room(room_id: int, viewer_uuid: int = Depends(get_uuid_from_xto
     dependencies=[Depends(check_token)],
 )
 async def rate_room(
-        payload: RoomRatingSchema,
-        room_id: int, viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    payload: RoomRatingSchema,
+    room_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch(
@@ -238,8 +240,7 @@ async def get_room_rating(room_id: int, rating_id: int):
 
 
 @router.get(
-    "/{room_id}/ratings", response_model=RoomRatingList,
-    status_code=HTTP_200_OK
+    "/{room_id}/ratings", response_model=RoomRatingList, status_code=HTTP_200_OK
 )
 async def get_all_room_ratings(room_id: int):
     path = f"/rooms/{room_id}/ratings"
@@ -256,9 +257,9 @@ async def get_all_room_ratings(room_id: int):
     dependencies=[Depends(check_token)],
 )
 async def delete_room_rating(
-        room_id: int,
-        rating_id: int,
-        viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    room_id: int,
+    rating_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = f"/rooms/{room_id}/ratings/{rating_id}"
     rating, _ = Requester.room_srv_fetch(
@@ -273,6 +274,8 @@ async def delete_room_rating(
         method="DELETE", path=rating_path, expected_statuses={HTTP_200_OK}
     )
     return rating
+
+
 # ------------------------------------------------------------------------------#
 
 
@@ -284,8 +287,9 @@ async def delete_room_rating(
     dependencies=[Depends(check_token)],
 )
 async def review_room(
-        payload: RoomReviewSchema, room_id: int,
-        viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    payload: RoomReviewSchema,
+    room_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = "/rooms" + f"/{room_id}"
     room, _ = Requester.room_srv_fetch(
@@ -328,9 +332,7 @@ async def get_room_review(room_id: int, review_id: int):
 
 
 @router.get(
-    "/{room_id}/reviews",
-    response_model=RoomReviewList,
-    status_code=HTTP_200_OK
+    "/{room_id}/reviews", response_model=RoomReviewList, status_code=HTTP_200_OK
 )
 async def get_all_room_reviews(room_id: int):
     path = "/rooms" + f"/{room_id}/reviews"
@@ -347,9 +349,9 @@ async def get_all_room_reviews(room_id: int):
     dependencies=[Depends(check_token)],
 )
 async def delete_room_review(
-        room_id: int,
-        review_id: int,
-        viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    room_id: int,
+    review_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     review_path = f"/rooms/{room_id}/reviews/{review_id}"
     review, _ = Requester.room_srv_fetch(
@@ -363,6 +365,8 @@ async def delete_room_review(
         method="DELETE", path=review_path, expected_statuses={HTTP_200_OK}
     )
     return review
+
+
 # ------------------------------------------------------------------------------#
 
 
@@ -374,8 +378,9 @@ async def delete_room_review(
     dependencies=[Depends(check_token)],
 )
 async def create_room_comment(
-        payload: RoomCommentSchema, room_id: int,
-        viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    payload: RoomCommentSchema,
+    room_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     room_path = "/rooms" + f"/{room_id}"
     room, _ = Requester.room_srv_fetch(
@@ -406,9 +411,7 @@ async def create_room_comment(
 
 
 @router.get(
-    "/{room_id}/comments",
-    response_model=RoomCommentList,
-    status_code=HTTP_200_OK
+    "/{room_id}/comments", response_model=RoomCommentList, status_code=HTTP_200_OK
 )
 async def get_all_room_comments(room_id: int):
     path = "/rooms" + f"/{room_id}/comments"
@@ -425,9 +428,9 @@ async def get_all_room_comments(room_id: int):
     dependencies=[Depends(check_token)],
 )
 async def delete_room_comment(
-        room_id: int,
-        comment_id: int,
-        viewer_uuid: int = Depends(get_uuid_from_xtoken),
+    room_id: int,
+    comment_id: int,
+    viewer_uuid: int = Depends(get_uuid_from_xtoken),
 ):
     comment_path = f"/rooms/{room_id}/comments/{comment_id}"
     comment, _ = Requester.room_srv_fetch(
@@ -441,6 +444,8 @@ async def delete_room_comment(
         method="DELETE", path=comment_path, expected_statuses={HTTP_200_OK}
     )
     return comment
+
+
 # ------------------------------------------------------------------------------#
 
 
@@ -476,18 +481,12 @@ async def add_room_picture(
     return photo_response
 
 
-@router.get(
-    "/{room_id}/photos",
-    response_model=RoomPhotoList,
-    status_code=HTTP_200_OK
-)
+@router.get("/{room_id}/photos", response_model=RoomPhotoList, status_code=HTTP_200_OK)
 async def get_all_room_photos(
     room_id: int,
 ):
     room_photo_path = f"/rooms/{room_id}/photos"
-    photo_response, _ = Requester.room_srv_fetch(
-        "GET", room_photo_path, {HTTP_200_OK}
-    )
+    photo_response, _ = Requester.room_srv_fetch("GET", room_photo_path, {HTTP_200_OK})
     return photo_response
 
 
@@ -506,9 +505,7 @@ async def get_room_photo(
     photo_id = photo["room_photo_id"]
     room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
 
-    photo_response, _ = Requester.room_srv_fetch(
-        "GET", room_photo_path, {HTTP_200_OK}
-    )
+    photo_response, _ = Requester.room_srv_fetch("GET", room_photo_path, {HTTP_200_OK})
     return photo_response
 
 
@@ -540,4 +537,6 @@ async def delete_room_photo(
         "DELETE", room_photo_path, {HTTP_200_OK}
     )
     return photo_response
+
+
 # ----------------------------------------------------------------------------- ww#

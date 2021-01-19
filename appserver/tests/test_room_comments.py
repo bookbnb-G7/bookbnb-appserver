@@ -3,11 +3,11 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from tests.mock_models.room_comments_models import (MockCommentListResponse,
+                                                    MockCommentResponse)
 from tests.mock_models.room_models import MockRoomResponse
-from tests.mock_models.room_comments_models import (MockCommentResponse,
-                                                    MockCommentListResponse)
 from tests.mock_models.user_models import MockUserResponse
-from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, COMMENT_REGEX,
+from tests.utils import (APPSERVER_URL, COMMENT_REGEX, POSTSERVER_ROOM_REGEX,
                          USER_REGEX, check_responses_equality)
 
 
@@ -15,13 +15,20 @@ from tests.utils import (APPSERVER_URL, POSTSERVER_ROOM_REGEX, COMMENT_REGEX,
 def test_post_room_comment(test_app, monkeypatch):
     test_comment = MockCommentResponse().dict()
     test_comment_payload = {
-      "comment": test_comment["comment"],
-      "main_comment_id": test_comment["main_comment_id"],
+        "comment": test_comment["comment"],
+        "main_comment_id": test_comment["main_comment_id"],
     }
     test_room = MockRoomResponse().dict()
     test_user = MockUserResponse().dict()
     expected_status = HTTP_201_CREATED
-    attrs_to_test = ["comment", "commentator", "commentator_id", "main_comment_id", "id", "room_id"]
+    attrs_to_test = [
+        "comment",
+        "commentator",
+        "commentator_id",
+        "main_comment_id",
+        "id",
+        "room_id",
+    ]
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
@@ -62,7 +69,14 @@ def test_get_all_room_comments(test_app):
     test_comment_list = mock_comment_response.dict()
     expected_status = HTTP_200_OK
     attrs_to_compare = ["amount", "room_id"]
-    room_attrs_to_compare = ["comment", "commentator", "commentator_id", "main_comment_id", "id", "room_id"]
+    room_attrs_to_compare = [
+        "comment",
+        "commentator",
+        "commentator_id",
+        "main_comment_id",
+        "id",
+        "room_id",
+    ]
 
     responses.add(
         responses.GET,
@@ -82,12 +96,14 @@ def test_get_all_room_comments(test_app):
     check_responses_equality(response.json(), test_comment_list, attrs_to_compare)
     for i, response_comment in enumerate(response_comments):
         check_responses_equality(
-            response_comment["comment"], test_comments[i]["comment"], room_attrs_to_compare
+            response_comment["comment"],
+            test_comments[i]["comment"],
+            room_attrs_to_compare,
         )
         for j, response_answer in enumerate(response_comment["answers"]):
-          check_responses_equality(
-            response_answer, test_comments[i]["answers"][j], room_attrs_to_compare
-          )
+            check_responses_equality(
+                response_answer, test_comments[i]["answers"][j], room_attrs_to_compare
+            )
 
 
 @responses.activate
@@ -116,6 +132,7 @@ def test_delete_room_comment(test_app, monkeypatch):
         status=expected_status,
     )
     response = test_app.delete(
-        f"{APPSERVER_URL}/rooms/{test_room_id}/comments/{test_comment_id}", headers=header
+        f"{APPSERVER_URL}/rooms/{test_room_id}/comments/{test_comment_id}",
+        headers=header,
     )
     assert response.status_code == expected_status

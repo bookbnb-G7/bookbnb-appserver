@@ -1,21 +1,14 @@
 import logging
-
-from app.api.models.booking_model import (BookingDB,
-                                          BookingList,
-                                          BookingSchema)
-
 from typing import Optional
-from app.dependencies import check_token, get_uuid_from_xtoken
 
+from app.api.models.booking_model import BookingDB, BookingList, BookingSchema
+from app.dependencies import check_token, get_uuid_from_xtoken
 from app.errors.http_error import (NotAllowedRequestError,
                                    UnauthorizedRequestError)
-
-from fastapi import APIRouter, Depends
-from app.services.requester import Requester
 from app.services.authsender import AuthSender
-from starlette.status import (HTTP_200_OK,
-                              HTTP_201_CREATED,
-                              HTTP_404_NOT_FOUND)
+from app.services.requester import Requester
+from fastapi import APIRouter, Depends
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -32,15 +25,13 @@ def payment_camel_to_snake(payment_payload):
         "date_to": payment_payload["dateTo"],
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
-        "transaction_status": payment_payload["transactionStatus"]
+        "transaction_status": payment_payload["transactionStatus"],
     }
 
     return booking_camel
 
 
-@router.get(
-    "", response_model=BookingList, status_code=HTTP_200_OK
-)
+@router.get("", response_model=BookingList, status_code=HTTP_200_OK)
 async def get_all_bookings(
     bookerId: Optional[int] = None,
     roomOwnerId: Optional[int] = None,
@@ -75,10 +66,7 @@ async def get_all_bookings(
     for i in range(len(bookings)):
         bookings[i] = payment_camel_to_snake(bookings[i])
 
-    booking_list = {
-        "amount": len(bookings),
-        "bookings": bookings
-    }
+    booking_list = {"amount": len(bookings), "bookings": bookings}
 
     return booking_list
 
@@ -107,14 +95,14 @@ async def create_new_booking(
     payload_booking = {
         "bookerId": uuid,
         "roomId": room_id,
-        "dateFrom": payload.date_from.strftime('%d-%m-%Y'),
-        "dateTo": payload.date_to.strftime('%d-%m-%Y')
+        "dateFrom": payload.date_from.strftime("%d-%m-%Y"),
+        "dateTo": payload.date_to.strftime("%d-%m-%Y"),
     }
     booking, _ = Requester.payment_fetch(
         method="POST",
         path=booking_path,
         expected_statuses={HTTP_201_CREATED},
-        payload=payload_booking
+        payload=payload_booking,
     )
 
     # Create booking in room server
@@ -122,8 +110,8 @@ async def create_new_booking(
     # Add the booking id received from the payment server
     payload_booking = {
         "id": booking["id"],
-        "date_from": payload.date_from.strftime('%Y-%m-%d'),
-        "date_to": payload.date_to.strftime('%Y-%m-%d')
+        "date_from": payload.date_from.strftime("%Y-%m-%d"),
+        "date_to": payload.date_to.strftime("%Y-%m-%d"),
     }
 
     booking_room, _ = Requester.room_srv_fetch(
@@ -142,10 +130,7 @@ async def create_new_booking(
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
-async def accept_booking(
-    booking_id: int,
-    uuid: int = Depends(get_uuid_from_xtoken)
-):
+async def accept_booking(booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     path = f"/bookings/{booking_id}"
     booking, _ = Requester.payment_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
@@ -173,10 +158,7 @@ async def accept_booking(
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
-async def reject_booking(
-    booking_id: int,
-    uuid: int = Depends(get_uuid_from_xtoken)
-):
+async def reject_booking(booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     path = f"/bookings/{booking_id}"
     booking, _ = Requester.payment_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
@@ -195,9 +177,7 @@ async def reject_booking(
 
     # Delete the rejected booking in post server
     booking_path = f"/rooms/{room_id}/bookings/{booking_id}"
-    booking, _ = Requester.room_srv_fetch(
-        "DELETE", booking_path, {HTTP_200_OK}
-    )
+    booking, _ = Requester.room_srv_fetch("DELETE", booking_path, {HTTP_200_OK})
 
     # TODO: Change BookingDB model to match camelcase in payment server
     booking_camel = payment_camel_to_snake(book_rejected)
@@ -228,10 +208,7 @@ async def get_booking(booking_id: int):
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
-async def delete_booking(
-    booking_id: int,
-    uuid: int = Depends(get_uuid_from_xtoken)
-):
+async def delete_booking(booking_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     path = f"/bookings/{booking_id}"
     booking, _ = Requester.payment_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
@@ -243,9 +220,7 @@ async def delete_booking(
         raise UnauthorizedRequestError("Can't reject other users bookings")
 
     path = f"/bookings/{booking_id}"
-    book_deleted, _ = Requester.payment_fetch(
-        "DELETE", path, {HTTP_200_OK}
-    )
+    book_deleted, _ = Requester.payment_fetch("DELETE", path, {HTTP_200_OK})
 
     # Delete the rejected booking in post server,
     # if it is not found it is also OK!

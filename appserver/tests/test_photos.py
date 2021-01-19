@@ -2,10 +2,9 @@ import re
 
 import responses
 from app.services.authsender import AuthSender
+from app.services.photouploader import photouploader
 from firebase_admin import storage
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
-
-from app.services.photouploader import photouploader
 from tests.mock_models.photo_upload_models import (MockFirebaseBucketResponse,
                                                    MockRoomPhotoList,
                                                    MockRoomPhotoUploadResponse)
@@ -45,7 +44,9 @@ def test_change_profile_picture(test_app, monkeypatch):
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
-    monkeypatch.setattr(photouploader, "upload_profile_photo", lambda x, y: expected_image_url)
+    monkeypatch.setattr(
+        photouploader, "upload_profile_photo", lambda x, y: expected_image_url
+    )
 
     responses.add(
         responses.PATCH,
@@ -81,13 +82,18 @@ def test_upload_room_photo(test_app, monkeypatch):
     header = {"x-access-token": "tokenrefalso"}
 
     expected_upload_service_response = (
-        test_room_photo["url"], test_room_photo["firebase_id"]
+        test_room_photo["url"],
+        test_room_photo["firebase_id"],
     )
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
-    monkeypatch.setattr(photouploader, "upload_room_photo", lambda x, y: expected_upload_service_response)
+    monkeypatch.setattr(
+        photouploader,
+        "upload_room_photo",
+        lambda x, y: expected_upload_service_response,
+    )
 
     responses.add(
         responses.GET,
@@ -172,10 +178,15 @@ def test_delete_room_photo(test_app, monkeypatch):
     )
 
     expected_upload_service_response = (
-        test_room_photo["url"], test_room_photo["firebase_id"]
+        test_room_photo["url"],
+        test_room_photo["firebase_id"],
     )
 
-    monkeypatch.setattr(photouploader, "upload_room_photo", lambda x, y: expected_upload_service_response)
+    monkeypatch.setattr(
+        photouploader,
+        "upload_room_photo",
+        lambda x, y: expected_upload_service_response,
+    )
     responses.add(
         responses.POST,
         re.compile(POSTSERVER_ROOM_REGEX),
@@ -198,4 +209,3 @@ def test_delete_room_photo(test_app, monkeypatch):
 
     assert room_response.status_code == expected_status
     check_responses_equality(room_response.json(), test_room_photo, attrs_to_test)
-

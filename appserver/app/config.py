@@ -1,8 +1,9 @@
-import os
 import logging
+import os
 from functools import lru_cache
-from pydantic import BaseSettings
+
 from firebase_admin import credentials
+from pydantic import BaseSettings
 
 logger = logging.getLogger(__name__)
 
@@ -35,4 +36,3 @@ if os.environ.get("ENVIRONMENT") == "production":
             "client_x509_cert_url": os.environ.get("FIREBASE_CLIENT_CERT_URL"),
         }
     )
-

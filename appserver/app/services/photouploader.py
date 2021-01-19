@@ -1,9 +1,10 @@
 import os
+
 import firebase_admin
-from firebase_admin import storage
-from app.config import logger, firebase_credentials
+from app.config import firebase_credentials, logger
 from app.errors.http_error import NotFoundError
 from app.utils.image_utils import IdGenerator
+from firebase_admin import storage
 
 
 class PhotoUploader:
@@ -70,7 +71,7 @@ class PhotoUploaderFake:
 
 
 photouploader = None
-if os.environ.get('ENVIRONMENT') == 'production':
+if os.environ.get("ENVIRONMENT") == "production":
     photouploader = PhotoUploader(firebase_credentials)
 else:
     photouploader = PhotoUploaderFake()
