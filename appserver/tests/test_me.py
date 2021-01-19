@@ -72,6 +72,7 @@ def test_get_self_user_wallet(test_app, monkeypatch):
         "uuid",
         "address",
         "mnemonic",
+        "balance"
     ]
     header = {"x-access-token": "tokenrefalso"}
 

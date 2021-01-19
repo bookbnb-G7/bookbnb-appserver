@@ -50,4 +50,5 @@ class MockPaymentWalletResponse(MockResponse):
             "uuid": 4,
             "address": "fake_addr",
             "mnemonic": "word word word word word word word word word word word word",
+            "balance": 0.24,
         }
