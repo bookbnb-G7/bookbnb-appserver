@@ -201,12 +201,13 @@ async def get_chat(
 
 @router.post(
     "/chats/{other_uuid}",
-    response_model=MessageSchema,
+    response_model=MessageDB,
     status_code=HTTP_200_OK,
     dependencies=[Depends(check_token)],
 )
 async def send_message(
-    _reponse: MessageDB,
+    _reponse: Response,
+    payload: MessageSchema,
     other_uuid: int,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
@@ -226,4 +227,4 @@ async def send_message(
     own_data = {"name": own_name, "uuid": uuid}
     other_data = {"name": other_name, "uuid": other_uuid}
 
-    return chat_service.send_message(own_data, other_data)
+    return chat_service.send_message(payload.message, own_data, other_data)
