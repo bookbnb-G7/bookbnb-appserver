@@ -42,6 +42,11 @@ class PhotoUploader:
 
     def _upload_image(self, file, filename):
         bucket = storage.bucket(app=self.app)
+
+        existing_blob = bucket.get_blob(filename)
+        if existing_blob is not None:
+            existing_blob.delete()
+
         blob = bucket.blob(filename)
         blob.upload_from_file(file.file)
         blob.make_public()
