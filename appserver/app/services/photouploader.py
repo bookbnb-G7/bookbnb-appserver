@@ -40,18 +40,16 @@ class PhotoUploader:
         filename = f"{self.ROOM_IMAGES_PATH}/{room_id}/{img_firebase_id}"
         self._remove_image(filename)
 
-    @staticmethod
-    def _upload_image(file, filename):
-        bucket = storage.bucket()
+    def _upload_image(self, file, filename):
+        bucket = storage.bucket(app=self.app)
         blob = bucket.blob(filename)
         blob.upload_from_file(file.file)
         blob.make_public()
 
         return blob.public_url
 
-    @staticmethod
-    def _remove_image(filename):
-        bucket = storage.bucket()
+    def _remove_image(self, filename):
+        bucket = storage.bucket(app=self.app)
         blob = bucket.get_blob(filename)
         if blob is None:
             raise NotFoundError("Photo")
