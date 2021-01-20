@@ -38,10 +38,10 @@ class ChatFirebase:
         }
 
         self.db_messages.child(chat_name).push(message_data)
-        self.db_chats.child(str(sender["uuid"])).child(str(receiver["uuid"])).set(
+        self.db_chats.child("-" + str(sender["uuid"])).child("-" + str(receiver["uuid"])).set(
             chat_db_data
         )
-        self.db_chats.child(str(receiver["uuid"])).child(str(sender["uuid"])).set(
+        self.db_chats.child("-" + str(receiver["uuid"])).child("-" + str(sender["uuid"])).set(
             chat_db_data
         )
 
@@ -62,13 +62,13 @@ class ChatFirebase:
         return messages
 
     def get_all_chats_from(self, user_uuid: int):
-        chats = self.db_chats.child(str(user_uuid)).get()
+        chats = self.db_chats.child("-" + str(user_uuid)).get()
 
         if (chats is None):
             return []
 
         previews = []
-        for chat in chats:
+        for uuid, chat in chats.items():
             if chat is None:
                 continue
 

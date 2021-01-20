@@ -202,7 +202,7 @@ async def get_chat(
 @router.post(
     "/chats/{other_uuid}",
     response_model=MessageDB,
-    status_code=HTTP_200_OK,
+    status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
 async def send_message(
