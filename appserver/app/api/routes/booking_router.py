@@ -56,7 +56,7 @@ async def get_all_bookings(
     if len(query) > 1:
         # strip last & in the query
         query = query[: (len(query) - 1)]
-        path = path + "/" + query
+        path = path + query
 
     bookings, _ = Requester.payment_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
