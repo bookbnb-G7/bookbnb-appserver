@@ -6,6 +6,8 @@ from app.db import Base, engine
 from app.errors.auth_error import AuthException
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import SQLAlchemyError
 from starlette.responses import JSONResponse
 
 logging_conf_path = os.path.join(os.path.dirname(__file__), "logging.ini")
@@ -35,6 +37,18 @@ async def auth_exception_handler(_request, exc):
 async def http_exception_handler(_request, exc):
     error = {"error": exc.detail}
     return JSONResponse(status_code=exc.status_code, content=error)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    error = {"error": str(exc)}
+    return JSONResponse(status_code=400, content=error)
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sql_exception_handler(request, exc):
+    error = {"error": str(exc.__dict__['orig'])}
+    return JSONResponse(status_code=500, content=error)
 
 
 app.include_router(me_router.router, prefix="/me", tags=["me"])
