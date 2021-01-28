@@ -14,6 +14,8 @@ class MockBookingResponse(MockResponse):
             "bookingStatus": 0,
             "transactionStatus": 3,
             "transactionHash": "HASHRELOCO",
+            "createdAt": "2020-11-10T22:51:03.539Z",
+            "updatedAt": "2020-11-10T22:51:03.539Z",
         }
 
 
@@ -30,6 +32,8 @@ class MockBookingAcceptedResponse(MockResponse):
             "bookingStatus": 2,
             "transactionStatus": 3,
             "transactionHash": "HASHRELOCO",
+            "createdAt": "2020-11-10T22:51:03.539Z",
+            "updatedAt": "2020-11-10T22:51:03.539Z",
         }
 
 
@@ -46,6 +50,8 @@ class MockBookingRejectedResponse(MockResponse):
             "bookingStatus": 2,
             "transactionStatus": 3,
             "transactionHash": "HASHRELOCO",
+            "createdAt": "2020-11-10T22:51:03.539Z",
+            "updatedAt": "2020-11-10T22:51:03.539Z",
         }
 
 
@@ -63,6 +69,8 @@ class MockBookingListResponse(MockResponse):
                 "bookingStatus": 0,
                 "transactionStatus": 3,
                 "transactionHash": "HASHRELOCO",
+                "createdAt": "2020-11-10T22:51:03.539Z",
+                "updatedAt": "2020-11-10T22:51:03.539Z",
             },
             {
                 "id": 8,
@@ -75,6 +83,8 @@ class MockBookingListResponse(MockResponse):
                 "bookingStatus": 0,
                 "transactionStatus": 3,
                 "transactionHash": "HASHRELOCO",
+                "createdAt": "2020-11-10T22:51:03.539Z",
+                "updatedAt": "2020-11-10T22:51:03.539Z",
             },
         ]
 

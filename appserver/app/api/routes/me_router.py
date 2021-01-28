@@ -27,6 +27,8 @@ def payment_camel_to_snake(payment_payload):
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
         "transaction_status": payment_payload["transactionStatus"],
+        "created_at": payment_payload["createdAt"],
+        "updated_at": payment_payload["updatedAt"],
     }
 
     return booking_camel

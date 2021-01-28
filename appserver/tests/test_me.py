@@ -25,6 +25,8 @@ def payment_camel_to_snake(payment_payload):
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
         "transaction_status": payment_payload["transactionStatus"],
+        "created_at": payment_payload["createdAt"],
+        "updated_at": payment_payload["updatedAt"],
     }
 
     return booking_camel
@@ -150,14 +152,15 @@ def test_get_self_user_bookings(test_app, monkeypatch):
         },
     }
 
-    check_responses_equality(response_json, test_bookings_camel, ["made", "received"])
     check_responses_equality(
-        response_json["made"], test_bookings_camel["made"], ["amount", "bookings"]
+        response_json["made"],
+        test_bookings_camel["made"],
+        ["amount"]
     )
     check_responses_equality(
         response_json["received"],
         test_bookings_camel["received"],
-        ["amount", "bookings"],
+        ["amount"],
     )
 
     for i, booking in enumerate(test_bookings_camel["made"]["bookings"]):
