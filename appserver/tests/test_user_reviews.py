@@ -3,23 +3,33 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from tests.mock_models.user_models import MockUserResponse
 from tests.mock_models.user_reviews_models import (MockUserReviewListResponse,
                                                    MockUserReviewResponse)
-from tests.utils import (APPSERVER_URL, GUEST_REVIEW_REGEX, HOST_REVIEW_REGEX,
-                         check_responses_equality)
+from tests.utils import (APPSERVER_URL, USER_REGEX, GUEST_REVIEW_REGEX,
+                         HOST_REVIEW_REGEX, check_responses_equality)
 
 
 @responses.activate
 def test_post_host_review(test_app, monkeypatch):
     test_review = MockUserReviewResponse().dict()
+    payload = {"review": test_review["review"]}
+    test_user = MockUserResponse().dict()
     test_user_id = test_review["reviewer_id"]
     expected_status = HTTP_201_CREATED
-    attrs_to_test = ["review", "reviewer", "reviewer_id"]
+    attrs_to_test = ["id", "review", "reviewer", "reviewer_id"]
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_review)
+
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
     responses.add(
         responses.POST,
         re.compile(HOST_REVIEW_REGEX),
@@ -28,7 +38,7 @@ def test_post_host_review(test_app, monkeypatch):
     )
     response = test_app.post(
         f"{APPSERVER_URL}/users/{test_user_id}/host_reviews",
-        json=test_review,
+        json=payload,
         headers=header,
     )
     assert response.status_code == expected_status
@@ -38,14 +48,23 @@ def test_post_host_review(test_app, monkeypatch):
 @responses.activate
 def test_post_guest_review(test_app, monkeypatch):
     test_review = MockUserReviewResponse().dict()
+    payload = {"review": test_review["review"]}
+    test_user = MockUserResponse().dict()
     test_user_id = test_review["reviewer_id"]
     expected_status = HTTP_201_CREATED
-    attrs_to_test = ["review", "reviewer", "reviewer_id"]
+    attrs_to_test = ["id", "review", "reviewer", "reviewer_id"]
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_review)
+
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
     responses.add(
         responses.POST,
         re.compile(GUEST_REVIEW_REGEX),
@@ -54,7 +73,7 @@ def test_post_guest_review(test_app, monkeypatch):
     )
     response = test_app.post(
         f"{APPSERVER_URL}/users/{test_user_id}/guest_reviews",
-        json=test_review,
+        json=payload,
         headers=header,
     )
     assert response.status_code == expected_status
@@ -66,7 +85,7 @@ def test_get_all_user_host_reviews(test_app):
     test_review_list = MockUserReviewListResponse().dict()
     test_user_id = 1
     expected_status = HTTP_200_OK
-    attrs_to_test = ["review", "reviewer", "reviewer_id"]
+    attrs_to_test = ["id", "review", "reviewer", "reviewer_id"]
 
     responses.add(
         responses.GET,
@@ -89,7 +108,7 @@ def test_get_all_user_guest_reviews(test_app):
     test_review_list = MockUserReviewListResponse().dict()
     test_user_id = 1
     expected_status = HTTP_200_OK
-    attrs_to_test = ["review", "reviewer", "reviewer_id"]
+    attrs_to_test = ["id", "review", "reviewer", "reviewer_id"]
 
     responses.add(
         responses.GET,
@@ -113,7 +132,7 @@ def test_get_single_guest_review(test_app):
     test_user_id = 1
     test_review_id = 2
     expected_status = HTTP_200_OK
-    attrs_to_test = ["review", "reviewer", "reviewer_id"]
+    attrs_to_test = ["id", "review", "reviewer", "reviewer_id"]
 
     responses.add(
         responses.GET,
@@ -135,7 +154,7 @@ def test_get_single_host_review(test_app):
     test_user_id = 1
     test_review_id = 2
     expected_status = HTTP_200_OK
-    attrs_to_test = ["review", "reviewer", "reviewer_id"]
+    attrs_to_test = ["id", "review", "reviewer", "reviewer_id"]
 
     responses.add(
         responses.GET,

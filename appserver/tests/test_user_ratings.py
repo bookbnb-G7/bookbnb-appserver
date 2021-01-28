@@ -3,15 +3,18 @@ import re
 import responses
 from app.services.authsender import AuthSender
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from tests.mock_models.user_models import MockUserResponse
 from tests.mock_models.user_ratings_models import (MockUserRatingListResponse,
                                                    MockUserRatingResponse)
-from tests.utils import (APPSERVER_URL, GUEST_RATING_REGEX, HOST_RATING_REGEX,
-                         check_responses_equality)
+from tests.utils import (APPSERVER_URL, USER_REGEX, GUEST_RATING_REGEX,
+                         HOST_RATING_REGEX, check_responses_equality)
 
 
 @responses.activate
 def test_post_host_rating(test_app, monkeypatch):
     test_rating = MockUserRatingResponse().dict()
+    payload = {"rating": test_rating["rating"]}
+    test_user = MockUserResponse().dict()
     test_user_id = test_rating["reviewer_id"]
     expected_status = HTTP_201_CREATED
     attrs_to_test = ["rating", "reviewer", "reviewer_id"]
@@ -20,6 +23,13 @@ def test_post_host_rating(test_app, monkeypatch):
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_rating)
+
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
     responses.add(
         responses.POST,
         re.compile(HOST_RATING_REGEX),
@@ -28,7 +38,7 @@ def test_post_host_rating(test_app, monkeypatch):
     )
     response = test_app.post(
         f"{APPSERVER_URL}/users/{test_user_id}/host_ratings",
-        json=test_rating,
+        json=payload,
         headers=header,
     )
     assert response.status_code == expected_status
@@ -38,6 +48,8 @@ def test_post_host_rating(test_app, monkeypatch):
 @responses.activate
 def test_post_guest_rating(test_app, monkeypatch):
     test_rating = MockUserRatingResponse().dict()
+    payload = {"rating": test_rating["rating"]}
+    test_user = MockUserResponse().dict()
     test_user_id = 1
     expected_status = HTTP_201_CREATED
     attrs_to_test = ["rating", "reviewer", "reviewer_id"]
@@ -46,6 +58,13 @@ def test_post_guest_rating(test_app, monkeypatch):
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
     monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_rating)
+    
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
     responses.add(
         responses.POST,
         re.compile(GUEST_RATING_REGEX),
@@ -54,7 +73,7 @@ def test_post_guest_rating(test_app, monkeypatch):
     )
     response = test_app.post(
         f"{APPSERVER_URL}/users/{test_user_id}/guest_ratings",
-        json=test_rating,
+        json=payload,
         headers=header,
     )
     assert response.status_code == expected_status

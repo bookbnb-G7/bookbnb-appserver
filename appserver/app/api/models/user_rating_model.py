@@ -5,12 +5,24 @@ from pydantic import BaseModel
 
 class UserRatingSchema(BaseModel):
     rating: int
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "rating": 5,
+            }
+        }
+
+
+class UserRatingDB(UserRatingSchema):
+    id: int
     reviewer: str
     reviewer_id: int
 
     class Config:
         schema_extra = {
             "example": {
+                "id": 2,
                 "rating": 5,
                 "reviewer": "Bob",
                 "reviewer_id": 17,
@@ -18,20 +30,7 @@ class UserRatingSchema(BaseModel):
         }
 
 
-class UserRatingUpdate(BaseModel):
-    rating: Optional[int] = None
-    reviewer: Optional[str] = None
-    reviewer_id: Optional[int] = None
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "rating": 4,
-            }
-        }
-
-
 class UserRatingList(BaseModel):
     userId: int
     amount: int
-    ratings: List[UserRatingSchema]
+    ratings: List[UserRatingDB]
