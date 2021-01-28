@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -29,6 +30,8 @@ class UserSchema(BaseModel):
 
 class UserDB(UserSchema):
     id: int
+    createdAt: datetime
+    updatedAt: datetime
 
     class Config:
         schema_extra = {
@@ -42,6 +45,8 @@ class UserDB(UserSchema):
                 "photo": "https://melmagazine.com/wp-content/uploads/"
                 + "2020/07/zuck_sunscreen.jpg",
                 "id": 16,
+                "createdAt": "2020-12-01T19:00:00.033Z",
+                "updatedAt": "2020-12-01T19:00:00.033Z",
             }
         }
 
@@ -65,6 +70,8 @@ class UserListSchema(BaseModel):
                         "photo": "https://melmagazine.com/wp-content/"
                         + "uploads/2020/07/zuck_sunscreen.jpg",
                         "id": 14,
+                        "createdAt": "2020-12-01T19:00:00.033Z",
+                        "updatedAt": "2020-12-01T19:00:00.033Z",
                     },
                     {
                         "firstname": "Jack",
@@ -76,6 +83,8 @@ class UserListSchema(BaseModel):
                         "photo": "https://i.insider.com/5e5e32fafee23d6a26433d83?"
                         + "width=750&format=jpeg&auto=webp",
                         "id": 9,
+                        "createdAt": "2020-12-01T19:00:00.033Z",
+                        "updatedAt": "2020-12-01T19:00:00.033Z",
                     },
                 ],
             }

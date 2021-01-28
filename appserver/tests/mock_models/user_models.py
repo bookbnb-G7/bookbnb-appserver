@@ -10,8 +10,10 @@ class MockUserResponse(MockResponse):
             "phonenumber": "08004444",
             "country": "CR",
             "birthdate": "9999-99-99",
-            "photo": "https://www.cmtv.com.ar/imagenes_artistas/70.jpg?Chayanne",
+            "photo": "https://bit.ly/3prghP8",
             "id": 12,
+            "createdAt": "2020-11-10T22:51:03.539Z",
+            "updatedAt": "2020-11-10T22:51:03.539Z",
         }
 
 
@@ -29,6 +31,8 @@ class MockUserListResponse(MockResponse):
                     "birthdate": "9999-99-99",
                     "photo": "otrolinkkkk",
                     "id": 8,
+                    "createdAt": "2020-11-10T22:51:03.539Z",
+                    "updatedAt": "2020-11-10T22:51:03.539Z",
                 },
                 {
                     "firstname": "elmer",
@@ -39,6 +43,8 @@ class MockUserListResponse(MockResponse):
                     "birthdate": "9999-99-99",
                     "photo": "unlinkkkkk",
                     "id": 45,
+                    "createdAt": "2020-11-10T22:51:03.539Z",
+                    "updatedAt": "2020-11-10T22:51:03.539Z",
                 },
             ],
         }
