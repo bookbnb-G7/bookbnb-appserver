@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import List
 
 from pydantic import BaseModel
@@ -18,6 +18,8 @@ class BookingDB(BookingSchema):
     booking_status: int
     transaction_hash: str
     transaction_status: int
+    created_at: datetime
+    updated_at: datetime
 
 
 class BookingList(BaseModel):

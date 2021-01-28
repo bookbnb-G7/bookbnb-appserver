@@ -27,6 +27,8 @@ def payment_camel_to_snake(payment_payload):
         "booking_status": payment_payload["bookingStatus"],
         "transaction_hash": payment_payload["transactionHash"],
         "transaction_status": payment_payload["transactionStatus"],
+        "created_at": payment_payload["createdAt"],
+        "updated_at": payment_payload["updatedAt"],
     }
 
     return booking_camel
@@ -226,7 +228,7 @@ def test_get_all_room_bookings(test_app):
 
     booking_list = {"amount": len(test_booking_list), "bookings": test_booking_list}
 
-    check_responses_equality(response_json, booking_list, ["amount", "bookings"])
+    check_responses_equality(response_json, booking_list, ["amount"])
 
     for i, booking in enumerate(booking_list["bookings"]):
         check_responses_equality(booking, response_json["bookings"][i], attrs_to_test)
