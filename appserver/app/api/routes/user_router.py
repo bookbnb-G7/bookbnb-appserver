@@ -2,8 +2,12 @@ from typing import Optional
 
 from app.api.models.user_model import (UserDB, UserListSchema, UserSchema,
                                        UserUpdateSchema)
-from app.api.models.user_rating_model import UserRatingList, UserRatingSchema
-from app.api.models.user_review_model import UserReviewList, UserReviewSchema
+from app.api.models.user_rating_model import (UserRatingList,
+                                              UserRatingSchema,
+                                              UserRatingDB)
+from app.api.models.user_review_model import (UserReviewList,
+                                              UserReviewSchema,
+                                              UserReviewDB)
 from app.dependencies import check_token, get_uuid_from_xtoken
 from app.errors.http_error import UnauthorizedRequestError
 from app.services.authsender import AuthSender
@@ -126,7 +130,7 @@ async def get_all_users():
 
 @router.post(
     "/{user_id}/host_reviews",
-    response_model=UserReviewSchema,
+    response_model=UserReviewDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
@@ -138,12 +142,23 @@ async def create_host_review(
     if not AuthSender.has_permission_to_modify(uuid, user_id):
         raise UnauthorizedRequestError("You can't create a review of other user")
 
+    path = f"/users/{uuid}"
+    me, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    new_payload = {
+        "review": payload.dict()["review"],
+        "reviewer": f"{me['firstname']} {me['lastname']}",
+        "reviewer_id": uuid,
+    }
+
     path = f"/users/{user_id}/host_reviews"
     review, _ = Requester.user_srv_fetch(
         method="POST",
         path=path,
         expected_statuses={HTTP_201_CREATED},
-        payload=payload.dict(),
+        payload=new_payload,
     )
 
     return review
@@ -151,7 +166,7 @@ async def create_host_review(
 
 @router.post(
     "/{user_id}/host_ratings",
-    response_model=UserRatingSchema,
+    response_model=UserRatingDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
@@ -163,12 +178,23 @@ async def create_host_rating(
     if not AuthSender.has_permission_to_modify(uuid, user_id):
         raise UnauthorizedRequestError("You can't create a rating of other user")
 
+    path = f"/users/{uuid}"
+    me, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    new_payload = {
+        "rating": payload.dict()["rating"],
+        "reviewer": f"{me['firstname']} {me['lastname']}",
+        "reviewer_id": uuid,
+    }
+
     path = f"/users/{user_id}/host_ratings"
     rating, _ = Requester.user_srv_fetch(
         method="POST",
         path=path,
         expected_statuses={HTTP_201_CREATED},
-        payload=payload.dict(),
+        payload=new_payload,
     )
 
     return rating
@@ -176,7 +202,7 @@ async def create_host_rating(
 
 @router.post(
     "/{user_id}/guest_reviews",
-    response_model=UserReviewSchema,
+    response_model=UserReviewDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
@@ -188,12 +214,23 @@ async def create_guest_review(
     if not AuthSender.has_permission_to_modify(uuid, user_id):
         raise UnauthorizedRequestError("You can't create a review of other user")
 
+    path = f"/users/{uuid}"
+    me, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    new_payload = {
+        "review": payload.dict()["review"],
+        "reviewer": f"{me['firstname']} {me['lastname']}",
+        "reviewer_id": uuid,
+    }
+
     path = f"/users/{user_id}/guest_reviews"
     review, _ = Requester.user_srv_fetch(
         method="POST",
         path=path,
         expected_statuses={HTTP_201_CREATED},
-        payload=payload.dict(),
+        payload=new_payload,
     )
 
     return review
@@ -201,7 +238,7 @@ async def create_guest_review(
 
 @router.post(
     "/{user_id}/guest_ratings",
-    response_model=UserRatingSchema,
+    response_model=UserRatingDB,
     status_code=HTTP_201_CREATED,
     dependencies=[Depends(check_token)],
 )
@@ -213,12 +250,23 @@ async def create_guest_rating(
     if not AuthSender.has_permission_to_modify(uuid, user_id):
         raise UnauthorizedRequestError("You can't create a rating of other user")
 
+    path = f"/users/{uuid}"
+    me, _ = Requester.user_srv_fetch(
+        method="GET", path=path, expected_statuses={HTTP_200_OK}
+    )
+
+    new_payload = {
+        "rating": payload.dict()["rating"],
+        "reviewer": f"{me['firstname']} {me['lastname']}",
+        "reviewer_id": uuid,
+    }
+
     path = f"/users/{user_id}/guest_ratings"
     rating, _ = Requester.user_srv_fetch(
         method="POST",
         path=path,
         expected_statuses={HTTP_201_CREATED},
-        payload=payload.dict(),
+        payload=new_payload,
     )
 
     return rating
@@ -270,7 +318,7 @@ async def get_guest_ratings(user_id: int):
 
 @router.get(
     "/{user_id}/host_reviews/{review_id}",
-    response_model=UserReviewSchema,
+    response_model=UserReviewDB,
     status_code=HTTP_200_OK,
 )
 async def get_single_host_review(user_id: int, review_id: int):
@@ -283,7 +331,7 @@ async def get_single_host_review(user_id: int, review_id: int):
 
 @router.get(
     "/{user_id}/host_ratings/{rating_id}",
-    response_model=UserRatingSchema,
+    response_model=UserRatingDB,
     status_code=HTTP_200_OK,
 )
 async def get_single_host_rating(user_id: int, rating_id: int):
@@ -296,7 +344,7 @@ async def get_single_host_rating(user_id: int, rating_id: int):
 
 @router.get(
     "/{user_id}/guest_reviews/{review_id}",
-    response_model=UserReviewSchema,
+    response_model=UserReviewDB,
     status_code=HTTP_200_OK,
 )
 async def get_single_guest_review(user_id: int, review_id: int):
@@ -309,7 +357,7 @@ async def get_single_guest_review(user_id: int, review_id: int):
 
 @router.get(
     "/{user_id}/guest_ratings/{rating_id}",
-    response_model=UserRatingSchema,
+    response_model=UserRatingDB,
     status_code=HTTP_200_OK,
 )
 async def get_single_guest_rating(user_id: int, rating_id: int):
