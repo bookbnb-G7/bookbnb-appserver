@@ -3,6 +3,7 @@ import os
 import firebase_admin
 from app.config import firebase_credentials
 from firebase_admin import db, messaging
+from firebase_admin.exceptions import FirebaseError
 
 
 class Notifier:
@@ -163,8 +164,21 @@ class Notifier:
             ),
             token=token,
         )
+        success = False
 
-        return messaging.send(message, app=self.app)
+        try:
+            messaging.send(message, app=self.app)
+            print("Success on notification")
+            success = True
+        except FirebaseError as err:
+            print("Notification failed, firebase error")
+            print(err.message)
+
+        except ValueError as err:
+            print("Notification failed, value error")
+            print(err.message)
+
+        return success
 
 
 class NotifierFake:
