@@ -181,6 +181,9 @@ async def delete_room(room_id: int, viewer_uuid: int = Depends(get_uuid_from_xto
     )
 
     # TODO: Delete room in payment server
+    room_pay, _ = Requester.payment_fetch(
+        method="DELETE", path=path, expected_statuses={HTTP_200_OK}
+    )
 
     return room
 
@@ -224,6 +227,12 @@ async def rate_room(
         expected_statuses={HTTP_201_CREATED},
         payload=rating_req_payload,
     )
+
+    # Send notification
+    notifier.send_new_room_rating_notification(
+        reviewer_name, room["title"], rating_req_payload["rating"], room["owner_uuid"]
+    )
+
     return rating
 
 
@@ -316,6 +325,12 @@ async def review_room(
         expected_statuses={HTTP_201_CREATED},
         payload=review_payload,
     )
+
+    # Send notification
+    notifier.send_new_room_review_notification(
+        reviewer_name, room["title"], room["owner_uuid"]
+    )
+
     return review
 
 

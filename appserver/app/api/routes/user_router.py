@@ -12,6 +12,7 @@ from app.dependencies import check_token, get_uuid_from_xtoken
 from app.errors.http_error import UnauthorizedRequestError
 from app.services.authsender import AuthSender
 from app.services.requester import Requester
+from app.services.notifier import notifier
 from fastapi import APIRouter, Depends, Header
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 
@@ -139,8 +140,8 @@ async def create_host_review(
     user_id: int,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't create a review of other user")
+    if not AuthSender.has_permission_to_comment(uuid, user_id):
+        raise UnauthorizedRequestError("You can't create a review of yourself")
 
     path = f"/users/{uuid}"
     me, _ = Requester.user_srv_fetch(
@@ -161,6 +162,11 @@ async def create_host_review(
         payload=new_payload,
     )
 
+    # Send notification
+    notifier.send_new_user_host_review_notification(
+        new_payload["reviewer"], user_id
+    )
+
     return review
 
 
@@ -175,8 +181,8 @@ async def create_host_rating(
     user_id: int,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't create a rating of other user")
+    if not AuthSender.has_permission_to_comment(uuid, user_id):
+        raise UnauthorizedRequestError("You can't create a rating of yourself")
 
     path = f"/users/{uuid}"
     me, _ = Requester.user_srv_fetch(
@@ -197,6 +203,11 @@ async def create_host_rating(
         payload=new_payload,
     )
 
+    # Send notification
+    notifier.send_new_user_host_rating_notification(
+        new_payload["reviewer"], new_payload["rating"], user_id
+    )
+
     return rating
 
 
@@ -211,8 +222,8 @@ async def create_guest_review(
     user_id: int,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't create a review of other user")
+    if not AuthSender.has_permission_to_comment(uuid, user_id):
+        raise UnauthorizedRequestError("You can't create a review of yourself")
 
     path = f"/users/{uuid}"
     me, _ = Requester.user_srv_fetch(
@@ -233,6 +244,11 @@ async def create_guest_review(
         payload=new_payload,
     )
 
+    # Send notification
+    notifier.send_new_user_guest_review_notification(
+        new_payload["reviewer"], user_id
+    )
+
     return review
 
 
@@ -247,8 +263,8 @@ async def create_guest_rating(
     user_id: int,
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
-    if not AuthSender.has_permission_to_modify(uuid, user_id):
-        raise UnauthorizedRequestError("You can't create a rating of other user")
+    if not AuthSender.has_permission_to_comment(uuid, user_id):
+        raise UnauthorizedRequestError("You can't create a rating yourself")
 
     path = f"/users/{uuid}"
     me, _ = Requester.user_srv_fetch(
@@ -267,6 +283,11 @@ async def create_guest_rating(
         path=path,
         expected_statuses={HTTP_201_CREATED},
         payload=new_payload,
+    )
+
+    # Send notification
+    notifier.send_new_user_guest_rating_notification(
+        new_payload["reviewer"], new_payload["rating"], user_id
     )
 
     return rating

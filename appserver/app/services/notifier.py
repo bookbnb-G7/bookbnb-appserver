@@ -33,7 +33,7 @@ class Notifier:
 
         self.notify(title, body, receiver["id"])
 
-    # TODO done: send notification chat new message
+    # send notification chat new message
     def send_new_chat_message_notification(
         self, sender_name: str, receiver_uuid: int
     ):
@@ -42,7 +42,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO done: send notification new booking received for user's room
+    # send notification new booking received for user's room
     def send_new_booking_received_notification(
         self, sender_name: str, room_title: str, receiver_uuid: int
     ):
@@ -51,7 +51,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO done: send notification booking made accepted
+    # send notification booking made accepted
     def send_booking_accepted_notification(
         self, sender_name: str, room_title: str, receiver_uuid: int
     ):
@@ -60,7 +60,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO done: send notification booking made rejected
+    # send notification booking made rejected
     def send_booking_rejected_notification(
         self, sender_name: str, room_title: str, receiver_uuid: int
     ):
@@ -69,7 +69,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO done: send notification new comment for user's room
+    # send notification new comment for user's room
     def send_new_comment_notification(
         self, sender_name: str, room_title: str, receiver_uuid: int
     ):
@@ -78,7 +78,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO done: send notification comment answered
+    # send notification comment answered
     def send_answered_comment_notification(
         self, sender_name: str, room_title: str, receiver_uuid: int
     ):
@@ -87,7 +87,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO: send notification new rating for user's room
+    # send notification new rating for user's room
     def send_new_room_rating_notification(
         self, sender_name: str, room_title: str, rating: int, receiver_uuid: int
     ):
@@ -96,7 +96,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO: send notification new review for user's room
+    # send notification new review for user's room
     def send_new_room_review_notification(
         self, sender_name: str, room_title: str, receiver_uuid: int
     ):
@@ -105,7 +105,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO: send notification new guest rating for user
+    # send notification new guest rating for user
     def send_new_user_guest_rating_notification(
         self, sender_name: str, rating: int, receiver_uuid: int
     ):
@@ -114,7 +114,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO: send notification new host rating for user
+    # send notification new host rating for user
     def send_new_user_host_rating_notification(
         self, sender_name: str, rating: int, receiver_uuid: int
     ):
@@ -123,7 +123,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO: send notification new guest review for user
+    # send notification new guest review for user
     def send_new_user_guest_review_notification(
         self, sender_name: str, receiver_uuid: int
     ):
@@ -132,7 +132,7 @@ class Notifier:
 
         self.notify(title, body, receiver_uuid)
 
-    # TODO: send notification new host review for user
+    # send notification new host review for user
     def send_new_user_host_review_notification(
         self, sender_name: str, receiver_uuid: int
     ):

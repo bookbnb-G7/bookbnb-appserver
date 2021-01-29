@@ -178,6 +178,7 @@ def test_update_room(test_app, monkeypatch):
 @responses.activate
 def test_delete_room(test_app, monkeypatch):
     test_room = MockRoomResponse().dict()
+    test_payment_room = MockPaymentRoomResponse().dict()
     test_room_id = test_room["id"]
     expected_status = HTTP_200_OK
     attrs_to_test = [
@@ -209,6 +210,12 @@ def test_delete_room(test_app, monkeypatch):
         responses.DELETE,
         re.compile(POSTSERVER_ROOM_REGEX),
         json=test_room,
+        status=expected_status,
+    )
+    responses.add(
+        responses.DELETE,
+        re.compile(PAYMENT_ROOM_REGEX),
+        json=test_payment_room,
         status=expected_status,
     )
     response = test_app.delete(f"{APPSERVER_URL}/rooms/{test_room_id}", headers=header)
