@@ -16,6 +16,7 @@ from app.errors.http_error import (BadRequestError, NotFoundError,
 from app.services.authsender import AuthSender
 from app.services.photouploader import photouploader
 from app.services.requester import Requester
+from app.services.notifier import notifier
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED
@@ -387,7 +388,10 @@ async def create_room_comment(
         method="GET", path=room_path, expected_statuses={HTTP_200_OK}
     )
 
-    if not AuthSender.has_permission_to_comment(viewer_uuid, room["owner_uuid"]):
+    if (
+        (payload.dict()["main_comment_id"] is None) and
+        (not AuthSender.has_permission_to_comment(viewer_uuid, room["owner_uuid"]))
+    ):
         raise BadRequestError("You can't comment your own rooms!")
 
     user_path = "/users" + f"/{viewer_uuid}"
@@ -406,6 +410,28 @@ async def create_room_comment(
         expected_statuses={HTTP_201_CREATED},
         payload=comment_payload,
     )
+
+    # Send notifications
+    if (comment_payload["main_comment_id"] is None):
+        # send notification to room_owner
+        notifier.send_new_comment_notification(
+            commentator, room["title"], room["owner_uuid"]
+        )
+    elif (viewer_uuid == room["owner_uuid"]):
+        # send notification answer to main_comment_owner
+        main_comment, _ = Requester.room_srv_fetch(
+            method="GET",
+            path=comment_path + f'/{comment_payload["main_comment_id"]}',
+            expected_statuses={HTTP_200_OK}
+        )
+        notifier.send_answered_comment_notification(
+            commentator, room["title"], main_comment["commentator_id"]
+        )
+    else:
+        # send notification answer to owner
+        notifier.send_answered_comment_notification(
+            commentator, room["title"], room["owner_uuid"]
+        )
 
     return comment
 

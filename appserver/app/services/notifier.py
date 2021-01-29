@@ -33,6 +33,114 @@ class Notifier:
 
         self.notify(title, body, receiver["id"])
 
+    # TODO done: send notification chat new message
+    def send_new_chat_message_notification(
+        self, sender_name: str, receiver_uuid: int
+    ):
+        title = "Nuevo mensaje en el chat"
+        body = f'Mensaje nuevo de {sender_name}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO done: send notification new booking received for user's room
+    def send_new_booking_received_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        title = "Nueva reserva recibida"
+        body = f'El usuario {sender_name} hizo una reserva en la habitacion {room_title}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO done: send notification booking made accepted
+    def send_booking_accepted_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        title = "Se confirmo una reserva realizada"
+        body = f'El usuario {sender_name} confirmo la reserva realizada en {room_title}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO done: send notification booking made rejected
+    def send_booking_rejected_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        title = "Se rechazo una reserva realizada"
+        body = f'El usuario {sender_name} rechazo la reserva realizada en {room_title}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO done: send notification new comment for user's room
+    def send_new_comment_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        title = "Se recibio un nuevo comentario"
+        body = f'El usuario {sender_name} comento tu habitacion {room_title}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO done: send notification comment answered
+    def send_answered_comment_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        title = "Se respondio tu nuevo comentario"
+        body = f'El usuario {sender_name} respondio a tu comentario de {room_title}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO: send notification new rating for user's room
+    def send_new_room_rating_notification(
+        self, sender_name: str, room_title: str, rating: int, receiver_uuid: int
+    ):
+        title = "Nueva calificacion en tu habitacion"
+        body = f'El usuario {sender_name} califico tu habitacion {room_title} con {rating}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO: send notification new review for user's room
+    def send_new_room_review_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        title = "Nueva reseña en tu habitacion"
+        body = f'El usuario {sender_name} escribio una reseña de tu habitacion {room_title}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO: send notification new guest rating for user
+    def send_new_user_guest_rating_notification(
+        self, sender_name: str, rating: int, receiver_uuid: int
+    ):
+        title = "Nueva calificacion recibida"
+        body = f'El usuario {sender_name} te califico como huesped con {rating}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO: send notification new host rating for user
+    def send_new_user_host_rating_notification(
+        self, sender_name: str, rating: int, receiver_uuid: int
+    ):
+        title = "Nueva calificacion recibida"
+        body = f'El usuario {sender_name} te califico como anfitrion con {rating}'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO: send notification new guest review for user
+    def send_new_user_guest_review_notification(
+        self, sender_name: str, receiver_uuid: int
+    ):
+        title = "Nueva reseña recibida"
+        body = f'El usuario {sender_name} escribio una reseña de huesped de tu usuario'
+
+        self.notify(title, body, receiver_uuid)
+
+    # TODO: send notification new host review for user
+    def send_new_user_host_review_notification(
+        self, sender_name: str, receiver_uuid: int
+    ):
+        title = "Nueva reseña recibida"
+        body = f'El usuario {sender_name} escribio una reseña de anfitrion de tu usuario'
+
+        self.notify(title, body, receiver_uuid)
+
     def notify(self, title: str, body: str, uuid: int):
         """
         Sends a notification to the users device.
@@ -74,6 +182,67 @@ class NotifierFake:
         body = f'Body of test notification from {sender["name"]}'
 
         self.notify(title, body, receiver["id"])
+
+    def send_new_chat_message_notification(
+        self, sender_name: str, receiver_uuid: int
+    ):
+        return
+
+    def send_new_booking_received_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        return
+
+    def send_booking_accepted_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        return
+
+    def send_booking_rejected_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        return
+
+    def send_new_comment_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        return
+
+    def send_answered_comment_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        return
+
+    def send_new_room_rating_notification(
+        self, sender_name: str, room_title: str, rating: int,
+        receiver_uuid: int
+    ):
+        return
+
+    def send_new_room_review_notification(
+        self, sender_name: str, room_title: str, receiver_uuid: int
+    ):
+        return
+
+    def send_new_user_guest_rating_notification(
+        self, sender_name: str, rating: int, receiver_uuid: int
+    ):
+        return
+
+    def send_new_user_host_rating_notification(
+        self, sender_name: str, rating: int, receiver_uuid: int
+    ):
+        return
+
+    def send_new_user_guest_review_notification(
+        self, sender_name: str, receiver_uuid: int
+    ):
+        return
+
+    def send_new_user_host_review_notification(
+        self, sender_name: str, receiver_uuid: int
+    ):
+        return
 
     def notify(self, title: str, body: str, uuid: int):
         return

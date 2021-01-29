@@ -3,6 +3,7 @@ from datetime import datetime
 
 import firebase_admin
 from app.config import firebase_credentials
+from app.services.notifier import notifier
 from firebase_admin import db
 
 
@@ -43,6 +44,10 @@ class ChatFirebase:
         )
         self.db_chats.child("-" + str(receiver["uuid"])).child("-" + str(sender["uuid"])).set(
             chat_db_data
+        )
+
+        notifier.send_new_chat_message_notification(
+            sender["name"], receiver["uuid"]
         )
 
         return message_data
