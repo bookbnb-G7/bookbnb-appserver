@@ -7,6 +7,7 @@ from app.errors.http_error import (NotAllowedRequestError,
                                    UnauthorizedRequestError)
 from app.services.authsender import AuthSender
 from app.services.requester import Requester
+from app.services.notifier import notifier
 from fastapi import APIRouter, Depends
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
@@ -123,6 +124,17 @@ async def create_new_booking(
     # TODO: Change BookingDB model to match camelcase in payment server
     booking_camel = payment_camel_to_snake(booking)
 
+    # Send notification
+    sender, _ = Requester.user_srv_fetch(
+        "GET", f"/users/{uuid}", {HTTP_200_OK}
+    )
+
+    sender_name = f"{sender['firstname']} {sender['lastname']}"
+
+    notifier.send_new_booking_received_notification(
+        sender_name, room["title"], room["owner_uuid"]
+    )
+
     return booking_camel
 
 
@@ -150,6 +162,21 @@ async def accept_booking(booking_id: int, uuid: int = Depends(get_uuid_from_xtok
 
     # TODO: Change BookingDB model to match camelcase in payment server
     booking_camel = payment_camel_to_snake(book_accepted)
+
+    # Send notification
+    sender, _ = Requester.user_srv_fetch(
+        "GET", f"/users/{booking_camel['room_owner_id']}", {HTTP_200_OK}
+    )
+    sender_name = f"{sender['firstname']} {sender['lastname']}"
+
+    room, _ = Requester.room_srv_fetch(
+        "GET", f"/rooms/{booking_camel['room_id']}", {HTTP_200_OK}
+    )
+    room_title = room["title"]
+
+    notifier.send_booking_accepted_notification(
+        sender_name, room_title, booking_camel["booker_id"]
+    )
 
     return booking_camel
 
@@ -183,6 +210,21 @@ async def reject_booking(booking_id: int, uuid: int = Depends(get_uuid_from_xtok
 
     # TODO: Change BookingDB model to match camelcase in payment server
     booking_camel = payment_camel_to_snake(book_rejected)
+
+    # Send notification
+    sender, _ = Requester.user_srv_fetch(
+        "GET", f"/users/{booking_camel['room_owner_id']}", {HTTP_200_OK}
+    )
+    sender_name = f"{sender['firstname']} {sender['lastname']}"
+
+    room, _ = Requester.room_srv_fetch(
+        "GET", f"/rooms/{booking_camel['room_id']}", {HTTP_200_OK}
+    )
+    room_title = room["title"]
+
+    notifier.send_booking_rejected_notification(
+        sender_name, room_title, booking_camel["booker_id"]
+    )
 
     return booking_camel
 

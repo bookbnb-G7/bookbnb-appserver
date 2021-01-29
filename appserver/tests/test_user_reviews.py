@@ -21,7 +21,7 @@ def test_post_host_review(test_app, monkeypatch):
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_comment", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_review)
 
     responses.add(
@@ -56,7 +56,7 @@ def test_post_guest_review(test_app, monkeypatch):
     header = {"x-access-token": "tokenrefalso"}
 
     monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
-    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_comment", lambda x, y: True)
     monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_review)
 
     responses.add(

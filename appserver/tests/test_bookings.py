@@ -8,6 +8,7 @@ from tests.mock_models.booking_models import (MockBookingAcceptedResponse,
                                               MockBookingRejectedResponse,
                                               MockBookingResponse,
                                               MockRoomBookingResponse)
+from tests.mock_models.user_models import MockUserResponse
 from tests.mock_models.room_models import MockRoomResponse
 from tests.utils import (APPSERVER_URL, PAYMENT_BOOKING_ACCEPT_REGEX,
                          PAYMENT_BOOKING_REGEX, PAYMENT_BOOKING_REJECT_REGEX,
@@ -44,6 +45,7 @@ def test_add_room_booking(test_app, monkeypatch):
     }
     test_room_booking = MockRoomBookingResponse().dict()
     test_room = MockRoomResponse().dict()
+    test_user = MockUserResponse().dict()
     expected_status = HTTP_201_CREATED
     attrs_to_test = [
         "id",
@@ -82,6 +84,12 @@ def test_add_room_booking(test_app, monkeypatch):
         json=test_room_booking,
         status=expected_status,
     )
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
     response = test_app.post(
         f"{APPSERVER_URL}/bookings",
         json=test_booking_payload,
@@ -97,6 +105,8 @@ def test_add_room_booking(test_app, monkeypatch):
 @responses.activate
 def test_accept_room_booking(test_app, monkeypatch):
     test_booking = MockBookingResponse().dict()
+    test_room = MockRoomResponse().dict()
+    test_user = MockUserResponse().dict()
     test_booking_accepted = MockBookingAcceptedResponse().dict()
     booking_id = test_booking["id"]
     expected_status = HTTP_200_OK
@@ -131,6 +141,18 @@ def test_accept_room_booking(test_app, monkeypatch):
         json=test_booking_accepted,
         status=HTTP_200_OK,
     )
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_room,
+        status=HTTP_200_OK,
+    )
     response = test_app.post(
         f"{APPSERVER_URL}/bookings/{booking_id}/accept", headers=header
     )
@@ -144,6 +166,8 @@ def test_accept_room_booking(test_app, monkeypatch):
 @responses.activate
 def test_reject_room_booking(test_app, monkeypatch):
     test_booking = MockBookingResponse().dict()
+    test_room = MockRoomResponse().dict()
+    test_user = MockUserResponse().dict()
     test_booking_rejected = MockBookingRejectedResponse().dict()
     test_room_booking = MockRoomBookingResponse().dict()
     booking_id = test_booking["id"]
@@ -183,6 +207,18 @@ def test_reject_room_booking(test_app, monkeypatch):
         responses.DELETE,
         re.compile(POSTSERVER_ROOM_REGEX),
         json=test_room_booking,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.GET,
+        re.compile(USER_REGEX),
+        json=test_user,
+        status=HTTP_200_OK,
+    )
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_room,
         status=HTTP_200_OK,
     )
     response = test_app.post(
