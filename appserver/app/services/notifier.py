@@ -148,7 +148,7 @@ class Notifier:
         no action is performed
         """
 
-        token = self.get_push_token(uuid)
+        token = self.get_push_token(str(uuid))
         if not token:
             return False
 
