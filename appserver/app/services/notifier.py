@@ -172,11 +172,11 @@ class Notifier:
             success = True
         except FirebaseError as err:
             print("Notification failed, firebase error")
-            print(err.message)
+            # print(err.message)
 
         except ValueError as err:
             print("Notification failed, value error")
-            print(err.message)
+            # print(err.message)
 
         return success
 
