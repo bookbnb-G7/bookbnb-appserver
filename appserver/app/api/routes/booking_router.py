@@ -85,7 +85,7 @@ async def create_new_booking(
     uuid: int = Depends(get_uuid_from_xtoken),
 ):
 
-    room_id = payload.room_id
+    room_id = payload.dict()["room_id"]
     room_path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch("GET", room_path, {HTTP_200_OK})
 
@@ -98,8 +98,8 @@ async def create_new_booking(
     payload_booking = {
         "bookerId": uuid,
         "roomId": room_id,
-        "dateFrom": payload.date_from.strftime("%d-%m-%Y"),
-        "dateTo": payload.date_to.strftime("%d-%m-%Y"),
+        "dateFrom": payload.dict()["date_from"].strftime("%d-%m-%Y"),
+        "dateTo": payload.dict()["date_to"].strftime("%d-%m-%Y"),
     }
     booking, _ = Requester.payment_fetch(
         method="POST",
@@ -113,8 +113,8 @@ async def create_new_booking(
     # Add the booking id received from the payment server
     payload_booking = {
         "id": booking["id"],
-        "date_from": payload.date_from.strftime("%Y-%m-%d"),
-        "date_to": payload.date_to.strftime("%Y-%m-%d"),
+        "date_from": payload.dict()["date_from"].strftime("%Y-%m-%d"),
+        "date_to": payload.dict()["date_to"].strftime("%Y-%m-%d"),
     }
 
     booking_room, _ = Requester.room_srv_fetch(
