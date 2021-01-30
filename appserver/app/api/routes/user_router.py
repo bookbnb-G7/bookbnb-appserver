@@ -31,7 +31,7 @@ async def create_user(
     payload: UserSchema,
     x_access_token: Optional[str] = Header(None),
 ):
-    auth_payload = {"email": payload.email}
+    auth_payload = {"email": payload.dict()["email"]}
     auth_header = {"x-access-token": x_access_token}
     registered_user, _ = Requester.auth_srv_fetch(
         method="POST",

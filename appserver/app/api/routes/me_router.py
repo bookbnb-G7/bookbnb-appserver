@@ -123,7 +123,7 @@ async def get_current_user_rooms(uuid: int = Depends(get_uuid_from_xtoken)):
 async def set_push_token(
     payload: TokenSchema, uuid: int = Depends(get_uuid_from_xtoken)
 ):
-    notifier.set_push_token(uuid, payload.push_token)
+    notifier.set_push_token(uuid, payload.dict()["push_token"])
     return payload
 
 
@@ -229,4 +229,4 @@ async def send_message(
     own_data = {"name": own_name, "uuid": uuid}
     other_data = {"name": other_name, "uuid": other_uuid}
 
-    return chat_service.send_message(payload.message, own_data, other_data)
+    return chat_service.send_message(payload.dict()["message"], own_data, other_data)
