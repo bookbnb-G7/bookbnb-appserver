@@ -64,6 +64,8 @@ async def create_room(payload: RoomSchema, uuid: int = Depends(get_uuid_from_xto
         payload=req_payload,
     )
 
+    del room["blocked"]
+
     return room
 
 
@@ -114,6 +116,10 @@ async def get_all_rooms(
     rooms, _ = Requester.room_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
+
+    for room in rooms["rooms"]:
+        del room["blocked"]
+
     return rooms
 
 
@@ -123,6 +129,9 @@ async def get_room(room_id: int):
     room, _ = Requester.room_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
+
+    del room["blocked"]
+
     return room
 
 
@@ -155,6 +164,8 @@ async def update_room(
         payload=room_req_payload,
     )
 
+    del room["blocked"]
+
     # TODO: Patch room price in payment server
 
     return room
@@ -180,7 +191,8 @@ async def delete_room(room_id: int, viewer_uuid: int = Depends(get_uuid_from_xto
         method="DELETE", path=path, expected_statuses={HTTP_200_OK}
     )
 
-    # TODO: Delete room in payment server
+    del room["blocked"]
+
     room_pay, _ = Requester.payment_fetch(
         method="DELETE", path=path, expected_statuses={HTTP_200_OK}
     )
