@@ -79,6 +79,8 @@ async def get_all_rooms(
     types: List[str] = Query(None),
     max_price: Optional[int] = None,
     min_price: Optional[int] = None,
+    allow_blocked: Optional[bool] = False,
+    only_blocked: Optional[bool] = False
 ):
     query = "?"
     path = "/rooms"
@@ -99,14 +101,20 @@ async def get_all_rooms(
         query = query + f"people={people}&"
 
     if types is not None:
-        for type in types:
-            query = query + f"types={type}&"
+        for specific_type in types:
+            query = query + f"types={specific_type}&"
 
     if min_price is not None:
         query = query + f"min_price={min_price}&"
 
     if max_price is not None:
         query = query + f"max_price={max_price}&"
+
+    if allow_blocked is not None:
+        query = query + f"allow_blocked={allow_blocked}&"
+
+    if only_blocked is not None:
+        query = query + f"only_blocked={only_blocked}&"
 
     if len(query) > 1:
         # strip last & in the query
