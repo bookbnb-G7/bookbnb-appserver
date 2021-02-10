@@ -92,6 +92,9 @@ async def create_new_booking(
     if not AuthSender.can_book_room(room["owner_uuid"], uuid):
         raise NotAllowedRequestError("Can't create booking of your own room")
 
+    if room["blocked"]:
+        raise NotAllowedRequestError("Can't create booking because the room is blocked")
+
     # Create intent book in payment server
 
     booking_path = "/bookings"
