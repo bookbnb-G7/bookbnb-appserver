@@ -1,9 +1,10 @@
 from app.api.models.booking_model import BookingsUserList
 from app.api.models.chat_model import (ChatDB, ChatList, MessageDB,
                                        MessageSchema)
-from app.api.models.room_model import RoomList
+from app.api.models.room_model import RoomDB, RoomList
 from app.api.models.token_model import TokenSchema
 from app.api.models.user_model import UserDB, UserSchema, WalletDB
+from app.api.models.user_favorite_room_model import UserFavoriteRoomSchema
 from app.dependencies import check_token, get_uuid_from_xtoken
 from app.services.chat import chat_service
 from app.services.notifier import notifier
@@ -230,3 +231,95 @@ async def send_message(
     other_data = {"name": other_name, "uuid": other_uuid}
 
     return chat_service.send_message(payload.dict()["message"], own_data, other_data)
+
+
+@router.post(
+    "/favorite_rooms",
+    response_model=RoomDB,
+    status_code=HTTP_201_CREATED,
+    dependencies=[Depends(check_token)],
+)
+async def create_favorite_room(
+    payload: UserFavoriteRoomSchema,
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+
+    room_path = f"/rooms/{payload.dict()['room_id']}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
+
+    path = f"/users/{uuid}/favorite_rooms"
+    favorite_room, _ = Requester.user_srv_fetch(
+        method="POST",
+        path=path,
+        expected_statuses={HTTP_201_CREATED},
+        payload=payload.dict(),
+    )
+
+    return room
+
+
+@router.get(
+    "/favorite_rooms",
+    response_model=RoomList,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def get_favorite_rooms(
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+    path = f"/users/{uuid}/favorite_rooms"
+    favorite_rooms, _ = Requester.user_srv_fetch(
+        method="GET",
+        path=path,
+        expected_statuses={HTTP_200_OK},
+    )
+
+    query = "?"
+    if len(favorite_rooms["favorites"]) > 0:
+        for favorite in favorite_rooms["favorites"]:
+            query = query + f"ids={favorite['room_id']}&"
+    else:
+        query = query + f"ids={-1}"
+
+    room_path = "/rooms" + query
+    rooms, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
+
+    return rooms
+
+
+@router.delete(
+    "/favorite_rooms/{favorite_id}",
+    response_model=RoomDB,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def delete_favorite_room(
+    favorite_id: int,
+    uuid: int = Depends(get_uuid_from_xtoken),
+):
+
+    path = f"/users/{uuid}/favorite_rooms/{favorite_id}"
+    favorite_room, _ = Requester.user_srv_fetch(
+        method="GET",
+        path=path,
+        expected_statuses={HTTP_200_OK},
+    )
+
+    room_path = f"/rooms/{favorite_room['room_id']}"
+    room, _ = Requester.room_srv_fetch(
+        method="GET", path=room_path, expected_statuses={HTTP_200_OK}
+    )
+
+    path = f"/users/{uuid}/favorite_rooms"
+    favorite_rooms, _ = Requester.user_srv_fetch(
+        method="DELETE",
+        path=path,
+        expected_statuses={HTTP_200_OK},
+    )
+
+    return room
+
