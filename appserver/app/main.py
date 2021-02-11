@@ -27,6 +27,11 @@ app.add_middleware(
 )
 
 
+@app.get("/ping")
+async def pong():
+    return {"message": "appserver"}
+
+
 @app.exception_handler(AuthException)
 async def auth_exception_handler(_request, exc):
     error = {"error": exc.detail}
