@@ -314,7 +314,7 @@ async def delete_favorite_room(
         method="GET", path=room_path, expected_statuses={HTTP_200_OK}
     )
 
-    path = f"/users/{uuid}/favorite_rooms"
+    path = f"/users/{uuid}/favorite_rooms/{favorite_id}"
     favorite_rooms, _ = Requester.user_srv_fetch(
         method="DELETE",
         path=path,
