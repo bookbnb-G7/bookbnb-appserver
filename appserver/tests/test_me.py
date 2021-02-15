@@ -2,15 +2,18 @@ import re
 
 import responses
 from app.services.authsender import AuthSender
-from starlette.status import HTTP_200_OK
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.mock_models.booking_models import MockBookingListResponse
-from tests.mock_models.room_models import MockRoomListResponse
+from tests.mock_models.room_models import MockRoomResponse, MockRoomListResponse
 from tests.mock_models.user_models import (MockPaymentWalletResponse,
-                                           MockUserResponse)
+                                           MockUserResponse,
+                                           MockFavoriteRoomResponse,
+                                           MockFavoriteRoomListResponse)
 from tests.utils import (APPSERVER_ME_REGEX, APPSERVER_URL,
                          APPSERVER_WALLET_REGEX, PAYMENT_BOOKING_REGEX,
                          PAYMENT_WALLET_REGEX, POSTSERVER_ROOM_REGEX,
-                         USER_REGEX, check_responses_equality)
+                         USER_REGEX, FAVORITE_ROOM_REGEX,
+                         check_responses_equality)
 
 
 def payment_camel_to_snake(payment_payload):
@@ -219,3 +222,157 @@ def test_get_self_user_rooms(test_app, monkeypatch):
 
     for i, room in enumerate(rooms):
         check_responses_equality(room, test_rooms[i], attrs_to_test)
+
+
+@responses.activate
+def test_create_self_favorite_room(test_app, monkeypatch):
+    # POST {appserver_url}/me/favorite_rooms
+
+    favorite_room = MockFavoriteRoomResponse().dict()
+    payload = {"room_id": favorite_room["room_id"]}
+    room = MockRoomResponse().dict()
+    expected_status = HTTP_201_CREATED
+    attrs_to_test = [
+        "title",
+        "description",
+        "type",
+        "owner",
+        "owner_uuid",
+        "price_per_day",
+        "latitude",
+        "longitude",
+        "location",
+        "capacity",
+    ]
+
+    header = {"x-access-token": "tokenrefalso"}
+    test_user_id = 1
+
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=room,
+        status=HTTP_200_OK,
+    )
+
+    responses.add(
+        responses.POST,
+        re.compile(FAVORITE_ROOM_REGEX),
+        json=favorite_room,
+        status=expected_status,
+    )
+
+    response = test_app.post(f"{APPSERVER_URL}/me/favorite_rooms", json=payload, headers=header)
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), room, attrs_to_test)
+
+
+@responses.activate
+def test_get_self_favorite_rooms(test_app, monkeypatch):
+    # GET {appserver_url}/me/favorite_rooms
+
+    favorite_rooms = MockFavoriteRoomListResponse().dict()
+    test_room_list = MockRoomListResponse().dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "title",
+        "description",
+        "type",
+        "owner",
+        "owner_uuid",
+        "price_per_day",
+        "latitude",
+        "longitude",
+        "location",
+        "capacity",
+    ]
+
+    header = {"x-access-token": "tokenrefalso"}
+    test_user_id = 1
+
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
+
+    responses.add(
+        responses.GET,
+        re.compile(FAVORITE_ROOM_REGEX),
+        json=favorite_rooms,
+        status=expected_status,
+    )
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=test_room_list,
+        status=expected_status,
+    )
+
+    response = test_app.get(f"{APPSERVER_URL}/me/favorite_rooms", headers=header)
+    assert response.status_code == expected_status
+    response_json = response.json()
+
+    rooms = response_json["rooms"]
+    test_rooms = test_room_list["rooms"]
+
+    check_responses_equality(response_json, test_room_list, ["amount"])
+
+    for i, room in enumerate(rooms):
+        check_responses_equality(room, test_rooms[i], attrs_to_test)
+
+
+@responses.activate
+def test_delete_self_favorite_rooms(test_app, monkeypatch):
+    # DELETE {appserver_url}/me/favorite_rooms/{favorite_id}
+
+    favorite_room = MockFavoriteRoomResponse().dict()
+    favorite_id = favorite_room["id"]
+    room = MockRoomResponse().dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "title",
+        "description",
+        "type",
+        "owner",
+        "owner_uuid",
+        "price_per_day",
+        "latitude",
+        "longitude",
+        "location",
+        "capacity",
+    ]
+
+    header = {"x-access-token": "tokenrefalso"}
+    test_user_id = 1
+
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(AuthSender, "has_permission_to_modify", lambda x, y: True)
+    monkeypatch.setattr(AuthSender, "get_uuid_from_token", lambda x: test_user_id)
+
+    responses.add(
+        responses.GET,
+        re.compile(FAVORITE_ROOM_REGEX),
+        json=favorite_room,
+        status=expected_status,
+    )
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_ROOM_REGEX),
+        json=room,
+        status=expected_status,
+    )
+
+    responses.add(
+        responses.DELETE,
+        re.compile(FAVORITE_ROOM_REGEX),
+        json=favorite_room,
+        status=expected_status,
+    )
+
+    response = test_app.delete(f"{APPSERVER_URL}/me/favorite_rooms/{favorite_id}", headers=header)
+    assert response.status_code == expected_status
+    check_responses_equality(response.json(), room, attrs_to_test)

@@ -58,3 +58,40 @@ class MockPaymentWalletResponse(MockResponse):
             "mnemonic": "word word word word word word word word word word word word",
             "balance": 0.24,
         }
+
+
+class MockFavoriteRoomResponse(MockResponse):
+    def dict(self):
+        return {
+            "room_id": 5,
+            "userId": 27,
+            "id": 45,
+            "createdAt": "2020-11-10T22:51:03.539Z",
+            "updatedAt": "2020-11-10T22:51:03.539Z",
+        }
+
+
+class MockFavoriteRoomListResponse(MockResponse):
+    def dict(self):
+        return {
+            "userId": 27,
+            "amount": 2,
+            "favorites": [
+                {
+                    "room_id": 5,
+                    "userId": 27,
+                    "id": 45,
+                    "createdAt": "2020-11-10T22:51:03.539Z",
+                    "updatedAt": "2020-11-10T22:51:03.539Z",
+                },
+                {
+                    "room_id": 6,
+                    "userId": 27,
+                    "id": 46,
+                    "createdAt": "2020-11-10T22:51:03.539Z",
+                    "updatedAt": "2020-11-10T22:51:03.539Z",
+                },
+            ]
+        }
+
+
