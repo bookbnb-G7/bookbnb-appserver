@@ -1,7 +1,7 @@
 import logging.config
 import os
 
-from app.api.routes import booking_router, me_router, room_router, user_router
+from app.api.routes import booking_router, me_router, room_router, user_router, recomendation_router
 from app.db import Base, engine
 from app.errors.auth_error import AuthException
 from fastapi import FastAPI, HTTPException
@@ -59,4 +59,5 @@ async def sql_exception_handler(request, exc):
 app.include_router(me_router.router, prefix="/me", tags=["me"])
 app.include_router(user_router.router, prefix="/users", tags=["Users"])
 app.include_router(room_router.router, prefix="/rooms", tags=["Rooms"])
+app.include_router(recomendation_router.router, prefix="/recomendations", tags=["Recomendations"])
 app.include_router(booking_router.router, prefix="/bookings", tags=["Bookings"])

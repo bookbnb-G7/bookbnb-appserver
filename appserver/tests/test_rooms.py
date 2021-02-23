@@ -9,7 +9,7 @@ from tests.mock_models.room_models import (MockPaymentRoomResponse,
 from tests.mock_models.user_models import MockUserResponse
 from tests.utils import (APPSERVER_URL, PAYMENT_ROOM_REGEX,
                          POSTSERVER_ROOM_REGEX, USER_REGEX,
-                         check_responses_equality)
+                         POSTSERVER_RECOMENDED_REGEX, check_responses_equality)
 
 
 @responses.activate
@@ -88,6 +88,43 @@ def test_get_all_rooms(test_app):
     )
 
     response = test_app.get(f"{APPSERVER_URL}/rooms")
+    assert response.status_code == expected_status
+    response_json = response.json()
+
+    rooms = response_json["rooms"]
+    test_rooms = test_room_list["rooms"]
+
+    check_responses_equality(response_json, test_room_list, ["amount"])
+
+    for i, room in enumerate(rooms):
+        check_responses_equality(room, test_rooms[i], attrs_to_test)
+
+
+@responses.activate
+def test_get_recomended_rooms(test_app):
+    test_room_list = MockRoomListResponse().dict()
+    expected_status = HTTP_200_OK
+    attrs_to_test = [
+        "title",
+        "description",
+        "type",
+        "owner",
+        "owner_uuid",
+        "price_per_day",
+        "latitude",
+        "longitude",
+        "location",
+        "capacity",
+    ]
+
+    responses.add(
+        responses.GET,
+        re.compile(POSTSERVER_RECOMENDED_REGEX),
+        json=test_room_list,
+        status=expected_status,
+    )
+
+    response = test_app.get(f"{APPSERVER_URL}/recomendations")
     assert response.status_code == expected_status
     response_json = response.json()
 
