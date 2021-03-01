@@ -6,10 +6,12 @@ from starlette.status import HTTP_200_OK, HTTP_201_CREATED
 from tests.mock_models.room_models import (MockPaymentRoomResponse,
                                            MockRoomListResponse,
                                            MockRoomResponse)
-from tests.mock_models.user_models import MockUserResponse
+from tests.mock_models.user_models import (MockUserResponse,
+                                           MockFavoriteRoomResponse)
 from tests.utils import (APPSERVER_URL, PAYMENT_ROOM_REGEX,
                          POSTSERVER_ROOM_REGEX, USER_REGEX,
-                         POSTSERVER_RECOMENDED_REGEX, check_responses_equality)
+                         POSTSERVER_RECOMENDED_REGEX,
+                         FAVORITE_ROOM_REGEX, check_responses_equality)
 
 
 @responses.activate
@@ -138,8 +140,9 @@ def test_get_recomended_rooms(test_app):
 
 
 @responses.activate
-def test_get_room_by_id(test_app):
+def test_get_room_by_id(test_app, monkeypatch):
     test_room = MockRoomResponse().dict()
+    test_favorite = MockFavoriteRoomResponse().dict()
     test_room_id = test_room["id"]
     expected_status = HTTP_200_OK
     attrs_to_test = [
@@ -154,6 +157,12 @@ def test_get_room_by_id(test_app):
         "location",
         "capacity",
     ]
+    header = {"x-access-token": "tokenrefalso"}
+
+    monkeypatch.setattr(AuthSender, "is_valid_token", lambda x: True)
+    monkeypatch.setattr(
+        AuthSender, "get_uuid_from_token", lambda x: test_room["owner_uuid"]
+    )
 
     responses.add(
         responses.GET,
@@ -162,7 +171,14 @@ def test_get_room_by_id(test_app):
         status=expected_status,
     )
 
-    response = test_app.get(f"{APPSERVER_URL}/rooms/{test_room_id}")
+    responses.add(
+        responses.GET,
+        re.compile(FAVORITE_ROOM_REGEX),
+        json=test_favorite,
+        status=expected_status,
+    )
+
+    response = test_app.get(f"{APPSERVER_URL}/rooms/{test_room_id}", headers=header)
     assert response.status_code == expected_status
     response_json = response.json()
 
