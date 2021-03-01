@@ -19,7 +19,7 @@ from app.services.requester import Requester
 from app.services.notifier import notifier
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_200_OK, HTTP_201_CREATED
+from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 router = APIRouter()
 
@@ -126,12 +126,30 @@ async def get_all_rooms(
     return rooms
 
 
-@router.get("/{room_id}", response_model=RoomDB, status_code=HTTP_200_OK)
-async def get_room(room_id: int):
+@router.get(
+    "/{room_id}",
+    response_model=RoomDB,
+    status_code=HTTP_200_OK,
+    dependencies=[Depends(check_token)],
+)
+async def get_room(
+    room_id: int,
+    uuid: int = Depends(get_uuid_from_xtoken)
+):
     path = f"/rooms/{room_id}"
     room, _ = Requester.room_srv_fetch(
         method="GET", path=path, expected_statuses={HTTP_200_OK}
     )
+
+    path = f"/users/{uuid}/favorite_rooms/{room_id}"
+    favorite_room, _ = Requester.user_srv_fetch(
+        method="GET",
+        path=path,
+        expected_statuses={HTTP_200_OK, HTTP_404_NOT_FOUND},
+    )
+
+    if "room_id" in favorite_room.keys():
+        room["favorite"] = True
 
     return room
 

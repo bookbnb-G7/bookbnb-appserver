@@ -34,6 +34,7 @@ class RoomDB(RoomSchema):
     owner: str
     owner_uuid: int
     blocked: bool
+    favorite: bool
     created_at: datetime
     updated_at: datetime
 
@@ -52,6 +53,7 @@ class RoomDB(RoomSchema):
                 "location": "USA",
                 "capacity": 1,
                 "blocked": False,
+                "favorite": False,
                 "created_at": "2020-11-20T18:02:20.965Z",
                 "updated_at": "2020-11-20T18:02:20.965Z",
             }
@@ -94,6 +96,7 @@ class RoomList(BaseModel):
                         "location": "USA",
                         "capacity": 1,
                         "blocked": False,
+                        "favorite": False,
                         "created_at": "2020-11-20T18:02:20.965Z",
                         "updated_at": "2020-11-20T18:02:20.965Z",
                     },
@@ -110,6 +113,7 @@ class RoomList(BaseModel):
                         "location": "USA",
                         "capacity": 1,
                         "blocked": False,
+                        "favorite": False,
                         "created_at": "2019-11-20T18:06:37.767Z",
                         "updated_at": "2020-11-20T18:06:37.767Z",
                     },

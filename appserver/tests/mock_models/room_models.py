@@ -16,6 +16,7 @@ class MockRoomResponse(MockResponse):
             "capacity": 1,
             "id": 0,
             "blocked": False,
+            "favorite": False,
             "created_at": "2020-11-10T22:51:03.539Z",
             "updated_at": "2020-11-10T22:51:03.539Z",
         }
@@ -39,6 +40,7 @@ class MockRoomListResponse(MockResponse):
                     "location": "USA",
                     "capacity": 1,
                     "blocked": False,
+                    "favorite": False,
                     "created_at": "2020-11-10T22:51:03.539Z",
                     "updated_at": "2020-11-10T22:51:03.539Z",
                 },
@@ -55,6 +57,7 @@ class MockRoomListResponse(MockResponse):
                     "location": "USA",
                     "capacity": 1,
                     "blocked": False,
+                    "favorite": False,
                     "created_at": "2020-11-10T22:51:03.539Z",
                     "updated_at": "2020-11-10T22:51:03.539Z",
                 },
