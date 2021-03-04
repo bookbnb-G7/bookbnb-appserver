@@ -99,7 +99,13 @@ async def update_user(
 @router.delete(
     "/{user_id}", status_code=HTTP_200_OK, dependencies=[Depends(check_token)]
 )
-async def delete_user(user_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
+async def delete_user(
+    user_id: int,
+    uuid: int = Depends(get_uuid_from_xtoken),
+    x_access_token: Optional[str] = Header(None)
+):
+
+    auth_header = {"x-access-token": x_access_token}
     if not AuthSender.has_permission_to_modify(uuid, user_id):
         raise UnauthorizedRequestError("You can't delete other users")
 
@@ -109,7 +115,12 @@ async def delete_user(user_id: int, uuid: int = Depends(get_uuid_from_xtoken)):
     )
 
     auth_path = f"/user/registered/{uuid}"
-    Requester.auth_srv_fetch("DELETE", path=auth_path, expected_statuses={HTTP_200_OK})
+    Requester.auth_srv_fetch(
+        "DELETE",
+        path=auth_path,
+        expected_statuses={HTTP_200_OK},
+        extra_headers=auth_header
+    )
 
     return new_user_info
 
