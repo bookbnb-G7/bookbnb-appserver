@@ -47,6 +47,7 @@ class PhotoUploader:
         while (generate_id and bucket.get_blob(new_filename) is not None):
             img_firebase_id = IdGenerator.generate()
             new_filename = filename + f"{img_firebase_id}"
+            logger.debug("Trying to upload photo with name " + new_filename)
 
         existing_blob = bucket.get_blob(filename)
         if existing_blob is not None:
