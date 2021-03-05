@@ -24,15 +24,14 @@ class PhotoUploader:
         _, image_extension = os.path.splitext(file.filename)
         filename = f"{self.USER_IMAGES_PATH}/{uuid}/profile{image_extension}"
 
-        image_url = self._upload_image(file, filename)
+        image_url, img_firebase_id = self._upload_image(file, filename)
 
         return image_url
 
     def upload_room_photo(self, file, room_id):
-        img_firebase_id = IdGenerator.generate()
-        filename = f"{self.ROOM_IMAGES_PATH}/{room_id}/{img_firebase_id}"
+        filename = f"{self.ROOM_IMAGES_PATH}/{room_id}/"
 
-        image_url = self._upload_image(file, filename)
+        image_url, img_firebase_id = self._upload_image(file, filename, True)
 
         return image_url, img_firebase_id
 
@@ -40,8 +39,14 @@ class PhotoUploader:
         filename = f"{self.ROOM_IMAGES_PATH}/{room_id}/{img_firebase_id}"
         self._remove_image(filename)
 
-    def _upload_image(self, file, filename):
+    def _upload_image(self, file, filename, generate_id=False):
         bucket = storage.bucket(app=self.app)
+
+        img_firebase_id = IdGenerator.generate()
+        new_filename = filename + f"{img_firebase_id}"
+        while (generate_id and bucket.get_blob(new_filename) is not None):
+            img_firebase_id = IdGenerator.generate()
+            new_filename = filename + f"{img_firebase_id}"
 
         existing_blob = bucket.get_blob(filename)
         if existing_blob is not None:
@@ -51,7 +56,7 @@ class PhotoUploader:
         blob.upload_from_file(file.file)
         blob.make_public()
 
-        return blob.public_url
+        return blob.public_url, img_firebase_id
 
     def _remove_image(self, filename):
         bucket = storage.bucket(app=self.app)
