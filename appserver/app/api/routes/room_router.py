@@ -543,9 +543,9 @@ async def add_room_picture(
     photo_response, _ = Requester.room_srv_fetch(
         "POST", room_photo_path, {HTTP_201_CREATED}, payload=new_photo_request
     )
-    photo_id = photo_response["id"]
+    # photo_id = photo_response["id"]
 
-    RoomPhotoDAO.add_new_room_photo(db, firebase_id, photo_id)
+    # RoomPhotoDAO.add_new_room_photo(db, firebase_id, photo_id)
     return photo_response
 
 
@@ -568,10 +568,11 @@ async def get_room_photo(
     firebase_id: int,
     db: Session = Depends(get_db),
 ):
-    photo = RoomPhotoDAO.get_room_photo(db, firebase_id)
+    # photo = RoomPhotoDAO.get_room_photo(db, firebase_id)
 
-    photo_id = photo["room_photo_id"]
-    room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
+    # photo_id = photo["room_photo_id"]
+    # room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
+    room_photo_path = f"/rooms/{room_id}/photos/{firebase_id}"
 
     photo_response, _ = Requester.room_srv_fetch("GET", room_photo_path, {HTTP_200_OK})
     return photo_response
@@ -595,12 +596,13 @@ async def delete_room_photo(
     if not AuthSender.has_permission_to_modify(room["owner_uuid"], uuid):
         raise UnauthorizedRequestError("You can't delete photos of another user room!")
 
-    photo = RoomPhotoDAO.delete_room_photo(db, firebase_id)
-    if photo is None:
-        raise NotFoundError("Photo id")
-    photo_id = photo["room_photo_id"]
+    # photo = RoomPhotoDAO.delete_room_photo(db, firebase_id)
+    # if photo is None:
+    #     raise NotFoundError("Photo id")
+    # photo_id = photo["room_photo_id"]
 
-    room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
+    # room_photo_path = f"/rooms/{room_id}/photos/{photo_id}"
+    room_photo_path = f"/rooms/{room_id}/photos/{firebase_id}"
     photo_response, _ = Requester.room_srv_fetch(
         "DELETE", room_photo_path, {HTTP_200_OK}
     )
